@@ -7,6 +7,7 @@
 """
 
 import os
+import sys
 
 #--------------------
 
@@ -22,9 +23,16 @@ def get_all_files(idir):
     # Initialize list that will contain all files.
     all_files = []
 
+    # Walk through all files, making sure there aren't so many that a list can't
+    # be created (based on 32- or 64-bit machine limits).
     for dirname, _, file_list in os.walk(idir):
-        all_files.extend([os.path.abspath(os.path.join(dirname, x))
-                          for x in file_list])
+        if len(all_files) + len(file_list) < sys.maxsize:
+            all_files.extend([os.path.abspath(os.path.join(dirname, x))
+                              for x in file_list])
+        else:
+            raise IndexError("There are too many files to store in a single "
+                             "array inside " + idir + ", run again on a subset "
+                             "of the directories.")
 
     return all_files
 
