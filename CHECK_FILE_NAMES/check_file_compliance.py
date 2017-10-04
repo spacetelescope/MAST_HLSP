@@ -15,13 +15,27 @@ from check_is_version_string import check_is_version_string
 
 #--------------------
 
-def check_file_compliance(file_list, hlsp_name):
+def check_file_compliance(file_list, hlsp_name, known_missions, known_filters):
     """
     Checks if file names satisfy MAST HLSP requirements.
 
     :param file_list: The list of HLSP files to check.
 
     :type file_list: list
+
+    :param hlsp_name: The name of the HLSP.
+
+    :type hlsp_name: str
+
+    :param known_missions: The list of known values for the "mission" part of
+        file names.
+
+    :type known_missions: set
+
+    :param known_filters: The list of known values for the "filter" part of
+        file names.
+
+    :type known_filters: set
     """
 
     # This controls how many "fields" (strings separated by an underscore) are
@@ -30,6 +44,10 @@ def check_file_compliance(file_list, hlsp_name):
 
     for ifile in file_list:
         ifile_base = os.path.basename(ifile)
+
+        # Check that the file name is all lowercase.
+        if not ifile_base.islower():
+            logging.warning("File is not all lowercase: " + ifile)
 
         # Check that this file has the corret number of fields.
         splits = ifile_base.split('_')
@@ -48,9 +66,9 @@ def check_file_compliance(file_list, hlsp_name):
                 logging.warning('Field 2 is not "' + hlsp_name + '": ' + ifile)
 
             # Check that the third field is in the list of known missions.
-            if not check_in_known_missions(splits[2]):
-                logging.warning('Field 3 is not in list of known missions: '
-                                + ifile)
+            if not check_in_known_missions(splits[2], known_missions):
+                logging.warning('Field 3 ("' + splits[2] + '") is not in list of'
+                                ' known missions: ' + ifile)
 
             # The fourth field is the instrument part, but can also include other
             # data like "resolution", etc.  No specific checks for this.
@@ -59,9 +77,9 @@ def check_file_compliance(file_list, hlsp_name):
             # free-form.  No specific checks for this.
 
             # Check that the sixth field is in the list of known filters.
-            if not check_in_known_filters(splits[5]):
-                logging.warning('Field 6 is not in list of known filters: '
-                                + ifile)
+            if not check_in_known_filters(splits[5], known_filters):
+                logging.warning('Field 6 ("' + splits[5] + '") is not in list of'
+                                ' known filters: ' + ifile)
 
             # Check that the seventh field looks like a version number.
             if not check_is_version_string(splits[6]):
