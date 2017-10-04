@@ -25,7 +25,8 @@ KNOWN_FILTERS_FILE = "known_filters.dat"
 
 #--------------------
 
-def check_file_names(idir, hlsp_name, root_dir=""):
+def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
+                     exclude_filters=None):
     """
     Checks all files contained below this directory for MAST HLSP compliance.
 
@@ -40,6 +41,16 @@ def check_file_names(idir, hlsp_name, root_dir=""):
     :param root_dir: Optional root directory to skip when checking compliance.
 
     :type root_dir: str
+
+    :param exclude_missions: Optional list of values for the "mission" part of
+        the file names that will be temporarily accepted (for this run only).
+
+    :type exclude_missions: list
+
+    :param exclude_filters: Optional list of values for the "filter" part of
+        the file names that will be temporarily accepted (for this run only).
+
+    :type exclude_filters: list
     """
 
     # Start logging to an output file.
@@ -72,7 +83,7 @@ def check_file_names(idir, hlsp_name, root_dir=""):
 
     # Check file names for compliance.
     check_file_compliance(all_file_list, hlsp_name, known_missions,
-                          known_filters)
+                          known_filters, exclude_missions, exclude_filters)
 
     logging.info('Finished at ' + datetime.datetime.now().isoformat())
 
@@ -100,6 +111,14 @@ def setup_args():
                         " of the file path will not be subject to MAST HLSP"
                         " requirements (e.g., lowercase will not be checked).")
 
+    parser.add_argument("--exclude_missions", dest="exclude_missions", nargs='*',
+                        action="store", help="Optional list of mission values"
+                        " to temporarily accept as valid values.")
+
+    parser.add_argument("--exclude_filters", dest="exclude_filters", nargs='*',
+                        action="store", help="Optional list of filter values"
+                        " to temporarily accept as valid values.")
+
     return parser
 
 #--------------------
@@ -110,6 +129,7 @@ if __name__ == "__main__":
     INPUT_ARGS = setup_args().parse_args()
 
     # Call main function.
-    check_file_names(INPUT_ARGS.idir, INPUT_ARGS.hlsp_name, INPUT_ARGS.root_dir)
+    check_file_names(INPUT_ARGS.idir, INPUT_ARGS.hlsp_name, INPUT_ARGS.root_dir,
+                     INPUT_ARGS.exclude_missions, INPUT_ARGS.exclude_filters)
 
 #--------------------

@@ -15,7 +15,8 @@ from check_is_version_string import check_is_version_string
 
 #--------------------
 
-def check_file_compliance(file_list, hlsp_name, known_missions, known_filters):
+def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
+                          exclude_missions, exclude_filters):
     """
     Checks if file names satisfy MAST HLSP requirements.
 
@@ -36,6 +37,16 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters):
         file names.
 
     :type known_filters: set
+
+    :param exclude_missions: Optional list of values for the "mission" part of
+        the file names that will be temporarily accepted (for this run only).
+
+    :type exclude_missions: list
+
+    :param exclude_filters: Optional list of values for the "filter" part of
+        the file names that will be temporarily accepted (for this run only).
+
+    :type exclude_filters: list
     """
 
     # This controls how many "fields" (strings separated by an underscore) are
@@ -66,7 +77,8 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters):
                 logging.warning('Field 2 is not "' + hlsp_name + '": ' + ifile)
 
             # Check that the third field is in the list of known missions.
-            if not check_in_known_missions(splits[2], known_missions):
+            if not check_in_known_missions(splits[2], known_missions,
+                                           exclude_missions):
                 logging.warning('Field 3 ("' + splits[2] + '") is not in list of'
                                 ' known missions: ' + ifile)
 
@@ -77,7 +89,8 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters):
             # free-form.  No specific checks for this.
 
             # Check that the sixth field is in the list of known filters.
-            if not check_in_known_filters(splits[5], known_filters):
+            if not check_in_known_filters(splits[5], known_filters,
+                                          exclude_filters):
                 logging.warning('Field 6 ("' + splits[5] + '") is not in list of'
                                 ' known filters: ' + ifile)
 
