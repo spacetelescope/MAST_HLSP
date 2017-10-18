@@ -26,6 +26,7 @@ KNOWN_FILTERS_FILE = "known_filters.dat"
 #--------------------
 
 def read_known_missions():
+    """ Reads in a list of known missions from a file on disk. """
     if os.path.isfile(KNOWN_MISSIONS_FILE):
         with open(KNOWN_MISSIONS_FILE, 'r') as km_file:
             return set([x.strip() for x in km_file.readlines()])
@@ -36,6 +37,7 @@ def read_known_missions():
 #--------------------
 
 def read_known_filters():
+    """ Reads in a list of known filters from a file on disk. """
     if os.path.isfile(KNOWN_FILTERS_FILE):
         with open(KNOWN_FILTERS_FILE, 'r') as kf_file:
             return set([x.strip() for x in kf_file.readlines()])
