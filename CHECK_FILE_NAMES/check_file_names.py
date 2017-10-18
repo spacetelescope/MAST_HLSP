@@ -25,6 +25,26 @@ KNOWN_FILTERS_FILE = "known_filters.dat"
 
 #--------------------
 
+def read_known_missions():
+    if os.path.isfile(KNOWN_MISSIONS_FILE):
+        with open(KNOWN_MISSIONS_FILE, 'r') as km_file:
+            return set([x.strip() for x in km_file.readlines()])
+    else:
+        raise OSError('Known Missions file not found.  Looking for "' +
+                      KNOWN_MISSIONS_FILE + '".')
+
+#--------------------
+
+def read_known_filters():
+    if os.path.isfile(KNOWN_FILTERS_FILE):
+        with open(KNOWN_FILTERS_FILE, 'r') as kf_file:
+            return set([x.strip() for x in kf_file.readlines()])
+    else:
+        raise OSError('Known Filters file not found.  Looking for "' +
+                      KNOWN_FILTERS_FILE + '".')
+
+#--------------------
+
 def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
                      exclude_filters=None):
     """
@@ -60,20 +80,10 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     logging.info('Started at ' + datetime.datetime.now().isoformat())
 
     # Read in list of known missions from reference file.
-    if os.path.isfile(KNOWN_MISSIONS_FILE):
-        with open(KNOWN_MISSIONS_FILE, 'r') as km_file:
-            known_missions = set([x.strip() for x in km_file.readlines()])
-    else:
-        raise OSError('Known Missions file not found.  Looking for "' +
-                      KNOWN_MISSIONS_FILE + '".')
+    known_missions = read_known_missions()
 
     # Read in list of known filters from reference file.
-    if os.path.isfile(KNOWN_FILTERS_FILE):
-        with open(KNOWN_FILTERS_FILE, 'r') as kf_file:
-            known_filters = set([x.strip() for x in kf_file.readlines()])
-    else:
-        raise OSError('Known Filters file not found.  Looking for "' +
-                      KNOWN_FILTERS_FILE + '".')
+    known_filters = read_known_filters()
 
     # Get list of all files.
     all_file_list = get_all_files(idir)

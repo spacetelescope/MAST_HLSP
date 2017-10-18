@@ -62,8 +62,6 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
 
         # Check that this file has the corret number of fields.
         splits = ifile_base.split('_')
-
-        # If there are any failed subdirectories, log them to the file.
         if len(splits) != n_fields_expected:
             logging.warning("File does not have " + str(n_fields_expected) +
                             " parts: " + ifile)
