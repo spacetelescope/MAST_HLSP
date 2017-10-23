@@ -32,7 +32,7 @@ def add_value_subelements(xmltree, subelements, parent):
 
 def add_header_subelements(xmltree, subelements):
     """
-    Adds SubElements from a dictionary to xmltree under a designated parent in the CAOM HEADER formatting.
+    Adds SubElements from a dictionary to xmltree under a designated parent in the CAOM HEADER formatting.  Parents are expected to be defined within the subelements dictionary [CAOM: (PARENT, KEYWORD)]
     """
 
     #Create a SubElement for each entry in the subelements dictionary

@@ -11,7 +11,6 @@
 ..moduleauthor:: Peter Forshay <pforshay@stsci.edu>
 """
 
-from keywords import Keyword
 from lxml import etree
 import add_xml_entries as axe
 import csv
@@ -40,6 +39,7 @@ def open_xml_file(filepath, overwrite=True):
             xmlfile.close()
     else:
         print("The file you are trying to create already exists. Set overwrite=True if you wish to proceed.")
+        quit()
 
 #--------------------
 
@@ -68,6 +68,7 @@ def get_header_keys(tablepath, header_type):
         quit()
 
     #Create the header_keys dictionary and add an entry for each csv row
+    #[CAOM: (PARENT, KEYWORD)]
     header_keys = {}
     for row in keys[1:]:
         header_keys[row[caom_index]] = (row[section_index], row[key_index])
