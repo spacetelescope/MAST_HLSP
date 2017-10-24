@@ -35,6 +35,12 @@ def add_header_subelements(xmltree, subelements):
     Adds SubElements from a dictionary to xmltree under a designated parent in the CAOM HEADER formatting.  Parents are expected to be defined within the subelements dictionary [CAOM: (PARENT, KEYWORD)]
     """
 
+    try:
+        assert len(list(subelements.values())[0]) == 2
+    except AssertionError:
+        print("The 'subelements' dictionary passed to add_header_subelements is not constructed correctly- [CAOM: (PARENT, KEYWORD)]")
+        quit()
+
     #Create a SubElement for each entry in the subelements dictionary
     for key in sorted(subelements):
         parent = subelements[key][0]

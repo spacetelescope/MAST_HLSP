@@ -1,8 +1,20 @@
+"""
+..module:: add_productlist_xml
+    :synopsis: Walk an HLSP directory (filepath) to create a list of all files.  Compare the filenames to a table of expected file extensions (extensions_table) and generate CAOM product entries with appropriate parameters.
+"""
+
 from lxml import etree
 import csv
+import logging
 import os
 
+#--------------------
+
 def add_productlist_xml(filepath, extensions_table, tree):
+    """
+    Walk filepath and create product entries for files by matching them with entries in extensions_table.
+    """
+
     parent = tree.find("productList")
     products = []
     filepath = os.path.abspath(filepath)
@@ -19,11 +31,13 @@ def add_productlist_xml(filepath, extensions_table, tree):
             products.append(os.path.join(path, name))
 
     for filename in products:
-        parameters = ["n/a"]*6
+        parameters = ["n/a"]*4
         for ext in extensions.keys():
             if filename.lower().endswith(ext):
                 parameters = extensions[ext]
         if "n/a" in parameters:
+            logging.warning("Skipped {}".format(filename))
+            logging.warning("Extension not defined in {}".format(extensions_table))
             continue
         product = etree.SubElement(parent, "product")
         pn = etree.SubElement(product, "planeNumber")
@@ -42,9 +56,15 @@ def add_productlist_xml(filepath, extensions_table, tree):
         ct = etree.SubElement(product, "contentType")
         ct.text = parameters[3]
         fs = etree.SubElement(product, "fileStatus")
-        fs.text = parameters[4]
+        if parameters[0] == '1':
+            fs.text = "REQUIRED"
+        else:
+            fs.text = "OPTIONAL"
         sa = etree.SubElement(product, "statusAction")
-        sa.text = parameters[5]
+        if parameters[0] == '1':
+            sa.text = "WARNING"
+        else:
+            sa.text = "IGNORE"
         pproj = etree.SubElement(product, "provenanceProject")
         pprod = etree.SubElement(product, "provenanceProducer")
 

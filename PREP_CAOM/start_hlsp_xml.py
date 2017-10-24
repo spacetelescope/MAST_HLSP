@@ -14,6 +14,7 @@
 from lxml import etree
 import add_xml_entries as axe
 import csv
+import logging
 import os
 
 #--------------------
@@ -89,6 +90,11 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
 
     :type overwrite: boolean (default = True)
     """
+
+    #Set up logging
+    logging.basicConfig(filename="hlsp_to_xml.log",
+                        format='%(levelname)s from %(module)s: %(message)s',
+                        level=logging.DEBUG, filemode='w')
 
     #Get the designated xml file and path ready
     print("Opening {}...".format(outpath))
