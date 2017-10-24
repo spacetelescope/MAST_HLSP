@@ -26,6 +26,7 @@ def open_xml_file(filepath, overwrite=True):
 
     #Make sure the filepath is whole and create any necessary directories
     path = os.path.abspath(filepath)
+    print("Opening {}...".format(path))
     directory = os.path.dirname(path)
     if not os.path.exists(directory):
         try:
@@ -39,7 +40,7 @@ def open_xml_file(filepath, overwrite=True):
         with open(path, 'w') as xmlfile:
             xmlfile.close()
     else:
-        print("The file you are trying to create already exists. Set overwrite=True if you wish to proceed.")
+        logging.error("The file you are trying to create already exists. Set overwrite=True if you wish to proceed.")
         quit()
 
 #--------------------
@@ -50,6 +51,7 @@ def get_header_keys(tablepath, header_type):
     """
 
     #Open the csv file and parse into a list
+    tablepath = os.path.abspath(tablepath)
     print("Opening {}".format(tablepath))
     keys = []
     with open(tablepath) as csvfile:
@@ -65,7 +67,7 @@ def get_header_keys(tablepath, header_type):
     try:
         key_index = keys[0].index(header_type)
     except ValueError:
-        print("get_header_keys was passed an invalid header_type!")
+        logging.error("get_header_keys was passed an invalid header_type!")
         quit()
 
     #Create the header_keys dictionary and add an entry for each csv row
@@ -97,10 +99,10 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
                         level=logging.DEBUG, filemode='w')
 
     #Get the designated xml file and path ready
-    print("Opening {}...".format(outpath))
     open_xml_file(outpath, overwrite)
 
     #Get the appropriate keyword dictionary from the lookup table
+    #header_keys dictionary formatted as CAOM: (PARENT, KEYWORD)
     header_keys = get_header_keys(tablepath, header_type)
 
     #Create the head string to write to doctype
@@ -112,7 +114,6 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     #Form the xml body
     co = etree.Element("CompositeObservation")
     as_tree = etree.ElementTree(co)
-
     metadata = etree.SubElement(co, "metadataList")
     provenance = etree.SubElement(co, "provenance")
     products = etree.SubElement(co, "productList")

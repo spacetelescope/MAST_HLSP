@@ -1,9 +1,9 @@
 extension,planeNumber,dataProductType,productType,contentType
-_allfiles.tar.gz,2,CUBE,SCIENCE,TAR
-_correction.png,2,IMAGE,CALIBRATION,PNG
-_image.png,2,IMAGE,SCIENCE,PNG
-_lls-default-aper.txt,2,MEASUREMENTS,SCIENCE,TXT
-_llc.fits,1,TIMESERIES,SCIENCE,FITS
-_llc.png,2,IMAGE,SCIENCE,PNG
-_medians.png,2,IMAGE,CALIBRATION,PNG
-_skypos.png,2,IMAGE,AUXILIARY,PNG
+_allfiles.tar.gz,2,CUBE,SCIENCE,application/x-tar
+_correction.png,2,IMAGE,AUXILIARY,image/png
+_image.png,2,IMAGE,AUXILIARY,image/png
+_lls-default-aper.txt,2,MEASUREMENTS,SCIENCE,text/plain
+_llc.fits,1,TIMESERIES,SCIENCE,image/fits
+_llc.png,2,IMAGE,AUXILIARY,image/png
+_medians.png,2,IMAGE,AUXILIARY,image/png
+_skypos.png,2,IMAGE,AUXILIARY,image/png

@@ -15,29 +15,40 @@ def add_productlist_xml(filepath, extensions_table, tree):
     Walk filepath and create product entries for files by matching them with entries in extensions_table.
     """
 
+    #All products will be subelements of the productList subelement
     parent = tree.find("productList")
     products = []
+
+    #Make sure filepaths are full
     filepath = os.path.abspath(filepath)
     extensions_table = os.path.abspath(extensions_table)
 
+    #Read the extensions_table into a dictionary
+    #[file extension : (n parameters...)]
     extensions = {}
     with open(extensions_table) as csvfile:
         csv_object = csv.reader(csvfile, delimiter=",")
         for row in csv_object:
             extensions[row[0]] = tuple(row[1:])
 
+    #Walk filepath and create a list of all files found
     for path, subdirs, files in os.walk(filepath):
         for name in files:
             products.append(os.path.join(path, name))
 
+    #For each file, compare it to the dictionary of file extensions.  If it
+    #matches, create a product entry with appropriate CAOM parameters.  If
+    #not, create a log entry and skip the file.
     for filename in products:
+        #Currently 4 parameters defined in extensions_table
         parameters = ["n/a"]*4
         for ext in extensions.keys():
             if filename.lower().endswith(ext):
                 parameters = extensions[ext]
         if "n/a" in parameters:
             logging.warning("Skipped {}".format(filename))
-            logging.warning("Extension not defined in {}".format(extensions_table))
+            logging.warning("Extension not defined in {}".format(
+                                                            extensions_table))
             continue
         product = etree.SubElement(parent, "product")
         pn = etree.SubElement(product, "planeNumber")

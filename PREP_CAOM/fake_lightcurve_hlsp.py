@@ -12,7 +12,7 @@ Where the HLSP files reside.
 Desired filepath for the final XML result output.
 
 -TABLE (filepath)
-A csv table translating CAOM metadata and provenance entries to fits headers.
+A general csv table translating CAOM metadata and provenance entries to fits headers.
 
 -TYPE (default, kepler)
 The user must specify which set of fits header keywords are used for this HLSP.
@@ -25,10 +25,10 @@ from add_productlist_xml import add_productlist_xml
 #--------------------
 
 #Set global variables
-EXTENSIONS = "/Users/pforshay/Documents/1709_hlsp/MAST-HLSP/PREP_CAOM/fake_hlsp_extensions.csv"
-HLSPPATH = "/Users/pforshay/Documents/1709_hlsp/hlsp_data"
-OUTPUT = "/Users/pforshay/Documents/1709_hlsp/COOL/ididit.xml"
-TABLE = "/Users/pforshay/Documents/1709_hlsp/MAST-HLSP/PREP_CAOM/hlsp_keywords_test.csv"
+EXTENSIONS = "fake_hlsp_extensions.csv"
+HLSPPATH = "../../hlsp_data"
+OUTPUT = "../../COOL/ididit.xml"
+TABLE = "hlsp_keywords_test.csv"
 TYPE = "kepler"
 
 if __name__ == "__main__":

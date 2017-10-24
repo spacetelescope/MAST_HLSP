@@ -7,6 +7,7 @@
 """
 
 from lxml import etree
+import logging
 
 #--------------------
 
@@ -38,7 +39,7 @@ def add_header_subelements(xmltree, subelements):
     try:
         assert len(list(subelements.values())[0]) == 2
     except AssertionError:
-        print("The 'subelements' dictionary passed to add_header_subelements is not constructed correctly- [CAOM: (PARENT, KEYWORD)]")
+        logging.error("The 'subelements' dictionary passed to add_header_subelements is not constructed correctly- [CAOM: (PARENT, KEYWORD)]")
         quit()
 
     #Create a SubElement for each entry in the subelements dictionary
