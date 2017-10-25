@@ -43,7 +43,7 @@ def add_productlist_xml(filepath, extensions_table, tree):
                 if name.lower().endswith(ext):
                     parameters = extensions[ext]
             if "n/a" in parameters:
-                logging.warning("Skipped {0}".format(filename))
+                logging.warning("Skipped {0}".format(os.path.join(path, name)))
                 logging.warning("Extension not defined in {0}".format(
                                                             extensions_table))
                 continue
