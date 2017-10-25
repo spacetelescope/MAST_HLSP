@@ -49,6 +49,6 @@ if __name__ == "__main__":
     head = "\n".join(head_strings)
 
     #Write the xml tree to the OUTPUT file
-    tree.write(OUTPUT, encoding="UTF-8", xml_declaration=True, doctype=head,
+    tree.write(OUTPUT, encoding="UTF-8", xml_declaration=True, #doctype=head,
                pretty_print=True)
     print("XML file generated!")

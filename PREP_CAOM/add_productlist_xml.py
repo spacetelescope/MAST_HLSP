@@ -36,51 +36,45 @@ def add_productlist_xml(filepath, extensions_table, tree):
     for path, subdirs, files in os.walk(filepath):
         print("...adding files from {0}...".format(path))
         for name in files:
-            products.append(os.path.join(path, name))
-    print("...looking at {0} files...".format(len(products)))
-
-    #For each file, compare it to the dictionary of file extensions.  If it
-    #matches, create a product entry with appropriate CAOM parameters.  If
-    #not, create a log entry and skip the file.
-    for filename in products:
-        #Currently 4 parameters defined in extensions_table
-        parameters = ["n/a"]*4
-        for ext in extensions.keys():
-            if filename.lower().endswith(ext):
-                parameters = extensions[ext]
-        if "n/a" in parameters:
-            logging.warning("Skipped {0}".format(filename))
-            logging.warning("Extension not defined in {0}".format(
+            #Currently 4 parameters defined in extensions_table
+            parameters = ["n/a"]*4
+            #products.append(os.path.join(path, name))
+            for ext in extensions.keys():
+                if name.lower().endswith(ext):
+                    parameters = extensions[ext]
+            if "n/a" in parameters:
+                logging.warning("Skipped {0}".format(filename))
+                logging.warning("Extension not defined in {0}".format(
                                                             extensions_table))
-            continue
-        product = etree.SubElement(parent, "product")
-        pn = etree.SubElement(product, "planeNumber")
-        pn.text = parameters[0]
-        cl = etree.SubElement(product, "calibrationLevel")
-        cl.text = "HLSP"
-        dpt = etree.SubElement(product, "dataProductType")
-        dpt.text = parameters[1]
-        pt = etree.SubElement(product, "productType")
-        pt.text = parameters[2]
-        rt = etree.SubElement(product, "releaseType")
-        rt.text = "DATA"
-        fnd = etree.SubElement(product, "fileNameDescriptor")
-        fnd.text = "FILEROOT"
-        ft = etree.SubElement(product, "fileType")
-        ct = etree.SubElement(product, "contentType")
-        ct.text = parameters[3]
-        fs = etree.SubElement(product, "fileStatus")
-        if parameters[0] == '1':
-            fs.text = "REQUIRED"
-        else:
-            fs.text = "OPTIONAL"
-        sa = etree.SubElement(product, "statusAction")
-        if parameters[0] == '1':
-            sa.text = "WARNING"
-        else:
-            sa.text = "IGNORE"
-        pproj = etree.SubElement(product, "provenanceProject")
-        pprod = etree.SubElement(product, "provenanceProducer")
+                continue
+            product = etree.SubElement(parent, "product")
+            pn = etree.SubElement(product, "planeNumber")
+            pn.text = parameters[0]
+            cl = etree.SubElement(product, "calibrationLevel")
+            cl.text = "HLSP"
+            dpt = etree.SubElement(product, "dataProductType")
+            dpt.text = parameters[1]
+            pt = etree.SubElement(product, "productType")
+            pt.text = parameters[2]
+            rt = etree.SubElement(product, "releaseType")
+            rt.text = "DATA"
+            fnd = etree.SubElement(product, "fileNameDescriptor")
+            fnd.text = "FILEROOT"
+            ft = etree.SubElement(product, "fileType")
+            ct = etree.SubElement(product, "contentType")
+            ct.text = parameters[3]
+            fs = etree.SubElement(product, "fileStatus")
+            if parameters[0] == '1':
+                fs.text = "REQUIRED"
+            else:
+                fs.text = "OPTIONAL"
+            sa = etree.SubElement(product, "statusAction")
+            if parameters[0] == '1':
+                sa.text = "WARNING"
+            else:
+                sa.text = "IGNORE"
+            pproj = etree.SubElement(product, "provenanceProject")
+            pprod = etree.SubElement(product, "provenanceProducer")
 
     print("...done!")
     return tree

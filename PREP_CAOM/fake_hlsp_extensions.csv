@@ -2,7 +2,7 @@ extension,planeNumber,dataProductType,productType,contentType
 _allfiles.tar.gz,2,CUBE,SCIENCE,application/x-tar
 _correction.png,2,IMAGE,AUXILIARY,image/png
 _image.png,2,IMAGE,AUXILIARY,image/png
-_lls-default-aper.txt,2,MEASUREMENTS,SCIENCE,text/plain
+default-aper.txt,2,MEASUREMENTS,SCIENCE,text/plain
 _llc.fits,1,TIMESERIES,SCIENCE,image/fits
 _llc.png,2,IMAGE,AUXILIARY,image/png
 _medians.png,2,IMAGE,AUXILIARY,image/png
