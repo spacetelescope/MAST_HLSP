@@ -26,7 +26,7 @@ def open_xml_file(filepath, overwrite=True):
 
     #Make sure the filepath is whole and create any necessary directories
     path = os.path.abspath(filepath)
-    print("Opening {}...".format(path))
+    print("Opening {0}...".format(path))
     directory = os.path.dirname(path)
     if not os.path.exists(directory):
         try:
@@ -53,7 +53,7 @@ def get_header_keys(tablepath, header_type):
 
     #Open the csv file and parse into a list
     tablepath = os.path.abspath(tablepath)
-    print("Opening {}".format(tablepath))
+    print("Opening {0}...".format(tablepath))
     keys = []
     with open(tablepath) as csvfile:
         hlsp_keys = csv.reader(csvfile, delimiter=",")

@@ -36,7 +36,7 @@ def add_productlist_xml(filepath, extensions_table, tree):
     for path, subdirs, files in os.walk(filepath):
         for name in files:
             products.append(os.path.join(path, name))
-    print("...looking at {} files...".format(len(products)))
+    print("...looking at {0} files...".format(len(products)))
 
     #For each file, compare it to the dictionary of file extensions.  If it
     #matches, create a product entry with appropriate CAOM parameters.  If
@@ -48,8 +48,8 @@ def add_productlist_xml(filepath, extensions_table, tree):
             if filename.lower().endswith(ext):
                 parameters = extensions[ext]
         if "n/a" in parameters:
-            logging.warning("Skipped {}".format(filename))
-            logging.warning("Extension not defined in {}".format(
+            logging.warning("Skipped {0}".format(filename))
+            logging.warning("Extension not defined in {0}".format(
                                                             extensions_table))
             continue
         product = etree.SubElement(parent, "product")
