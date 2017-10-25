@@ -34,6 +34,7 @@ def add_productlist_xml(filepath, extensions_table, tree):
 
     #Walk filepath and create a list of all files found
     for path, subdirs, files in os.walk(filepath):
+        print("...adding files from {0}...".format(path))
         for name in files:
             products.append(os.path.join(path, name))
     print("...looking at {0} files...".format(len(products)))
