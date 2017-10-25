@@ -42,6 +42,13 @@ if __name__ == "__main__":
     #Add the product list to the xml tree
     tree = add_productlist_xml(HLSPPATH, EXTENSIONS, tree)
 
+    #Create the head string to write to doctype
+    head_strings = []
+    head_strings.append("<!-- Process HLSP for CAOM ingestion -->")
+    head_strings.append("")
+    head = "\n".join(head_strings)
+
     #Write the xml tree to the OUTPUT file
-    tree.write(OUTPUT, encoding="UTF-8", xml_declaration=True,
+    tree.write(OUTPUT, encoding="UTF-8", xml_declaration=True, doctype=head,
                pretty_print=True)
+    print("XML file generated!")

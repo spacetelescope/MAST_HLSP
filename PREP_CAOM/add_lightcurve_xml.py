@@ -35,10 +35,11 @@ def add_lightcurve_xml(xmltree):
     statics_lightcurve = {"algorithm": "timeseries"}
 
     #Form the light curve elements to add
+    print("Adding light curve information...")
     newtree = axe.add_value_subelements(xmltree, statics_lightcurve, "metadataList")
 
     #Write the modified ElementTree to file
-    print("Adding light curve data...")
+    print("...done!")
     return newtree
     #tree.write(filepath, encoding="UTF-8", xml_declaration=True, pretty_print=True)
 

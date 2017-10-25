@@ -18,6 +18,7 @@ def add_productlist_xml(filepath, extensions_table, tree):
     #All products will be subelements of the productList subelement
     parent = tree.find("productList")
     products = []
+    print("Generating the product list...")
 
     #Make sure filepaths are full
     filepath = os.path.abspath(filepath)
@@ -35,6 +36,7 @@ def add_productlist_xml(filepath, extensions_table, tree):
     for path, subdirs, files in os.walk(filepath):
         for name in files:
             products.append(os.path.join(path, name))
+    print("...looking at {} files...".format(len(products)))
 
     #For each file, compare it to the dictionary of file extensions.  If it
     #matches, create a product entry with appropriate CAOM parameters.  If
@@ -79,4 +81,5 @@ def add_productlist_xml(filepath, extensions_table, tree):
         pproj = etree.SubElement(product, "provenanceProject")
         pprod = etree.SubElement(product, "provenanceProducer")
 
+    print("...done!")
     return tree

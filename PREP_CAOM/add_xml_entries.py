@@ -40,6 +40,7 @@ def add_header_subelements(xmltree, subelements):
         assert len(list(subelements.values())[0]) == 2
     except AssertionError:
         logging.error("The 'subelements' dictionary passed to add_header_subelements is not constructed correctly- [CAOM: (PARENT, KEYWORD)]")
+        print("Aborting, see log!")
         quit()
 
     #Create a SubElement for each entry in the subelements dictionary

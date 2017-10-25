@@ -41,6 +41,7 @@ def open_xml_file(filepath, overwrite=True):
             xmlfile.close()
     else:
         logging.error("The file you are trying to create already exists. Set overwrite=True if you wish to proceed.")
+        print("Aborting, see log!")
         quit()
 
 #--------------------
@@ -68,6 +69,7 @@ def get_header_keys(tablepath, header_type):
         key_index = keys[0].index(header_type)
     except ValueError:
         logging.error("get_header_keys was passed an invalid header_type!")
+        print("Aborting, see log!")
         quit()
 
     #Create the header_keys dictionary and add an entry for each csv row
@@ -105,13 +107,8 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     #header_keys dictionary formatted as CAOM: (PARENT, KEYWORD)
     header_keys = get_header_keys(tablepath, header_type)
 
-    #Create the head string to write to doctype
-    head_strings = []
-    head_strings.append("<!-- Process HLSP for CAOM ingestion -->")
-    head_strings.append("")
-    head = "\n".join(head_strings)
-
     #Form the xml body
+    print("Adding general HLSP information...")
     co = etree.Element("CompositeObservation")
     as_tree = etree.ElementTree(co)
     metadata = etree.SubElement(co, "metadataList")
@@ -127,7 +124,7 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     as_tree = axe.add_header_subelements(as_tree, header_keys)
 
     #Write the xml body and doctype to file
-    print("Writing document info to the new file...")
+    print("...done!")
     return as_tree
     #as_tree.write(outpath, encoding="UTF-8", xml_declaration=True, doctype=head, pretty_print=True)
 
