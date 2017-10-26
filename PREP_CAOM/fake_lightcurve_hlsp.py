@@ -16,13 +16,16 @@ A general csv table translating CAOM metadata and provenance entries to fits hea
 
 -TYPE (default, kepler)
 The user must specify which set of fits header keywords are used for this HLSP.
+
+..module::  add_unique_xml
+    :synopsis:  Adds CAOM parameters that are unique to this HLSP.
 """
 
-from start_hlsp_xml import start_hlsp_xml
 from add_lightcurve_xml import add_lightcurve_xml
 from add_productlist_xml import add_productlist_xml
-
-#--------------------
+from start_hlsp_xml import start_hlsp_xml
+from lxml import etree
+import add_xml_entries as axe
 
 #Set global variables
 EXTENSIONS = "fake_hlsp_extensions.csv"
@@ -30,6 +33,33 @@ HLSPPATH = "../../hlsp_data"
 OUTPUT = "../../COOL/ididit.xml"
 TABLE = "hlsp_keywords_test.csv"
 TYPE = "kepler"
+
+#--------------------
+
+def add_unique_xml(tree):
+    """
+    Add CAOM parameters that are unique to this HLSP.
+
+    :param tree:  The xml tree object that these subelements will be added to.
+    :type tree:  _ElementTree from lxml
+    """
+
+    print("Adding unique HLSP information...")
+
+    #Define the parents to look for
+    metadata = "metadataList"
+    provenance = "provenance"
+    products = "productList"
+
+    hlsp_provenance = {"name": "<HLSP name>",
+                       "reference": "<HLSP url>"}
+
+    tree = axe.add_value_subelements(tree, hlsp_provenance, provenance)
+
+    print("...done!")
+    return tree
+
+#--------------------
 
 if __name__ == "__main__":
 
@@ -41,6 +71,9 @@ if __name__ == "__main__":
 
     #Add the product list to the xml tree
     tree = add_productlist_xml(HLSPPATH, EXTENSIONS, tree)
+
+    #Add HLSP-specifiic CAOM parameters to the xml tree
+    tree = add_unique_xml(tree)
 
     #Create the head string to write to doctype
     head_strings = []

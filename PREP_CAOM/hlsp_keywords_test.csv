@@ -8,3 +8,4 @@ targetPosition_coordsys,metadataList,RADESYS,RADESYS
 target_name,metadataList,TARGNAME,OBJECT
 telescope_name,metadataList,TELESCOP,TELESCOP
 version,provenance,FIX,DATA_REL
+project,provenance,MISSION,MISSION

@@ -98,11 +98,17 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     """
     Create a new xml file for CAOM ingestion and add standard HLSP information.
 
-    :param outpath: Location and filename of new xml file to generate.
-    :type outpath: string
+    :param outpath:  Location and filename of new xml file to generate.
+    :type outpath:  string
 
-    :param overwrite: Flag to prevent existing file destruction.
-    :type overwrite: boolean (=True by default)
+    :param tablepath:  Location of the .csv file with translations from CAOM elements to fits header keywords.
+    :type tablepath:  string
+
+    :param header_type:  The type of fits header used by the current HLSP.  Must match a column header in the tablepath .csv file.
+    :type header_type:  string
+
+    :param overwrite:  Flag to prevent existing file destruction.
+    :type overwrite:  boolean (=True by default)
     """
 
     #Set up logging
