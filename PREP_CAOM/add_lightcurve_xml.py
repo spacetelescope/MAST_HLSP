@@ -15,21 +15,8 @@ def add_lightcurve_xml(xmltree):
     """
     Add light curve information to an xml file for CAOM ingestion.
 
-    :param filepath: Location and filename of new xml file to add to.
-
-    :type filepath: string
-
-
-    #Open the designated filepath and parse the xml file
-    print("Reopening {}...".format(filepath))
-    absfile = os.path.abspath(filepath)
-    if not os.path.isfile(absfile):
-        print("add_lightcurve_xml was not sent a valid filepath!")
-        quit()
-    with open(absfile) as xmlfile:
-        parser = etree.XMLParser(remove_blank_text=True)
-        tree = etree.parse(xmlfile, parser)
-        xmlfile.close()
+    :param xmltree: The xml tree object to add light curve subelements to.
+    :type xmltree: _ElementTree from lxml
     """
 
     statics_lightcurve = {"algorithm": "timeseries"}

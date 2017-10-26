@@ -1,6 +1,6 @@
 """
 ..module:: add_productlist_xml
-    :synopsis: Walk an HLSP directory (filepath) to create a list of all files.  Compare the filenames to a table of expected file extensions (extensions_table) and generate CAOM product entries with appropriate parameters.
+    :synopsis: Walk an HLSP directory (filepath) to identify all files.  Compare the filenames found to a table of expected file extensions (extensions_table) and generate CAOM product entries with appropriate parameters.
 """
 
 from lxml import etree
@@ -13,11 +13,19 @@ import os
 def add_productlist_xml(filepath, extensions_table, tree):
     """
     Walk filepath and create product entries for files by matching them with entries in extensions_table.
+
+    :param filepath:  The path where all the files for the current HLSP are located.
+    :type filepath:  string
+
+    :param extensions_table:  The filepath for a .csv file specific to the current HLSP with file extensions expected to be found and corresponding CAOM product parameters to associate with them.
+    :type extensions_table:  string
+
+    :param tree:  The xml tree object to add product subelements to.
+    :type tree:  _ElementTree from lxml
     """
 
     #All products will be subelements of the productList subelement
     parent = tree.find("productList")
-    products = []
     print("Generating the product list...")
 
     #Make sure filepaths are full
@@ -32,13 +40,18 @@ def add_productlist_xml(filepath, extensions_table, tree):
         for row in csv_object:
             extensions[row[0]] = tuple(row[1:])
 
-    #Walk filepath and create a list of all files found
+    #Walk filepath and check files found against the list of defined
+    #extensions.  If the extension matches, create a product subelement with
+    #matching parameters.
     for path, subdirs, files in os.walk(filepath):
         print("...adding files from {0}...".format(path))
         for name in files:
             #Currently 4 parameters defined in extensions_table
             parameters = ["n/a"]*4
-            #products.append(os.path.join(path, name))
+
+            #Look for a match with an entry in extensions and overwrite
+            #parameters.  If parameters is not overwritten, generate a
+            #warning in the log and skip the file.
             for ext in extensions.keys():
                 if name.lower().endswith(ext):
                     parameters = extensions[ext]
@@ -47,6 +60,8 @@ def add_productlist_xml(filepath, extensions_table, tree):
                 logging.warning("Extension not defined in {0}".format(
                                                             extensions_table))
                 continue
+
+            #Create all the subelements for this product.
             product = etree.SubElement(parent, "product")
             pn = etree.SubElement(product, "planeNumber")
             pn.text = parameters[0]

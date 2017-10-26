@@ -22,6 +22,12 @@ import os
 def open_xml_file(filepath, overwrite=True):
     """
     Will either overwrite or create a new xml file.
+
+    :param filepath:  Desired filepath for xml file creation.
+    :type filepath:  string
+
+    :param overwrite:  Flag to overwrite an existing xml file at the filepath location.  Defaults to True.
+    :type overwrite:  boolean
     """
 
     #Make sure the filepath is whole and create any necessary directories
@@ -49,6 +55,12 @@ def open_xml_file(filepath, overwrite=True):
 def get_header_keys(tablepath, header_type):
     """
     Parse a .csv file at tablepath, which contains the CAOM XML entry name and corresponding header keywords.  Create a dictionary for translating CAOM entry to a header keyword for a designated header type.
+
+    :param tablepath:  The filepath containing a .csv file with CAOM elements and corresponding xml parents and fits keywords.
+    :type tablepath:  string
+
+    :param header_type:  The type of fits header keywords used by this HLSP.  Must match a column header in the .csv file at tablepath.
+    :type header_type:  string
     """
 
     #Open the csv file and parse into a list
@@ -87,12 +99,10 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     Create a new xml file for CAOM ingestion and add standard HLSP information.
 
     :param outpath: Location and filename of new xml file to generate.
-
-    :param overwrite: Flag to prevent existing file destruction.
-
     :type outpath: string
 
-    :type overwrite: boolean (default = True)
+    :param overwrite: Flag to prevent existing file destruction.
+    :type overwrite: boolean (=True by default)
     """
 
     #Set up logging
@@ -123,9 +133,7 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     as_tree = axe.add_value_subelements(as_tree, statics_provenance, "provenance")
     as_tree = axe.add_header_subelements(as_tree, header_keys)
 
-    #Write the xml body and doctype to file
     print("...done!")
     return as_tree
-    #as_tree.write(outpath, encoding="UTF-8", xml_declaration=True, doctype=head, pretty_print=True)
 
 #--------------------
