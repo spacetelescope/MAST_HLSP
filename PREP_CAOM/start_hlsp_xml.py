@@ -1,12 +1,16 @@
 """
 ..module:: open_xml_file
-    :synopsis: Called from start_hlsp_xml.  Will either overwrite or create a new xml file.
+    :synopsis: Called from start_hlsp_xml.  Will either overwrite or create a
+    new xml file.
 
 ..module:: get_header_keys
-    :synopsis:  Called from start_hlsp_xml.  Given a filepath for a .csv keyword lookup table and a header type, will return a dictionary of CAOM entries with their associated header keywords.
+    :synopsis:  Called from start_hlsp_xml.  Given a filepath for a .csv
+    keyword lookup table and a header type, will return a dictionary of CAOM
+    entries with their associated header keywords.
 
 ..module:: start_hlsp_xml
-    :synopsis: With a given filepath, create a new xml file for CAOM ingestion and add standard HLSP informaiton.
+    :synopsis: With a given filepath, create a new xml file for CAOM ingestion
+    and add standard HLSP informaiton.
 
 ..moduleauthor:: Peter Forshay <pforshay@stsci.edu>
 """
@@ -26,7 +30,8 @@ def open_xml_file(filepath, overwrite=True):
     :param filepath:  Desired filepath for xml file creation.
     :type filepath:  string
 
-    :param overwrite:  Flag to overwrite an existing xml file at the filepath location.  Defaults to True.
+    :param overwrite:  Flag to overwrite an existing xml file at the filepath
+    location.  Defaults to True.
     :type overwrite:  boolean
     """
 
@@ -46,7 +51,8 @@ def open_xml_file(filepath, overwrite=True):
         with open(path, 'w') as xmlfile:
             xmlfile.close()
     else:
-        logging.error("The file you are trying to create already exists. Set overwrite=True if you wish to proceed.")
+        logging.error("The file you are trying to create already exists. Set\
+                      overwrite=True if you wish to proceed.")
         print("Aborting, see log!")
         quit()
 
@@ -54,12 +60,16 @@ def open_xml_file(filepath, overwrite=True):
 
 def get_header_keys(tablepath, header_type):
     """
-    Parse a .csv file at tablepath, which contains the CAOM XML entry name and corresponding header keywords.  Create a dictionary for translating CAOM entry to a header keyword for a designated header type.
+    Parse a .csv file at tablepath, which contains the CAOM XML entry name and
+    corresponding header keywords.  Create a dictionary for translating CAOM
+    entry to a header keyword for a designated header type.
 
-    :param tablepath:  The filepath containing a .csv file with CAOM elements and corresponding xml parents and fits keywords.
+    :param tablepath:  The filepath containing a .csv file with CAOM elements
+    and corresponding xml parents and fits keywords.
     :type tablepath:  string
 
-    :param header_type:  The type of fits header keywords used by this HLSP.  Must match a column header in the .csv file at tablepath.
+    :param header_type:  The type of fits header keywords used by this HLSP.
+    Must match a column header in the .csv file at tablepath.
     :type header_type:  string
     """
 
@@ -101,10 +111,12 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     :param outpath:  Location and filename of new xml file to generate.
     :type outpath:  string
 
-    :param tablepath:  Location of the .csv file with translations from CAOM elements to fits header keywords.
+    :param tablepath:  Location of the .csv file with translations from CAOM
+    elements to fits header keywords.
     :type tablepath:  string
 
-    :param header_type:  The type of fits header used by the current HLSP.  Must match a column header in the tablepath .csv file.
+    :param header_type:  The type of fits header used by the current HLSP.
+    Must match a column header in the tablepath .csv file.
     :type header_type:  string
 
     :param overwrite:  Flag to prevent existing file destruction.
@@ -135,8 +147,12 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
                         "proposal_id": "FILEROOT",
                         "intent": "SCIENCE"}
     statics_provenance = {"project": "FILEROOT"}
-    as_tree = axe.add_value_subelements(as_tree, statics_metadata, "metadataList")
-    as_tree = axe.add_value_subelements(as_tree, statics_provenance, "provenance")
+    as_tree = axe.add_value_subelements(as_tree,
+                                        statics_metadata,
+                                        "metadataList")
+    as_tree = axe.add_value_subelements(as_tree,
+                                        statics_provenance,
+                                        "provenance")
     as_tree = axe.add_header_subelements(as_tree, header_keys)
 
     print("...done!")

@@ -1,9 +1,13 @@
 """
 ..module:: add_value_subelements
-    :synopsis:  With an XML tree, this module will create a SubElement under a given parent for each entry in a passed dictionary (subelements) with CAOM VALUE formatting.
+    :synopsis:  With an XML tree, this module will create a SubElement under a
+    given parent for each entry in a passed dictionary (subelements) with CAOM
+    VALUE formatting.
 
 ..module:: add_header_subelements
-    :synopsis:  With an XML tree, this module will create a SubElement under a given parent for each entry in a passed dictionary (subelements) with CAOM HEADER formatting.
+    :synopsis:  With an XML tree, this module will create a SubElement under a
+    given parent for each entry in a passed dictionary (subelements) with CAOM
+    HEADER formatting.
 """
 
 from lxml import etree
@@ -13,15 +17,19 @@ import logging
 
 def add_value_subelements(xmltree, subelements, parent):
     """
-    Adds SubElements from a dictionary to xmltree under a designated parent in the CAOM VALUE formatting.
+    Adds SubElements from a dictionary to xmltree under a designated parent in
+    the CAOM VALUE formatting.
 
-    :param xmltree:  The xml tree object this function will add subelements into.
+    :param xmltree:  The xml tree object this function will add subelements
+    into.
     :type xmltree:  _ElementTree from lxml
 
-    :param subelements:  All the subelements and corresponding keywords to be added to the xml tree.
+    :param subelements:  All the subelements and corresponding keywords to be
+    added to the xml tree.
     :type subelements:  dictionary
 
-    :param parent:  The element or subelement to create new subelements for with this function.
+    :param parent:  The element or subelement to create new subelements for
+    with this function.
     :type parent:  string
     """
 
@@ -42,12 +50,16 @@ def add_value_subelements(xmltree, subelements, parent):
 
 def add_header_subelements(xmltree, subelements):
     """
-    Adds SubElements from a dictionary to xmltree under a designated parent in the CAOM HEADER formatting.  Parents are expected to be defined within the subelements dictionary [CAOM: (PARENT, KEYWORD)]
+    Adds SubElements from a dictionary to xmltree under a designated parent in
+    the CAOM HEADER formatting.  Parents are expected to be defined within the
+    subelements dictionary [CAOM: (PARENT, KEYWORD)]
 
-    :param xmltree:  The xml tree object this function will add subelements into.
+    :param xmltree:  The xml tree object this function will add subelements
+    into.
     :type xmltree:  _ElementTree from lxml
 
-    :param subelements:  All the subelements and corresponding keywords to be added to the xml tree.
+    :param subelements:  All the subelements and corresponding keywords to be
+    added to the xml tree.
     :type subelements:  dictionary
     """
 
@@ -55,7 +67,9 @@ def add_header_subelements(xmltree, subelements):
     try:
         assert len(list(subelements.values())[0]) == 2
     except AssertionError:
-        logging.error("The 'subelements' dictionary passed to add_header_subelements is not constructed correctly- [CAOM: (PARENT, KEYWORD)]")
+        logging.error("The 'subelements' dictionary passed to\
+                      add_header_subelements is not constructed correctly- \
+                      [CAOM: (PARENT, KEYWORD)]")
         print("Aborting, see log!")
         quit()
 

@@ -23,7 +23,9 @@ def add_lightcurve_xml(xmltree):
 
     #Form the light curve elements to add
     print("Adding light curve information...")
-    newtree = axe.add_value_subelements(xmltree, statics_lightcurve, "metadataList")
+    newtree = axe.add_value_subelements(xmltree,
+                                        statics_lightcurve,
+                                        "metadataList")
 
     #Write the modified ElementTree to file
     print("...done!")

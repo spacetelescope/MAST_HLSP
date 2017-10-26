@@ -12,12 +12,16 @@ import os
 
 def add_productlist_xml(filepath, extensions_table, tree):
     """
-    Walk filepath and create product entries for files by matching them with entries in extensions_table.
+    Walk filepath and create product entries for files by matching them with
+    entries in extensions_table.
 
-    :param filepath:  The path where all the files for the current HLSP are located.
+    :param filepath:  The path where all the files for the current HLSP are
+    located.
     :type filepath:  string
 
-    :param extensions_table:  The filepath for a .csv file specific to the current HLSP with file extensions expected to be found and corresponding CAOM product parameters to associate with them.
+    :param extensions_table:  The filepath for a .csv file specific to the
+    current HLSP with file extensions expected to be found and corresponding
+    CAOM product parameters to associate with them.
     :type extensions_table:  string
 
     :param tree:  The xml tree object to add product subelements to.
