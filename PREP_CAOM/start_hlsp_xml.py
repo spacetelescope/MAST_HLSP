@@ -1,7 +1,8 @@
 """
 ..module:: check_output
     :synopsis: Checks the full path name for the output file provided by the
-    wrapper.  Creates subdirectories as needed.  Split from open_xml_file to allow log file creation in same file location as the xml.
+    wrapper.  Creates subdirectories as needed.  Split from open_xml_file to
+    allow log file creation in same file location as the xml.
 
 ..module:: open_xml_file
     :synopsis: Called from start_hlsp_xml.  Will either overwrite or create a

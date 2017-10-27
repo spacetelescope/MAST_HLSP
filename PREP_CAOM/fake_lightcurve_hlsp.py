@@ -52,7 +52,7 @@ def add_unique_xml(tree):
 
     print("Adding unique HLSP information...")
 
-    #Define the parents to look for
+    #Define the parents to add subelements to
     metadata = "metadataList"
     provenance = "provenance"
     products = "productList"

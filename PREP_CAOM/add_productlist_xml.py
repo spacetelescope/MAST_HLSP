@@ -1,6 +1,9 @@
 """
 ..module:: add_productlist_xml
-    :synopsis: Walk an HLSP directory (filepath) to identify all files.  Compare the filenames found to a table of expected file extensions (extensions_table) and generate CAOM product entries with appropriate parameters.
+    :synopsis: Walk an HLSP directory (filepath) to identify all files.
+    Compare the filenames found to a table of expected file extensions
+    (extensions_table) and generate CAOM product entries with appropriate
+    parameters.
 """
 
 from lxml import etree
@@ -50,7 +53,13 @@ def add_productlist_xml(filepath, extensions_table, tree):
     with open(extensions_table) as csvfile:
         csv_object = csv.reader(csvfile, delimiter=",")
         for row in csv_object:
-            extensions[row[0]] = tuple(row[1:])
+            if len(row) <= 1:
+                logging.error("Not enough columns in {0}"
+                              .format(extensions_table))
+                print("Aborting, see log!")
+                quit()
+            else:
+                extensions[row[0]] = tuple(row[1:])
 
     #Walk filepath and check files found against the list of defined
     #extensions.  If the extension matches, create a product subelement with
@@ -59,8 +68,9 @@ def add_productlist_xml(filepath, extensions_table, tree):
     for path, subdirs, files in os.walk(filepath):
         #print("...adding files from {0}...".format(path))
         for name in files:
-            #Currently 4 parameters defined in extensions_table
-            parameters = ["n/a"]*4
+            #Fill parameters with an "n/a" for each value in the extensions
+            #dictionary
+            parameters = ["n/a"]*len(list(extensions.values())[0])
 
             #Look for a match with an entry in extensions and overwrite
             #parameters.  If parameters is not overwritten, generate a
