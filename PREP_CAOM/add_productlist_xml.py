@@ -32,9 +32,17 @@ def add_productlist_xml(filepath, extensions_table, tree):
     parent = tree.find("productList")
     print("Generating the product list...")
 
-    #Make sure filepaths are full
+    #Make sure filepaths are full and valid
     filepath = os.path.abspath(filepath)
+    if not os.path.exists(filepath):
+        logging.error("{0} is not a real directory!".format(filepath))
+        print("Aborting, see log!")
+        quit()
     extensions_table = os.path.abspath(extensions_table)
+    if not os.path.isfile(extensions_table):
+        logging.error("{0} does not exist!".format(extensions_table))
+        print("Aborting, see log!")
+        quit()
 
     #Read the extensions_table into a dictionary
     #[file extension : (n parameters...)]
@@ -47,8 +55,9 @@ def add_productlist_xml(filepath, extensions_table, tree):
     #Walk filepath and check files found against the list of defined
     #extensions.  If the extension matches, create a product subelement with
     #matching parameters.
+    print("...adding files from {0}...".format(filepath))
     for path, subdirs, files in os.walk(filepath):
-        print("...adding files from {0}...".format(path))
+        #print("...adding files from {0}...".format(path))
         for name in files:
             #Currently 4 parameters defined in extensions_table
             parameters = ["n/a"]*4
@@ -60,9 +69,9 @@ def add_productlist_xml(filepath, extensions_table, tree):
                 if name.lower().endswith(ext):
                     parameters = extensions[ext]
             if "n/a" in parameters:
-                logging.warning("Skipped {0}".format(os.path.join(path, name)))
-                logging.warning("Extension not defined in {0}".format(
-                                                            extensions_table))
+                logging.warning("Skipped {0}, extension not defined in {1}"
+                                .format(os.path.join(path, name),
+                                os.path.basename(extensions_table)))
                 continue
 
             #Create all the subelements for this product.

@@ -1,4 +1,8 @@
 """
+..module:: check_output
+    :synopsis: Checks the full path name for the output file provided by the
+    wrapper.  Creates subdirectories as needed.  Split from open_xml_file to allow log file creation in same file location as the xml.
+
 ..module:: open_xml_file
     :synopsis: Called from start_hlsp_xml.  Will either overwrite or create a
     new xml file.
@@ -23,6 +27,28 @@ import os
 
 #--------------------
 
+def check_output(outpath):
+    """
+    Check the provided output filepath and create any subdirectories as needed.
+
+    :param outpath:  Desired filepath for xml file creation.
+    :type outpath:  string
+    """
+
+    #Make sure the filepath is whole and create any necessary directories
+    path = os.path.abspath(outpath)
+
+    directory = os.path.dirname(path)
+    if not os.path.exists(directory):
+        try:
+            os.makedirs(directory)
+            print("Creating new directories...")
+        except FileExistsError:
+            pass
+    return path
+
+#--------------------
+
 def open_xml_file(filepath, overwrite=True):
     """
     Will either overwrite or create a new xml file.
@@ -35,24 +61,14 @@ def open_xml_file(filepath, overwrite=True):
     :type overwrite:  boolean
     """
 
-    #Make sure the filepath is whole and create any necessary directories
-    path = os.path.abspath(filepath)
-    print("Opening {0}...".format(path))
-    directory = os.path.dirname(path)
-    if not os.path.exists(directory):
-        try:
-            os.makedirs(directory)
-            print("Creating new directories...")
-        except FileExistsError:
-            pass
-
     #Check if this is a new file or if 'overwrite' is on before proceeding
-    if overwrite or not os.path.isfile(path):
-        with open(path, 'w') as xmlfile:
+    print("Opening {0}...".format(filepath))
+    if overwrite or not os.path.isfile(filepath):
+        with open(filepath, 'w') as xmlfile:
             xmlfile.close()
     else:
-        logging.error("The file you are trying to create already exists. Set\
-                      overwrite=True if you wish to proceed.")
+        logging.error("{0} already exists. Set overwrite=True to proceed."
+                      .format(filepath))
         print("Aborting, see log!")
         quit()
 
@@ -76,6 +92,10 @@ def get_header_keys(tablepath, header_type):
     #Open the csv file and parse into a list
     tablepath = os.path.abspath(tablepath)
     print("Opening {0}...".format(tablepath))
+    if not os.path.isfile(tablepath):
+        logging.error("{0} does not exist!".format(tablepath))
+        print("Aborting, see log!")
+        quit()
     keys = []
     with open(tablepath) as csvfile:
         hlsp_keys = csv.reader(csvfile, delimiter=",")
@@ -90,7 +110,8 @@ def get_header_keys(tablepath, header_type):
     try:
         key_index = keys[0].index(header_type)
     except ValueError:
-        logging.error("get_header_keys was passed an invalid header_type!")
+        logging.error("'{0}' is not a header type defined in {1}"
+                      .format(header_type, tablepath))
         print("Aborting, see log!")
         quit()
 
@@ -123,9 +144,13 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     :type overwrite:  boolean (=True by default)
     """
 
+    #Check output path sent from wrapper
+    outpath = check_output(outpath)
+    outdir = os.path.dirname(outpath)
+
     #Set up logging
-    logging.basicConfig(filename="hlsp_to_xml.log",
-                        format='%(levelname)s from %(module)s: %(message)s',
+    logging.basicConfig(filename=os.path.join(outdir, "hlsp_to_xml.log"),
+                        format='***%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
 
     #Get the designated xml file and path ready
@@ -137,11 +162,11 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
 
     #Form the xml body
     print("Adding general HLSP information...")
-    co = etree.Element("CompositeObservation")
-    as_tree = etree.ElementTree(co)
-    metadata = etree.SubElement(co, "metadataList")
-    provenance = etree.SubElement(co, "provenance")
-    products = etree.SubElement(co, "productList")
+    composite = etree.Element("CompositeObservation")
+    as_tree = etree.ElementTree(composite)
+    metadata = etree.SubElement(composite, "metadataList")
+    provenance = etree.SubElement(composite, "provenance")
+    products = etree.SubElement(composite, "productList")
     statics_metadata = {"collection": "HLSP",
                         "observationID": "FILENAME",
                         "proposal_id": "FILEROOT",

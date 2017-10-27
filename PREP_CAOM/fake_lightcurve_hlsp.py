@@ -35,15 +35,16 @@ from add_productlist_xml import add_productlist_xml
 #Set global variables
 EXTENSIONS = "fake_hlsp_extensions.csv"
 HLSPPATH = "../../hlsp_data"
-OUTPUT = "../../COOL/ididit.xml"
+OUTPUT = "results/example.xml"
 TABLE = "hlsp_keywords_test.csv"
-TYPE = "kepler"
+TYPE = "kepler"     #'default', 'kepler'
 
 #--------------------
 
 def add_unique_xml(tree):
     """
-    Add CAOM parameters that are unique to this HLSP.
+    Add CAOM parameters that are unique to this HLSP and not contained in
+    headers.
 
     :param tree:  The xml tree object that these subelements will be added to.
     :type tree:  _ElementTree from lxml
@@ -69,7 +70,7 @@ def add_unique_xml(tree):
 if __name__ == "__main__":
 
     #Create the xml file and add initial HLSP information
-    tree = start_hlsp_xml(OUTPUT, TABLE, TYPE)
+    tree = start_hlsp_xml(OUTPUT, TABLE, TYPE, overwrite=True)
 
     #Add light curve HLSP information to the xml tree
     tree = add_lightcurve_xml(tree)

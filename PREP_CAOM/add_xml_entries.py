@@ -75,7 +75,11 @@ def add_header_subelements(xmltree, subelements):
 
     #Create a SubElement for each entry in the subelements dictionary
     for key in sorted(subelements):
+        #Extract elements from tuple
         parent = subelements[key][0]
+        header_keyword = subelements[key][1]
+
+        #Find parent and create new subelement
         section = xmltree.find(parent)
         new_subelement = etree.SubElement(section, key)
         source = etree.SubElement(new_subelement, "source")
@@ -83,8 +87,16 @@ def add_header_subelements(xmltree, subelements):
         header_name = etree.SubElement(new_subelement, "headerName")
         header_name.text = "PRIMARY"
         keyword = etree.SubElement(new_subelement, "headerKeyword")
-        keyword.text = subelements[key][1]
+        keyword.text = header_keyword
+
+        #Handle different default value cases
+        if key == "targetPosition_equinox":
+            default = "2000.0"
+        elif key == "targetPosition_coordsys":
+            default = "ICRS"
+        else:
+            default = "None"
         default_value = etree.SubElement(new_subelement, "headerDefaultValue")
-        default_value.text = "None"
+        default_value.text = default
 
     return xmltree
