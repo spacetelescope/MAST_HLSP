@@ -39,7 +39,7 @@ This file contains a list of data file extensions to search
 for in the HLSP filepath and corresponding CAOM product  
 properties to define for each.  
           
-4. "add_xml_entries.py"  
+"add_xml_entries.py"  
 This script is called from several others to generate xml subelements with  
 proper CAOM formatting.  Modules are available for creating both VALUE  
-    subelements and HEADER subelements.  
+subelements and HEADER subelements.  
