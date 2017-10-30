@@ -28,7 +28,7 @@ import os
 
 #--------------------
 
-def check_output(outpath):
+def check_newpath(outpath):
     """
     Check the provided output filepath and create any subdirectories as needed.
 
@@ -43,7 +43,7 @@ def check_output(outpath):
     if not os.path.exists(directory):
         try:
             os.makedirs(directory)
-            print("Creating new directories...")
+            print("Creating new directories for {0}...".format(path))
         except FileExistsError:
             pass
     return path
@@ -126,7 +126,7 @@ def get_header_keys(tablepath, header_type):
 
 #--------------------
 
-def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
+def start_hlsp_xml(logfile, outpath, tablepath, header_type, overwrite=True):
     """
     Create a new xml file for CAOM ingestion and add standard HLSP information.
 
@@ -146,11 +146,12 @@ def start_hlsp_xml(outpath, tablepath, header_type, overwrite=True):
     """
 
     #Check output path sent from wrapper
-    outpath = check_output(outpath)
+    outpath = check_newpath(outpath)
+    logfile = check_newpath(logfile)
     outdir = os.path.dirname(outpath)
 
     #Set up logging
-    logging.basicConfig(filename=os.path.join(outdir, "hlsp_to_xml.log"),
+    logging.basicConfig(filename=logfile,
                         format='***%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
 

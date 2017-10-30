@@ -12,6 +12,9 @@ product parameters.
 -HLSPPATH (filepath)
 Where the HLSP files reside.
 
+-LOG (filepath)
+Desired filepath to save log entries.
+
 -OUTPUT (filepath)
 Desired filepath for the final XML result output.
 
@@ -31,10 +34,12 @@ from lxml import etree
 from start_hlsp_xml import start_hlsp_xml
 from add_lightcurve_xml import add_lightcurve_xml
 from add_productlist_xml import add_productlist_xml
+from check_log import check_log
 
 #Set global variables
 EXTENSIONS = "fake_hlsp_extensions.csv"
 HLSPPATH = "../../hlsp_data"
+LOG = "results/hlsp_to_xml.log"
 OUTPUT = "results/example.xml"
 TABLE = "hlsp_keywords_test.csv"
 TYPE = "kepler"     #'default', 'kepler'
@@ -70,7 +75,7 @@ def add_unique_xml(tree):
 if __name__ == "__main__":
 
     #Create the xml file and add initial HLSP information
-    tree = start_hlsp_xml(OUTPUT, TABLE, TYPE, overwrite=True)
+    tree = start_hlsp_xml(LOG, OUTPUT, TABLE, TYPE, overwrite=True)
 
     #Add light curve HLSP information to the xml tree
     tree = add_lightcurve_xml(tree)
@@ -91,3 +96,5 @@ if __name__ == "__main__":
     tree.write(OUTPUT, encoding="utf-8", xml_declaration=True, #doctype=head,
                pretty_print=True)
     print("XML file generated!")
+
+    check_log(LOG)
