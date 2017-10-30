@@ -7,9 +7,21 @@
 """
 
 from lxml import etree
+import add_xml_entries as axe
 import csv
 import logging
 import os
+
+#--------------------
+
+def check_paths(filepath):
+    filepath = os.path.abspath(filepath)
+    if not os.path.exists(filepath):
+        logging.error("{0} does not exist!".format(filepath))
+        print("Aborting, see log!")
+        quit()
+    else:
+        return(filepath)
 
 #--------------------
 
@@ -36,20 +48,14 @@ def add_productlist_xml(filepath, extensions_table, tree):
     print("Generating the product list...")
 
     #Make sure filepaths are full and valid
-    filepath = os.path.abspath(filepath)
-    if not os.path.exists(filepath):
-        logging.error("{0} is not a real directory!".format(filepath))
-        print("Aborting, see log!")
-        quit()
-    extensions_table = os.path.abspath(extensions_table)
-    if not os.path.isfile(extensions_table):
-        logging.error("{0} does not exist!".format(extensions_table))
-        print("Aborting, see log!")
-        quit()
+    filepath = check_paths(filepath)
+    extensions_table = check_paths(extensions_table)
 
-    #Read the extensions_table into a dictionary
+    #Read the extensions_table into a dictionary, ASSUMES extension name in
+    #column 0.
     #[file extension : (n parameters...)]
     extensions = {}
+    found_extensions = []
     with open(extensions_table) as csvfile:
         csv_object = csv.reader(csvfile, delimiter=",")
         for row in csv_object:
@@ -60,6 +66,17 @@ def add_productlist_xml(filepath, extensions_table, tree):
                 quit()
             else:
                 extensions[row[0]] = tuple(row[1:])
+        csvfile.close()
+
+    #Check that 'extension' is a valid key in the extensions dictionary,
+    #otherwise it is not formatted correctly.
+    try:
+        ext_list = extensions['extension']
+    except KeyError:
+        logging.error("{0} needs 'extension' listed in column 0"
+                      .format(extensions_table))
+        print("Aborting, see log!")
+        quit()
 
     #Walk filepath and check files found against the list of defined
     #extensions.  If the extension matches, create a product subelement with
@@ -68,51 +85,54 @@ def add_productlist_xml(filepath, extensions_table, tree):
     for path, subdirs, files in os.walk(filepath):
         #print("...adding files from {0}...".format(path))
         for name in files:
-            #Fill parameters with an "n/a" for each value in the extensions
-            #dictionary
-            parameters = ["n/a"]*len(list(extensions.values())[0])
+            #Build static HLSP product information.
+            product_properties = {"calibrationLevel": "HLSP",
+                                  "releaseType": "DATA",
+                                  "fileNameDescriptor": "FILEROOT"}
 
-            #Look for a match with an entry in extensions and overwrite
-            #parameters.  If parameters is not overwritten, generate a
-            #warning in the log and skip the file.
+            #Look for a match with an entry in extensions and fill in
+            #parameters.  If parameters is not filled, generate a warning in
+            #the log and skip the file.
+            parameters = {}
             for ext in extensions.keys():
                 if name.lower().endswith(ext):
-                    parameters = extensions[ext]
-            if "n/a" in parameters:
-                logging.warning("Skipped {0}, extension not defined in {1}"
-                                .format(os.path.join(path, name),
-                                os.path.basename(extensions_table)))
+                    parameters = dict(zip(extensions['extension'],
+                                          extensions[ext]))
+                    found_extensions.append(ext)
+                    del extensions[ext]
+                    break
+            if len(parameters) == 0:
+                found = False
+                for e in found_extensions:
+                    if name.lower().endswith(e):
+                        found = True
+                        break
+                if not found:
+                    logging.warning("Skipped {0}, extension not defined in {1}"
+                                    .format(os.path.join(path, name),
+                                    os.path.basename(extensions_table)))
                 continue
 
-            #Create all the subelements for this product.
+            #Add the newly-filled parameters dictionary to the static
+            #properties defined previously.
+            product_properties.update(parameters)
+
+            #product_properties is now a dictionary of all necessary
+            #[CAOM: XML value] entries.
             product = etree.SubElement(parent, "product")
-            pn = etree.SubElement(product, "planeNumber")
-            pn.text = parameters[0]
-            cl = etree.SubElement(product, "calibrationLevel")
-            cl.text = "HLSP"
-            dpt = etree.SubElement(product, "dataProductType")
-            dpt.text = parameters[1]
-            pt = etree.SubElement(product, "productType")
-            pt.text = parameters[2]
-            rt = etree.SubElement(product, "releaseType")
-            rt.text = "DATA"
-            fnd = etree.SubElement(product, "fileNameDescriptor")
-            fnd.text = "FILEROOT"
-            ft = etree.SubElement(product, "fileType")
-            ct = etree.SubElement(product, "contentType")
-            ct.text = parameters[3]
-            fs = etree.SubElement(product, "fileStatus")
-            if parameters[0] == '1':
-                fs.text = "REQUIRED"
+            for prop in sorted(product_properties):
+                sub = etree.SubElement(product, prop)
+                sub.text = product_properties[prop]
+
+    #Check for any remaining unused file extensions.  Dictionary will still
+    #contain one 'extension' entry.
+    if len(extensions) > 1:
+        for ext in sorted(extensions):
+            if ext == 'extension':
+                continue
             else:
-                fs.text = "OPTIONAL"
-            sa = etree.SubElement(product, "statusAction")
-            if parameters[0] == '1':
-                sa.text = "WARNING"
-            else:
-                sa.text = "IGNORE"
-            pproj = etree.SubElement(product, "provenanceProject")
-            pprod = etree.SubElement(product, "provenanceProducer")
+                logging.warning("{0} was defined in {1}, but none found in {2}"
+                            .format(ext, extensions_table, filepath))
 
     print("...done!")
     return tree
