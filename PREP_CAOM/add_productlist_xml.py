@@ -8,6 +8,7 @@
 
 from lxml import etree
 import add_xml_entries as axe
+import check_paths as cp
 import csv
 import logging
 import os
@@ -48,8 +49,8 @@ def add_productlist_xml(filepath, extensions_table, tree):
     print("Generating the product list...")
 
     #Make sure filepaths are full and valid
-    filepath = check_paths(filepath)
-    extensions_table = check_paths(extensions_table)
+    filepath = cp.check_existing_dir(filepath)
+    extensions_table = cp.check_existing_file(extensions_table)
 
     #Read the extensions_table into a dictionary, ASSUMES extension name in
     #column 0.

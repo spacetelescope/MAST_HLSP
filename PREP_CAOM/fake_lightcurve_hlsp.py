@@ -41,6 +41,7 @@ EXTENSIONS = "fake_hlsp_extensions.csv"
 HLSPPATH = "../../hlsp_data"
 LOG = "results/hlsp_to_xml.log"
 OUTPUT = "results/example.xml"
+STATICS = "hlsp_caom_staticvalues.yaml"
 TABLE = "hlsp_keywords_test.csv"
 TYPE = "kepler"     #'default', 'kepler'
 
@@ -75,7 +76,7 @@ def add_unique_xml(tree):
 if __name__ == "__main__":
 
     #Create the xml file and add initial HLSP information
-    tree = start_hlsp_xml(LOG, OUTPUT, TABLE, TYPE, overwrite=True)
+    tree = start_hlsp_xml(LOG, OUTPUT, STATICS, TABLE, TYPE, overwrite=True)
 
     #Add light curve HLSP information to the xml tree
     tree = add_lightcurve_xml(tree)
@@ -97,4 +98,5 @@ if __name__ == "__main__":
                pretty_print=True)
     print("XML file generated!")
 
+    #Print out log stats before finishing
     check_log(LOG)

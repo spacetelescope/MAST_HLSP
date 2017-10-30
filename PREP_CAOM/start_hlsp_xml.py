@@ -1,9 +1,4 @@
 """
-..module:: check_output
-    :synopsis: Checks the full path name for the output file provided by the
-    wrapper.  Creates subdirectories as needed.  Split from open_xml_file to
-    allow log file creation in same file location as the xml.
-
 ..module:: open_xml_file
     :synopsis: Called from start_hlsp_xml.  Will either overwrite or create a
     new xml file.
@@ -22,31 +17,11 @@
 
 from lxml import etree
 import add_xml_entries as axe
+import check_paths as cp
 import csv
 import logging
 import os
-
-#--------------------
-
-def check_newpath(outpath):
-    """
-    Check the provided output filepath and create any subdirectories as needed.
-
-    :param outpath:  Desired filepath for xml file creation.
-    :type outpath:  string
-    """
-
-    #Make sure the filepath is whole and create any necessary directories
-    path = os.path.abspath(outpath)
-
-    directory = os.path.dirname(path)
-    if not os.path.exists(directory):
-        try:
-            os.makedirs(directory)
-            print("Creating new directories for {0}...".format(path))
-        except FileExistsError:
-            pass
-    return path
+import yaml
 
 #--------------------
 
@@ -91,12 +66,8 @@ def get_header_keys(tablepath, header_type):
     """
 
     #Open the csv file and parse into a list
-    tablepath = os.path.abspath(tablepath)
+    tablepath = cp.check_existing_file(tablepath)
     print("Opening {0}...".format(tablepath))
-    if not os.path.isfile(tablepath):
-        logging.error("{0} does not exist!".format(tablepath))
-        print("Aborting, see log!")
-        quit()
     keys = []
     with open(tablepath) as csvfile:
         hlsp_keys = csv.reader(csvfile, delimiter=",")
@@ -126,7 +97,8 @@ def get_header_keys(tablepath, header_type):
 
 #--------------------
 
-def start_hlsp_xml(logfile, outpath, tablepath, header_type, overwrite=True):
+def start_hlsp_xml(logfile, outpath, staticvalues, tablepath, header_type,
+                   overwrite=True):
     """
     Create a new xml file for CAOM ingestion and add standard HLSP information.
 
@@ -145,10 +117,10 @@ def start_hlsp_xml(logfile, outpath, tablepath, header_type, overwrite=True):
     :type overwrite:  boolean (=True by default)
     """
 
-    #Check output path sent from wrapper
-    outpath = check_newpath(outpath)
-    logfile = check_newpath(logfile)
-    outdir = os.path.dirname(outpath)
+    #Check output, logfile, and yaml variable paths sent from wrapper
+    outpath = cp.check_new_file(outpath)
+    logfile = cp.check_new_file(logfile)
+    staticvalues = cp.check_existing_file(staticvalues)
 
     #Set up logging
     logging.basicConfig(filename=logfile,
@@ -162,6 +134,10 @@ def start_hlsp_xml(logfile, outpath, tablepath, header_type, overwrite=True):
     #header_keys dictionary formatted as CAOM: (PARENT, KEYWORD)
     header_keys = get_header_keys(tablepath, header_type)
 
+    #TESTING
+    stream = open(staticvalues, 'r')
+    statics = yaml.load(stream)
+
     #Form the xml body
     print("Adding general HLSP information...")
     composite = etree.Element("CompositeObservation")
@@ -169,11 +145,13 @@ def start_hlsp_xml(logfile, outpath, tablepath, header_type, overwrite=True):
     metadata = etree.SubElement(composite, "metadataList")
     provenance = etree.SubElement(composite, "provenance")
     products = etree.SubElement(composite, "productList")
-    statics_metadata = {"collection": "HLSP",
+    statics_metadata = statics["hlsp_metadata"]
+    statics_provenance = statics["hlsp_provenance"]
+    """statics_metadata = {"collection": "HLSP",
                         "observationID": "FILENAME",
                         "proposal_id": "FILEROOT",
-                        "intent": "SCIENCE"}
-    statics_provenance = {"project": "FILEROOT"}
+                        "intent": "SCIENCE"}"""
+    #statics_provenance = {"project": "FILEROOT"}
     as_tree = axe.add_value_subelements(as_tree,
                                         statics_metadata,
                                         "metadataList")

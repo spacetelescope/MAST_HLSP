@@ -1,0 +1,13 @@
+hlsp_metadata:
+    collection: HLSP
+    observationID: FILENAME
+    proposal_id: FILEROOT
+    intent: SCIENCE
+hlsp_provenance:
+    project: FILEROOT
+lightcurve_metadata:
+    algorithm: timeseries
+product_properties:
+    calibrationLevel: HLSP
+    releaseType: DATA
+    fileNameDescriptor: FILEROOT
