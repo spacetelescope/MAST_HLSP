@@ -26,20 +26,22 @@ headers.
 The user must specify which set of fits header keywords are used for this HLSP.
 """
 
-import add_xml_entries as axe
 from lxml import etree
 from start_hlsp_xml import start_hlsp_xml
 from add_lightcurve_xml import add_lightcurve_xml
 from add_productlist_xml import add_productlist_xml
 from add_unique_xml import add_unique_xml
 from check_log import check_log
+import add_xml_entries as axe
+import check_paths as cp
+import logging
 import os
 import sys
 import yaml
 
 #Set global variables
 global LOG
-LOG = "results/hlsp_to_xml.log"
+LOG = "hlsp_to_xml.log"
 global STATICS
 STATICS = "hlsp_caom_staticvalues.yaml"
 global TABLE
@@ -69,24 +71,63 @@ if __name__ == "__main__":
     try:
         paths = parameters["filepaths"]
     except TypeError:
-        print("{0} is not a yaml formatted file!".format(config))
+        print("{0} is missing 'filepaths'!".format(config))
         quit()
     try:
         extensions = paths["extensions"]
     except KeyError:
         print("{0} is missing 'extensions'!".format(config))
         quit()
-    hlsppath = paths["hlsppath"]
-    output = paths["output"]
-    header_type = parameters["header_type"]
-    uniques = parameters["unique_parameters"]
+    try:
+        hlsppath = paths["hlsppath"]
+    except KeyError:
+        print("{0} is missing 'hlsppath'!".format(config))
+        quit()
+    try:
+        output = paths["output"]
+    except KeyError:
+        print("{0} is missing 'output'!".format(config))
+        quit()
+    outdir = os.path.dirname(output)
+    logfile = os.path.join(outdir, LOG)
+    logfile = cp.check_new_file(logfile)
+    try:
+        header_type = parameters["header_type"]
+    except KeyError:
+        print("{0} is missing 'header_type'!".format(config))
+        quit()
+    try:
+        uniques = parameters["unique_parameters"]
+    except KeyError:
+        print("{0} is missing 'unique_parameters'!".format(config))
+        quit()
+
+    #Set up logging
+    logging.basicConfig(filename=logfile,
+                        format='***%(levelname)s from %(module)s: %(message)s',
+                        level=logging.DEBUG, filemode='w')
 
     #Create the xml file and add initial HLSP information
-    tree = start_hlsp_xml(LOG, output, STATICS, TABLE, header_type,
+    tree = start_hlsp_xml(output, STATICS, TABLE, header_type,
                           overwrite=True)
 
-    #Add light curve HLSP information to the xml tree
-    tree = add_lightcurve_xml(tree)
+    #Launch module for each data type specified in yaml config.
+    data_types = []
+    data_types.extend(parameters["data_types"])
+    for dt in data_types:
+        if dt == "lightcurve":
+            tree = add_lightcurve_xml(tree)
+        elif dt == "spectrum" or dt == "sepctra" or dt == "spectral":
+            pass
+        elif dt == "catalog":
+            pass
+        elif dt == "simulation":
+            pass
+        elif dt == "model":
+            pass
+        else:
+            logging.warning("Skipping '{0}' from 'data_types', not valid type."
+                            .format(dt))
 
     #Add the product list to the xml tree
     tree = add_productlist_xml(hlsppath, extensions, tree)
@@ -101,9 +142,10 @@ if __name__ == "__main__":
     head = "\n".join(head_strings)
 
     #Write the xml tree to the OUTPUT file
+    #doctype not a valid argument for python 2.x
     tree.write(output, encoding="utf-8", xml_declaration=True, #doctype=head,
                pretty_print=True)
     print("XML file generated!")
 
     #Print out log stats before finishing
-    check_log(LOG)
+    check_log(logfile)

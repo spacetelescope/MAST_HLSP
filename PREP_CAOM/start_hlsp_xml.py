@@ -97,7 +97,7 @@ def get_header_keys(tablepath, header_type):
 
 #--------------------
 
-def start_hlsp_xml(logfile, outpath, staticvalues, tablepath, header_type,
+def start_hlsp_xml(outpath, staticvalues, tablepath, header_type,
                    overwrite=True):
     """
     Create a new xml file for CAOM ingestion and add standard HLSP information.
@@ -119,13 +119,7 @@ def start_hlsp_xml(logfile, outpath, staticvalues, tablepath, header_type,
 
     #Check output, logfile, and yaml variable paths sent from wrapper
     outpath = cp.check_new_file(outpath)
-    logfile = cp.check_new_file(logfile)
     staticvalues = cp.check_existing_file(staticvalues)
-
-    #Set up logging
-    logging.basicConfig(filename=logfile,
-                        format='***%(levelname)s from %(module)s: %(message)s',
-                        level=logging.DEBUG, filemode='w')
 
     #Get the designated xml file and path ready
     open_xml_file(outpath, overwrite)
