@@ -15,17 +15,6 @@ import os
 
 #--------------------
 
-def check_paths(filepath):
-    filepath = os.path.abspath(filepath)
-    if not os.path.exists(filepath):
-        logging.error("{0} does not exist!".format(filepath))
-        print("Aborting, see log!")
-        quit()
-    else:
-        return(filepath)
-
-#--------------------
-
 def add_productlist_xml(filepath, extensions_table, tree):
     """
     Walk filepath and create product entries for files by matching them with
