@@ -6,7 +6,7 @@
 """
 
 from lxml import etree
-import add_xml_entries as axe
+import util.add_xml_entries as axe
 import os
 
 #--------------------
