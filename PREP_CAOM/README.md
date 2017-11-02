@@ -10,10 +10,10 @@ structure is described below:
 ___
 ### /PREP_CAOM/  
 + "hlsp_to_xml.py"  
-This is the wrapper script intended to launch all necessary child scripts  
-and contain any operations required specifically for a single HLSP.  This  
-script will need to be generated for each HLSP, using this version as a  
-template.  
+This is the wrapper script intended to launch all necessary child scripts.  
+The user must also provide a .yaml config file when launching this script,  
+which is then parsed and checked for all necessary parameters and file  
+paths.  
 
 + "start_hlsp_xml.py"  
 This script will begin creation of the output XML file and check  
