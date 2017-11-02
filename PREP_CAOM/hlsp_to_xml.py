@@ -32,6 +32,7 @@ from add_lightcurve_xml import add_lightcurve_xml
 from add_productlist_xml import add_productlist_xml
 from add_unique_xml import add_unique_xml
 from util.check_log import check_log
+from util.read_yaml import read_yaml
 import util.add_xml_entries as axe
 import util.check_paths as cp
 import logging
@@ -65,22 +66,10 @@ if __name__ == "__main__":
     except IndexError:
         print("hlsp_to_xml needs a filepath to yaml config file as well!")
         quit()
-    config = os.path.abspath(config)
+    config = cp.check_existing_file(config)
 
-    #Try to open the yaml config file.
-    try:
-        stream = open(config, 'r')
-        print("Opening {0}...".format(config))
-    except FileNotFoundError:
-        print("{0} does not exist!".format(config))
-        quit()
-
-    #Use yaml.load to read the contents into a dictionary.
-    try:
-        parameters = yaml.load(stream)
-    except yaml.scanner.ScannerError:
-        print("{0} is not a yaml formatted file!".format(config))
-        quit()
+    #Try to read in the yaml config file.
+    parameters = read_yaml(config)
 
     #Make sure the config file has all the expected sections
     for section in EXPECTED_CONFIGS:
@@ -111,8 +100,13 @@ if __name__ == "__main__":
                         format='***%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
 
+    #Read the static CAOM values from the yaml file
+    statics = cp.check_existing_file(STATICS)
+    static_values = read_yaml(statics)
+
     #Create the xml file and add initial HLSP information
-    tree = start_hlsp_xml(output, STATICS, TABLE, header_type, overwrite=True)
+    tree = start_hlsp_xml(output, static_values, TABLE, header_type,
+                          overwrite=True)
 
     #Launch module for each data type specified in yaml config.
     data_types = []
@@ -137,7 +131,7 @@ if __name__ == "__main__":
                             .format(dt))
 
     #Add the product list to the xml tree
-    tree = add_productlist_xml(hlsppath, extensions, tree)
+    tree = add_productlist_xml(hlsppath, extensions, static_values, tree)
 
     #Add HLSP-specifiic CAOM parameters to the xml tree
     tree = add_unique_xml(uniques, tree)

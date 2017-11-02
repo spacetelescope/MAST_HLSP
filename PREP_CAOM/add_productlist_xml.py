@@ -15,7 +15,7 @@ import os
 
 #--------------------
 
-def add_productlist_xml(filepath, extensions_table, tree):
+def add_productlist_xml(filepath, extensions_table, static_values, tree):
     """
     Walk filepath and create product entries for files by matching them with
     entries in extensions_table.
@@ -71,14 +71,12 @@ def add_productlist_xml(filepath, extensions_table, tree):
     #Walk filepath and check files found against the list of defined
     #extensions.  If the extension matches, create a product subelement with
     #matching parameters.
-    print("...adding files from {0}...".format(filepath))
+    print("...scanning files from {0}...".format(filepath))
     for path, subdirs, files in os.walk(filepath):
         #print("...adding files from {0}...".format(path))
         for name in files:
             #Build static HLSP product information.
-            product_properties = {"calibrationLevel": "HLSP",
-                                  "releaseType": "DATA",
-                                  "fileNameDescriptor": "FILEROOT"}
+            product_properties = static_values["product_properties"]
 
             #Look for a match with an entry in extensions and fill in
             #parameters.  If parameters is not filled, generate a warning in

@@ -26,8 +26,8 @@ to the xml.  Similar scripts will be added for additional data types
 (spectra, catalogs, etc.).  
 
 + "add_productlist_xml.py"  
-This script crawls the provided HLSP filepath and creates a product  
-entry for all files matching a defined file extension.  
+This script crawls the provided HLSP file path and creates a product  
+entry for each file type matching a set of defined file extensions.  
 
 + "add_unique_xml.py"  
 This script adds CAOM parameters unique to a certain HLSP provided in the  

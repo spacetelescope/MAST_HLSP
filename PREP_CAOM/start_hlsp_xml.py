@@ -97,8 +97,7 @@ def get_header_keys(tablepath, header_type):
 
 #--------------------
 
-def start_hlsp_xml(outpath, staticvalues, tablepath, header_type,
-                   overwrite=True):
+def start_hlsp_xml(outpath, statics, tablepath, header_type, overwrite=True):
     """
     Create a new xml file for CAOM ingestion and add standard HLSP information.
 
@@ -117,9 +116,8 @@ def start_hlsp_xml(outpath, staticvalues, tablepath, header_type,
     :type overwrite:  boolean (=True by default)
     """
 
-    #Check output, logfile, and yaml variable paths sent from wrapper
+    #Check output path sent from wrapper
     outpath = cp.check_new_file(outpath)
-    staticvalues = cp.check_existing_file(staticvalues)
 
     #Get the designated xml file and path ready
     open_xml_file(outpath, overwrite)
@@ -127,10 +125,6 @@ def start_hlsp_xml(outpath, staticvalues, tablepath, header_type,
     #Get the appropriate keyword dictionary from the lookup table
     #header_keys dictionary formatted as CAOM: (PARENT, KEYWORD)
     header_keys = get_header_keys(tablepath, header_type)
-
-    #TESTING
-    stream = open(staticvalues, 'r')
-    statics = yaml.load(stream)
 
     #Form the xml body
     print("Adding general HLSP information...")
@@ -141,11 +135,6 @@ def start_hlsp_xml(outpath, staticvalues, tablepath, header_type,
     products = etree.SubElement(composite, "productList")
     statics_metadata = statics["hlsp_metadata"]
     statics_provenance = statics["hlsp_provenance"]
-    """statics_metadata = {"collection": "HLSP",
-                        "observationID": "FILENAME",
-                        "proposal_id": "FILEROOT",
-                        "intent": "SCIENCE"}"""
-    #statics_provenance = {"project": "FILEROOT"}
     as_tree = axe.add_value_subelements(as_tree,
                                         statics_metadata,
                                         "metadataList")

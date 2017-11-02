@@ -9,6 +9,12 @@ import os
 #--------------------
 
 def check_log(filepath):
+    """
+    Count errors and warnings in the log file and print the results.
+
+    :param filepath: File path for the log file.
+    :type filepath: string
+    """
     fullpath = os.path.abspath(filepath)
     errors = 0
     warnings = 0
