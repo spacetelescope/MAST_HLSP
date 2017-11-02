@@ -1,9 +1,10 @@
 /MAST-HLSP/PREP_CAOM/README.md  
-:Updated: Nov 2  
+:Updated: 2017 Nov 2  
 :Author: Peter Forshay  
 
 The files in this directory are used to create an XML document that will  
-allow data files from an HLSP to be ingested into CAOM.  The Python scripts attempt to automate as much of the process as possible, and we try to provide  
+allow data files from an HLSP to be ingested into CAOM.  The Python scripts  
+attempt to automate as much of the process as possible, and we try to provide  
 templates and guidance for necessary HLSP-specific coding.  The file  
 structure is described below:  
 ___
