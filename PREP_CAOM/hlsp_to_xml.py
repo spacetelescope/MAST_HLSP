@@ -40,6 +40,15 @@ import sys
 import yaml
 
 #Set global variables
+global EXPECTED_CONFIGS
+EXPECTED_CONFIGS = ["filepaths",
+                    "header_type",
+                    "data_types",
+                    "unique_parameters"]
+global EXPECTED_PATHS
+EXPECTED_PATHS = ["extensions",
+                  "hlsppath",
+                  "output"]
 global LOG
 LOG = "hlsp_to_xml.log"
 global STATICS
@@ -50,70 +59,68 @@ TABLE = "resources/hlsp_keywords_test.csv"
 #--------------------
 
 if __name__ == "__main__":
-    #Read in the user-made yaml config file and set variables
+    #User must provide a path to the yaml config file in order to run.
     try:
         config = sys.argv[1]
     except IndexError:
         print("hlsp_to_xml needs a filepath to yaml config file as well!")
         quit()
     config = os.path.abspath(config)
+
+    #Try to open the yaml config file.
     try:
         stream = open(config, 'r')
         print("Opening {0}...".format(config))
     except FileNotFoundError:
         print("{0} does not exist!".format(config))
         quit()
+
+    #Use yaml.load to read the contents into a dictionary.
     try:
         parameters = yaml.load(stream)
     except yaml.scanner.ScannerError:
         print("{0} is not a yaml formatted file!".format(config))
         quit()
-    try:
-        paths = parameters["filepaths"]
-    except TypeError:
-        print("{0} is missing 'filepaths'!".format(config))
-        quit()
-    try:
-        extensions = paths["extensions"]
-    except KeyError:
-        print("{0} is missing 'extensions'!".format(config))
-        quit()
-    try:
-        hlsppath = paths["hlsppath"]
-    except KeyError:
-        print("{0} is missing 'hlsppath'!".format(config))
-        quit()
-    try:
-        output = paths["output"]
-    except KeyError:
-        print("{0} is missing 'output'!".format(config))
-        quit()
+
+    #Make sure the config file has all the expected sections
+    for section in EXPECTED_CONFIGS:
+        if not section in parameters:
+            print("{0} does not define '{1}'!".format(config, section))
+            quit()
+
+    #Make sure all necessary filepaths have been provided
+    for path in EXPECTED_PATHS:
+        if not path in parameters["filepaths"]:
+            print("{0} is missing an '{1}' filepath!".format(config, path))
+            quit()
+
+    #Config parameters have been checked, now read into variables
+    paths = parameters["filepaths"]
+    extensions = paths["extensions"]
+    hlsppath = paths["hlsppath"]
+    output = paths["output"]
+    header_type = parameters["header_type"]
+    types = parameters["data_types"]
+    uniques = parameters["unique_parameters"]
+
+    #Set up logging
     outdir = os.path.dirname(output)
     logfile = os.path.join(outdir, LOG)
     logfile = cp.check_new_file(logfile)
-    try:
-        header_type = parameters["header_type"]
-    except KeyError:
-        print("{0} is missing 'header_type'!".format(config))
-        quit()
-    try:
-        uniques = parameters["unique_parameters"]
-    except KeyError:
-        print("{0} is missing 'unique_parameters'!".format(config))
-        quit()
-
-    #Set up logging
     logging.basicConfig(filename=logfile,
                         format='***%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
 
     #Create the xml file and add initial HLSP information
-    tree = start_hlsp_xml(output, STATICS, TABLE, header_type,
-                          overwrite=True)
+    tree = start_hlsp_xml(output, STATICS, TABLE, header_type, overwrite=True)
 
     #Launch module for each data type specified in yaml config.
     data_types = []
-    data_types.extend(parameters["data_types"])
+    try:
+        data_types.extend(types)
+    except TypeError:
+        print("No data_types listed in {0}".format(config))
+        quit()
     for dt in data_types:
         if dt == "lightcurve":
             tree = add_lightcurve_xml(tree)
