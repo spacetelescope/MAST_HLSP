@@ -38,11 +38,11 @@ This script is called from several others to generate xml subelements with
 proper CAOM formatting.  Modules are available for creating both VALUE  
 subelements and HEADER subelements.  
 
-+ "check_log.py"
++ "check_log.py"  
 This script scans the resulting log file at the end of the script to display  
 stats on errors and warnings logged.  
 
-+ "check_paths.py"
++ "check_paths.py"  
 This script contains a number of modules to check user-provided file paths  
 and potentially create new directories if they don't already exist.  
 ___
