@@ -11,3 +11,4 @@ product_properties:
     calibrationLevel: HLSP
     releaseType: DATA
     fileNameDescriptor: FILEROOT
+    planeNumber: 1

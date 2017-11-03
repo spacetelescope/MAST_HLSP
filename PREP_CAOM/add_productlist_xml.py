@@ -105,12 +105,29 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
             #properties defined previously.
             product_properties.update(parameters)
 
+            #Define statusAction depending on what fileStatus is assigned
+            if product_properties["fileStatus"] == "REQUIRED":
+                product_properties["statusAction"] = "ERROR"
+            else:
+                product_properties["statusAction"] = "WARNING"
+
+            #Get fileType and contentType by operating on the filename.
+            #Assumes that the filename ends with '_abc' to denote file type.
+            #Concatenates everything after the first '.' to get content type.
+            get_ext = name.split(".")
+            filename = get_ext[0]
+            filename = filename.split("_")
+            fileType = filename[-1]
+            contentType = ".".join(get_ext[1:])
+            product_properties["fileType"] = fileType.upper()
+            product_properties["contentType"] = contentType.upper()
+
             #product_properties is now a dictionary of all necessary
             #[CAOM: XML value] entries.
             product = etree.SubElement(parent, "product")
             for prop in sorted(product_properties):
                 sub = etree.SubElement(product, prop)
-                sub.text = product_properties[prop]
+                sub.text = str(product_properties[prop])
 
     #Check for any remaining unused file extensions.  Dictionary will still
     #contain one 'extension' entry.
