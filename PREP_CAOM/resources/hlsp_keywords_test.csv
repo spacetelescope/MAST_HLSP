@@ -1,5 +1,6 @@
 caom,section,default,kepler
 instrument_keywords,metadataList,DATE-OBS,DATE
+instrument_keywords,metadataList,FILTER,null
 targetPosition_cval2,metadataList,DEC_TARG,DEC_OBJ
 targetPosition_equinox,metadataList,EQUINOX,EQUINOX
 instrument_name,metadataList,INSTRUME,INSTRUME

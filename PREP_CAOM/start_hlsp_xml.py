@@ -91,7 +91,14 @@ def get_header_keys(tablepath, header_type):
     #[CAOM: (PARENT, KEYWORD)]
     header_keys = {}
     for row in keys[1:]:
-        header_keys[row[caom_index]] = (row[section_index], row[key_index])
+        if row[key_index] == "null":
+            continue
+        elif row[caom_index] in header_keys.keys():
+            header_keys[row[caom_index]].append((row[section_index],
+                                                 row[key_index]))
+        else:
+            header_keys[row[caom_index]] = [(row[section_index],
+                                             row[key_index])]
 
     return header_keys
 
@@ -133,13 +140,18 @@ def start_hlsp_xml(outpath, statics, tablepath, header_type, overwrite=True):
     metadata = etree.SubElement(composite, "metadataList")
     provenance = etree.SubElement(composite, "provenance")
     products = etree.SubElement(composite, "productList")
-    statics_metadata = statics["hlsp_metadata"]
-    statics_provenance = statics["hlsp_provenance"]
+    hlsp_entries = statics["hlsp"]
+    metadata = hlsp_entries["metadataList"]
+    provenance = hlsp_entries["provenance"]
+    if header_type == "kepler":
+        kepler_entries = statics["kepler"]
+        kepler_metadata = kepler_entries["metadataList"]
+        metadata.update(kepler_metadata)
     as_tree = axe.add_value_subelements(as_tree,
-                                        statics_metadata,
+                                        metadata,
                                         "metadataList")
     as_tree = axe.add_value_subelements(as_tree,
-                                        statics_provenance,
+                                        provenance,
                                         "provenance")
     as_tree = axe.add_header_subelements(as_tree, header_keys)
 

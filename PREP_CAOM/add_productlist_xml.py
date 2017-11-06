@@ -106,7 +106,14 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
             product_properties.update(parameters)
 
             #Define statusAction depending on what fileStatus is assigned
-            if product_properties["fileStatus"] == "REQUIRED":
+            try:
+                status = product_properties["fileStatus"]
+            except KeyError:
+                logging.error("{0} does not define 'fileStatus'!"
+                              .format(extensions_table))
+                print("Aborting, see log!")
+                quit()
+            if status == "REQUIRED":
                 product_properties["statusAction"] = "ERROR"
             else:
                 product_properties["statusAction"] = "WARNING"
@@ -116,7 +123,10 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
             #Concatenates everything after the first '.' to get content type.
             get_ext = name.split(".")
             filename = get_ext[0]
-            filename = filename.split("_")
+            if "_" in filename:
+                filename = filename.split("_")
+            elif "-" in filename:
+                filename = filename.split("-")
             fileType = filename[-1]
             contentType = ".".join(get_ext[1:])
             product_properties["fileType"] = fileType.upper()
@@ -137,7 +147,7 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
                 continue
             else:
                 logging.warning("{0} was defined in {1}, but none found in {2}"
-                            .format(ext, extensions_table, filepath))
+                                .format(ext, extensions_table, filepath))
 
     print("...done!")
     return tree

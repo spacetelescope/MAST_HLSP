@@ -1,12 +1,17 @@
-hlsp_metadata:
-    collection: HLSP
-    observationID: FILENAME
-    proposal_id: FILEROOT
-    intent: SCIENCE
-hlsp_provenance:
-    project: FILEROOT
-lightcurve_metadata:
-    algorithm: timeseries
+hlsp:
+    metadataList:
+        collection: HLSP
+        observationID: FILENAME
+        proposal_id: FILEROOT
+        intent: SCIENCE
+    provenance:
+        project: FILEROOT
+kepler:
+    metadataList:
+        filter: Kepler
+lightcurve:
+    metadataList:
+        algorithm: timeseries
 product_properties:
     calibrationLevel: HLSP
     releaseType: DATA

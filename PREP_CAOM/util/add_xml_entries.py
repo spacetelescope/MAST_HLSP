@@ -15,6 +15,19 @@ import logging
 
 #--------------------
 
+def new_add_value_subelements(xmltree, subelements):
+    for parent in subelements:
+        print("Finding {0}".format(parent))
+        section = xmltree.find(parent)
+        subset = subelements[parent]
+        for value in sorted(subset):
+            new_subelement = etree.SubElement(section, value)
+            source = etree.SubElement(new_subelement, "source")
+            source.text = "VALUE"
+            value = etree.SubElement(new_subelement, "value")
+            value.text = subset[value]
+    return xmltree
+
 def add_value_subelements(xmltree, subelements, parent):
     """
     Adds SubElements from a dictionary to xmltree under a designated parent in
@@ -63,38 +76,36 @@ def add_header_subelements(xmltree, subelements):
     :type subelements:  dictionary
     """
 
-    #The subelements dictionary should have a 2-element tuple for each key.
-    if not len(list(subelements.values())[0]) == 2:
-        logging.error("The 'subelements' dictionary passed to\
-                      add_header_subelements is not constructed correctly- \
-                      [CAOM: (PARENT, KEYWORD)]")
-        print("Aborting, see log!")
-        quit()
-
     #Create a SubElement for each entry in the subelements dictionary
     for key in sorted(subelements):
-        #Extract elements from tuple
-        parent = subelements[key][0]
-        header_keyword = subelements[key][1]
+        for entry in subelements[key]:
+            #Extract elements from tuple
+            parent = entry[0]
+            header_keyword = entry[1]
 
-        #Find parent and create new subelement
-        section = xmltree.find(parent)
-        new_subelement = etree.SubElement(section, key)
-        source = etree.SubElement(new_subelement, "source")
-        source.text = "HEADER"
-        header_name = etree.SubElement(new_subelement, "headerName")
-        header_name.text = "PRIMARY"
-        keyword = etree.SubElement(new_subelement, "headerKeyword")
-        keyword.text = header_keyword
+            #Some header schemes don't use certain keywords
+            if header_keyword == "null":
+                continue
 
-        #Handle different default value cases
-        if key == "targetPosition_equinox":
-            default = "2000.0"
-        elif key == "targetPosition_coordsys":
-            default = "ICRS"
-        else:
-            default = "None"
-        default_value = etree.SubElement(new_subelement, "headerDefaultValue")
-        default_value.text = default
+            #Find parent and create new subelement
+            section = xmltree.find(parent)
+            new_subelement = etree.SubElement(section, key)
+            source = etree.SubElement(new_subelement, "source")
+            source.text = "HEADER"
+            header_name = etree.SubElement(new_subelement, "headerName")
+            header_name.text = "PRIMARY"
+            keyword = etree.SubElement(new_subelement, "headerKeyword")
+            keyword.text = header_keyword
+
+            #Handle different default value cases
+            if key == "targetPosition_equinox":
+                default = "2000.0"
+            elif key == "targetPosition_coordsys":
+                default = "ICRS"
+            else:
+                default = "None"
+            default_value = etree.SubElement(new_subelement,
+                                             "headerDefaultValue")
+            default_value.text = default
 
     return xmltree
