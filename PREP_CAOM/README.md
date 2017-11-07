@@ -1,5 +1,5 @@
 /MAST-HLSP/PREP_CAOM/README.md  
-:Updated: 2017 Nov 2  
+:Updated: 2017 Nov 7  
 :Author: Peter Forshay  
 
 The files in this directory are used to create an XML document that will  
@@ -15,15 +15,13 @@ The user must also provide a .yaml config file when launching this script,
 which is then parsed and checked for all necessary parameters and file  
 paths.  
 
-+ "start_hlsp_xml.py"  
-This script will begin creation of the output XML file and check  
-provided filepaths.  It also writes as much generic HLSP information  
-as possible to xml.  
++ "add_static_values.py"  
+Read in all appropriate static values from hlsp_caom_staticvalues.yaml and  
+add these to the xml tree.
 
-+ "add_lightcurve_xml.py"  
-This script adds as much generic light curve information as possible  
-to the xml.  Similar scripts will be added for additional data types  
-(spectra, catalogs, etc.).  
++ "add_header_entries.py"  
+Read in the header keywords translation table based on which header type  
+the user has designated.  Add these to the xml tree.
 
 + "add_productlist_xml.py"  
 This script crawls the provided HLSP file path and creates a product  
@@ -46,13 +44,16 @@ stats on errors and warnings logged.
 + "check_paths.py"  
 This script contains a number of modules to check user-provided file paths  
 and potentially create new directories if they don't already exist.  
+
++ "read_yaml.py"  
+Read in a .yaml file and return the contents as a dictionary.  
 ___
 ### /PREP_CAOM/resources/
-+ "hlsp_keywords_test.csv"  
++ "hlsp_caom_staticvalues.yaml"
+This file contains CAOM parameters and static values to fill them with for  
+certain types of HLSPs.  
+
++ "hlsp_keywords.csv"  
 This table contains CAOM parameter keywords, and a translation table for  
 multiple sets of accepted fits header keywords.  Parent xml elements are  
 also listed for each keyword.  
-
-+ "fake_hlsp_extensions.csv"  
-This file contains a list of data file extensions to search for in the HLSP  
-filepath and corresponding CAOM product properties to define for each.  
