@@ -4,8 +4,6 @@ hlsp:
         observationID: FILENAME
         proposal_id: FILEROOT
         intent: SCIENCE
-    provenance:
-        project: FILEROOT
 kepler:
     metadataList:
         filter: Kepler

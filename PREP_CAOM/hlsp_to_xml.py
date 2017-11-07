@@ -18,7 +18,7 @@ Desired filepath to save log entries.
 -OUTPUT (filepath)
 Desired filepath for the final XML result output.
 
--TABLE (filepath)
+-KEYWORD_TABLE (filepath)
 A general csv table translating CAOM metadata and provenance entries to fits
 headers.
 
@@ -27,9 +27,9 @@ The user must specify which set of fits header keywords are used for this HLSP.
 """
 
 from lxml import etree
-from start_hlsp_xml import start_hlsp_xml
-from add_lightcurve_xml import add_lightcurve_xml
+from add_header_entries import add_header_entries
 from add_productlist_xml import add_productlist_xml
+from add_static_values import add_static_values
 from add_unique_xml import add_unique_xml
 from util.check_log import check_log
 from util.read_yaml import read_yaml
@@ -49,13 +49,14 @@ EXPECTED_CONFIGS = ["filepaths",
 global EXPECTED_PATHS
 EXPECTED_PATHS = ["extensions",
                   "hlsppath",
-                  "output"]
+                  "output",
+                  "overwrite"]
 global LOG
 LOG = "hlsp_to_xml.log"
 global STATICS
 STATICS = "resources/hlsp_caom_staticvalues.yaml"
-global TABLE
-TABLE = "resources/hlsp_keywords_test.csv"
+global KEYWORD_TABLE
+KEYWORD_TABLE = "resources/hlsp_keywords_test.csv"
 
 #--------------------
 
@@ -88,8 +89,9 @@ if __name__ == "__main__":
     extensions = paths["extensions"]
     hlsppath = paths["hlsppath"]
     output = paths["output"]
+    overwrite = paths["overwrite"]
     header_type = parameters["header_type"]
-    types = parameters["data_types"]
+    data_types = parameters["data_types"]
     uniques = parameters["unique_parameters"]
 
     #Set up logging
@@ -100,41 +102,38 @@ if __name__ == "__main__":
                         format='***%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
 
-    #Read the static CAOM values from the yaml file
+    #Prepare the output file
+    output = cp.check_new_file(output)
+    print("Opening {0}...".format(output))
+    if overwrite or not os.path.isfile(output):
+        with open(output, 'w') as xmlfile:
+            xmlfile.close()
+    else:
+        logging.error("{0} already exists. Set overwrite=True to proceed."
+                      .format(output))
+        print("Aborting, see log!")
+        quit()
+
+    #Begin the lxml tree and add the main subelements
+    composite = etree.Element("CompositeObservation")
+    xmltree = etree.ElementTree(composite)
+    metadata = etree.SubElement(composite, "metadataList")
+    provenance = etree.SubElement(composite, "provenance")
+    products = etree.SubElement(composite, "productList")
+
+    #Read the static CAOM values from the yaml file, and add to the tree.
     statics = cp.check_existing_file(STATICS)
     static_values = read_yaml(statics)
+    xmltree = add_static_values(xmltree, static_values, data_types, header_type)
 
-    #Create the xml file and add initial HLSP information
-    tree = start_hlsp_xml(output, static_values, TABLE, header_type,
-                          overwrite=True)
-
-    #Launch module for each data type specified in yaml config.
-    data_types = []
-    try:
-        data_types.extend(types)
-    except TypeError:
-        print("No data_types listed in {0}".format(config))
-        quit()
-    for dt in data_types:
-        if dt == "lightcurve":
-            tree = add_lightcurve_xml(tree)
-        elif dt == "spectrum" or dt == "sepctra" or dt == "spectral":
-            pass
-        elif dt == "catalog":
-            pass
-        elif dt == "simulation":
-            pass
-        elif dt == "model":
-            pass
-        else:
-            logging.warning("Skipping '{0}' from 'data_types', not valid type."
-                            .format(dt))
+    #Add information from the header keywords table.
+    xmltree = add_header_entries(xmltree, KEYWORD_TABLE, header_type)
 
     #Add the product list to the xml tree
-    tree = add_productlist_xml(hlsppath, extensions, static_values, tree)
+    xmltree = add_productlist_xml(hlsppath, extensions, static_values, xmltree)
 
     #Add HLSP-specifiic CAOM parameters to the xml tree
-    tree = add_unique_xml(uniques, tree)
+    xmltree = add_unique_xml(uniques, xmltree)
 
     #Create the head string to write to doctype
     head_strings = []
@@ -144,7 +143,7 @@ if __name__ == "__main__":
 
     #Write the xml tree to the OUTPUT file
     #(doctype not a valid argument for python 2.x)
-    tree.write(output, encoding="utf-8", xml_declaration=True, #doctype=head,
+    xmltree.write(output, encoding="utf-8", xml_declaration=True, doctype=head,
                pretty_print=True)
     print("XML file generated!")
 

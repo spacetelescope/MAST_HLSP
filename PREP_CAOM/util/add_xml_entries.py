@@ -15,19 +15,6 @@ import logging
 
 #--------------------
 
-def new_add_value_subelements(xmltree, subelements):
-    for parent in subelements:
-        print("Finding {0}".format(parent))
-        section = xmltree.find(parent)
-        subset = subelements[parent]
-        for value in sorted(subset):
-            new_subelement = etree.SubElement(section, value)
-            source = etree.SubElement(new_subelement, "source")
-            source.text = "VALUE"
-            value = etree.SubElement(new_subelement, "value")
-            value.text = subset[value]
-    return xmltree
-
 def add_value_subelements(xmltree, subelements, parent):
     """
     Adds SubElements from a dictionary to xmltree under a designated parent in
