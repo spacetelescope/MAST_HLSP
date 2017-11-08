@@ -32,9 +32,11 @@ from add_productlist_xml import add_productlist_xml
 from add_static_values import add_static_values
 from add_unique_xml import add_unique_xml
 from util.check_log import check_log
+from util.fudge_for_kepler import fudge_for_kepler
 from util.read_yaml import read_yaml
 import util.add_xml_entries as axe
 import util.check_paths as cp
+from CAOMxml import *
 import logging
 import os
 import sys
@@ -135,11 +137,22 @@ if __name__ == "__main__":
     #Add HLSP-specifiic CAOM parameters to the xml tree
     xmltree = add_unique_xml(uniques, xmltree)
 
+    if header_type == "kepler":
+        xmltree = fudge_for_kepler(xmltree)
+
     #Create the head string to write to doctype
     head_strings = []
     head_strings.append("<!-- Process HLSP for CAOM ingestion -->")
     head_strings.append("")
     head = "\n".join(head_strings)
+
+    #TESTING
+    xmltree = axe.update_xml_entry(xmltree, "FILTER", "headerDefaultValue", "DARP")
+    test = CAOMxml("test")
+    test.parent = "NOPE"
+    test.source = "VALUE"
+    test.value = "HUGE"
+    test.send_to_lxml(xmltree)
 
     #Write the xml tree to the OUTPUT file
     #(doctype not a valid argument for python 2.x)

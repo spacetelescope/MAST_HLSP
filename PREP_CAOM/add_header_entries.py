@@ -50,6 +50,7 @@ def add_header_entries(xmltree, tablepath, header_type):
     #Get the indices for the section value, CAOM XML value, and designated
     #header type
     caom_index = keys[0].index("caom")
+    header_index = keys[0].index("headerName")
     section_index = keys[0].index("section")
     try:
         key_index = keys[0].index(header_type)
@@ -64,14 +65,17 @@ def add_header_entries(xmltree, tablepath, header_type):
     print("Adding header keyword entries...")
     header_keys = {}
     for row in keys[1:]:
-        if row[key_index] == "null":
+        keyword = row[key_index]
+        parent = row[section_index]
+        caom_parameter = row[caom_index]
+        header_name = row[header_index]
+        new_set = (parent, header_name, keyword)
+        if keyword == "null":
             continue
-        elif row[caom_index] in header_keys.keys():
-            header_keys[row[caom_index]].append((row[section_index],
-                                                 row[key_index]))
+        elif caom_parameter in header_keys.keys():
+            header_keys[caom_parameter].append(new_set)
         else:
-            header_keys[row[caom_index]] = [(row[section_index],
-                                             row[key_index])]
+            header_keys[caom_parameter] = [new_set]
 
 
     xmltree = axe.add_header_subelements(xmltree, header_keys)

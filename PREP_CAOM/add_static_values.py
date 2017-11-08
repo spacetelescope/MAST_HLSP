@@ -71,8 +71,11 @@ def add_static_values(xmltree, statics, data_types, header_type):
     static_entries = statics["hlsp"]
 
     if header_type == "kepler":
-        kepler_entries = statics["kepler"]
-        static_entries = merge_dictionaries(static_entries, kepler_entries)
+        try:
+            kepler_entries = statics["kepler"]
+            static_entries = merge_dictionaries(static_entries, kepler_entries)
+        except KeyError:
+            logging.info("No Kepler static information found.")
 
     for dt in data_types:
         if dt == "lightcurve":

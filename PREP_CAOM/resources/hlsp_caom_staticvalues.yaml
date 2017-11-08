@@ -4,9 +4,6 @@ hlsp:
         observationID: FILENAME
         proposal_id: FILEROOT
         intent: SCIENCE
-kepler:
-    metadataList:
-        filter: Kepler
 lightcurve:
     metadataList:
         algorithm: timeseries

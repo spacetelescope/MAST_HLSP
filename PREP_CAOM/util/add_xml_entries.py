@@ -52,7 +52,7 @@ def add_header_subelements(xmltree, subelements):
     """
     Adds SubElements from a dictionary to xmltree under a designated parent in
     the CAOM HEADER formatting.  Parents are expected to be defined within the
-    subelements dictionary [CAOM: (PARENT, KEYWORD)]
+    subelements dictionary [CAOM: (PARENT, HEADER_NAME, KEYWORD)]
 
     :param xmltree:  The xml tree object this function will add subelements
     into.
@@ -68,7 +68,8 @@ def add_header_subelements(xmltree, subelements):
         for entry in subelements[key]:
             #Extract elements from tuple
             parent = entry[0]
-            header_keyword = entry[1]
+            header_name = entry[1]
+            header_keyword = entry[2]
 
             #Some header schemes don't use certain keywords
             if header_keyword == "null":
@@ -79,8 +80,8 @@ def add_header_subelements(xmltree, subelements):
             new_subelement = etree.SubElement(section, key)
             source = etree.SubElement(new_subelement, "source")
             source.text = "HEADER"
-            header_name = etree.SubElement(new_subelement, "headerName")
-            header_name.text = "PRIMARY"
+            name = etree.SubElement(new_subelement, "headerName")
+            name.text = header_name
             keyword = etree.SubElement(new_subelement, "headerKeyword")
             keyword.text = header_keyword
 
@@ -95,4 +96,25 @@ def add_header_subelements(xmltree, subelements):
                                              "headerDefaultValue")
             default_value.text = default
 
+    return xmltree
+
+def update_xml_entry(xmltree, parent, parameter, new_value):
+    section = xmltree.find(parent)
+    if section:
+        entry = section.find(parameter)
+        entry.text = new_value
+        return xmltree
+    else:
+        for child in xmltree.iter():
+            if child.tag == parent:
+                try:
+                    entry = child.find(parameter)
+                    entry.text = new_value
+                    return xmltree
+                except AttributeError:
+                    logging.warning("{0} does not have a {1} parameter!"
+                                    .format(child, parameter))
+                    break
+    logging.warning("Could not find {0} in {1}!".format(parent,
+                                                        xmltree.getroot().tag))
     return xmltree
