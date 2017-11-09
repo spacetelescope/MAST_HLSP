@@ -15,6 +15,7 @@
 ..moduleauthor:: Peter Forshay <pforshay@stsci.edu>
 """
 
+from CAOMxml import *
 import util.add_xml_entries as axe
 import util.check_paths as cp
 import csv
@@ -22,20 +23,7 @@ import logging
 
 #--------------------
 
-def add_header_entries(xmltree, tablepath, header_type):
-    """
-    Parse a .csv file at tablepath, which contains the CAOM XML entry name and
-    corresponding header keywords.  Create a dictionary for translating CAOM
-    entry to a header keyword for a designated header type.
-
-    :param tablepath:  The filepath containing a .csv file with CAOM elements
-    and corresponding xml parents and fits keywords.
-    :type tablepath:  string
-
-    :param header_type:  The type of fits header keywords used by this HLSP.
-    Must match a column header in the .csv file at tablepath.
-    :type header_type:  string
-    """
+def add_header_entries(xmllist, tablepath, header_type):
 
     #Open the csv file and parse into a list
     tablepath = cp.check_existing_file(tablepath)
@@ -60,25 +48,22 @@ def add_header_entries(xmltree, tablepath, header_type):
         print("Aborting, see log!")
         quit()
 
-    #Create the header_keys dictionary and add an entry for each csv row
-    #[CAOM: (PARENT, KEYWORD)]
-    print("Adding header keyword entries...")
-    header_keys = {}
     for row in keys[1:]:
-        keyword = row[key_index]
-        parent = row[section_index]
-        caom_parameter = row[caom_index]
-        header_name = row[header_index]
-        new_set = (parent, header_name, keyword)
-        if keyword == "null":
+        if row[key_index] == "null":
             continue
-        elif caom_parameter in header_keys.keys():
-            header_keys[caom_parameter].append(new_set)
         else:
-            header_keys[caom_parameter] = [new_set]
+            caom_parameter = row[caom_index]
+            new_entry = CAOMxml(caom_parameter)
+            new_entry.parent = row[section_index]
+            new_entry.source = "HEADER"
+            new_entry.headerName = row[header_index]
+            new_entry.headerKeyword = row[key_index]
+            if caom_parameter == "targetPosition_equinox":
+                new_entry.headerDefaultValue = "2000.0"
+            elif caom_parameter == "targetPosition_coordsys":
+                new_entry.headerDefaultValue = "ICRS"
+            else:
+                new_entry.headerDefaultValue = "None"
+            xmllist.append(new_entry)
 
-
-    xmltree = axe.add_header_subelements(xmltree, header_keys)
-
-    print("...done!")
-    return xmltree
+    return xmllist

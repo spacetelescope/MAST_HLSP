@@ -30,9 +30,7 @@ from lxml import etree
 from add_header_entries import add_header_entries
 from add_productlist_xml import add_productlist_xml
 from add_static_values import add_static_values
-from add_unique_xml import add_unique_xml
 from util.check_log import check_log
-from util.fudge_for_kepler import fudge_for_kepler
 from util.read_yaml import read_yaml
 import util.add_xml_entries as axe
 import util.check_paths as cp
@@ -76,13 +74,13 @@ if __name__ == "__main__":
 
     #Make sure the config file has all the expected sections
     for section in EXPECTED_CONFIGS:
-        if not section in parameters:
+        if section not in parameters:
             print("{0} does not define '{1}'!".format(config, section))
             quit()
 
     #Make sure all necessary filepaths have been provided
     for path in EXPECTED_PATHS:
-        if not path in parameters["filepaths"]:
+        if path not in parameters["filepaths"]:
             print("{0} is missing an '{1}' filepath!".format(config, path))
             quit()
 
@@ -116,6 +114,22 @@ if __name__ == "__main__":
         print("Aborting, see log!")
         quit()
 
+    #Read the static CAOM values from the yaml file, begin a list of CAOMxml
+    #elements.
+    statics = cp.check_existing_file(STATICS)
+    static_values = read_yaml(statics)
+    xmllist = []
+    xmllist = add_static_values(xmllist,
+                                static_values,
+                                data_types,
+                                header_type)
+
+    #Add information from the header keywords table.
+    xmllist = add_header_entries(xmllist, KEYWORD_TABLE, header_type)
+
+    #Add CAOMxml entries for HLSP-specifiic CAOM parameters.
+    xmllist = axe.add_value_caomxml(xmllist, uniques)
+
     #Begin the lxml tree and add the main subelements
     composite = etree.Element("CompositeObservation")
     xmltree = etree.ElementTree(composite)
@@ -123,22 +137,8 @@ if __name__ == "__main__":
     provenance = etree.SubElement(composite, "provenance")
     products = etree.SubElement(composite, "productList")
 
-    #Read the static CAOM values from the yaml file, and add to the tree.
-    statics = cp.check_existing_file(STATICS)
-    static_values = read_yaml(statics)
-    xmltree = add_static_values(xmltree, static_values, data_types, header_type)
-
-    #Add information from the header keywords table.
-    xmltree = add_header_entries(xmltree, KEYWORD_TABLE, header_type)
-
     #Add the product list to the xml tree
     xmltree = add_productlist_xml(hlsppath, extensions, static_values, xmltree)
-
-    #Add HLSP-specifiic CAOM parameters to the xml tree
-    xmltree = add_unique_xml(uniques, xmltree)
-
-    if header_type == "kepler":
-        xmltree = fudge_for_kepler(xmltree)
 
     #Create the head string to write to doctype
     head_strings = []
@@ -146,13 +146,12 @@ if __name__ == "__main__":
     head_strings.append("")
     head = "\n".join(head_strings)
 
-    #TESTING
-    xmltree = axe.update_xml_entry(xmltree, "FILTER", "headerDefaultValue", "DARP")
-    test = CAOMxml("test")
-    test.parent = "NOPE"
-    test.source = "VALUE"
-    test.value = "HUGE"
-    test.send_to_lxml(xmltree)
+    #Add CAOMxml elements to xmltree with some final tweaks
+    for entry in xmllist:
+        if header_type == "kepler":
+            if entry.label == "instrument_keywords" and entry.headerKeyword == "FILTER":
+                entry.headerDefaultValue = "K"
+        entry.send_to_lxml(xmltree)
 
     #Write the xml tree to the OUTPUT file
     #(doctype not a valid argument for python 2.x)

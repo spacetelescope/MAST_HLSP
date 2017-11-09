@@ -1,3 +1,4 @@
+from CAOMxml import *
 import util.add_xml_entries as axe
 import logging
 
@@ -42,3 +43,16 @@ def add_unique_xml(unique_parameters, tree):
 
     print("...done!")
     return tree
+
+def new_unique_xml(xmllist, unique_parameters):
+
+    for section in unique_parameters.keys():
+        section_dict = unique_parameters[section]
+        for element in section_dict.keys():
+            new_entry = CAOMxml(element)
+            new_entry.parent = section
+            new_entry.source = "VALUE"
+            new_entry.value = section_dict[element]
+            xmllist.append(new_entry)
+
+    return xmllist

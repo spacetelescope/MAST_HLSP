@@ -10,111 +10,17 @@
     HEADER formatting.
 """
 
+from CAOMxml import CAOMxml
 from lxml import etree
 import logging
 
-#--------------------
-
-def add_value_subelements(xmltree, subelements, parent):
-    """
-    Adds SubElements from a dictionary to xmltree under a designated parent in
-    the CAOM VALUE formatting.
-
-    :param xmltree:  The xml tree object this function will add subelements
-    into.
-    :type xmltree:  _ElementTree from lxml
-
-    :param subelements:  All the subelements and corresponding keywords to be
-    added to the xml tree.
-    :type subelements:  dictionary
-
-    :param parent:  The element or subelement to create new subelements for
-    with this function.
-    :type parent:  string
-    """
-
-    #Find the parent section
-    section = xmltree.find(parent)
-
-    #Create a SubElement for each entry in the subelements dictionary
-    for key in sorted(subelements):
-        new_subelement = etree.SubElement(section, key)
-        source = etree.SubElement(new_subelement, "source")
-        source.text = "VALUE"
-        value = etree.SubElement(new_subelement, "value")
-        value.text = subelements[key]
-
-    return xmltree
-
-#--------------------
-
-def add_header_subelements(xmltree, subelements):
-    """
-    Adds SubElements from a dictionary to xmltree under a designated parent in
-    the CAOM HEADER formatting.  Parents are expected to be defined within the
-    subelements dictionary [CAOM: (PARENT, HEADER_NAME, KEYWORD)]
-
-    :param xmltree:  The xml tree object this function will add subelements
-    into.
-    :type xmltree:  _ElementTree from lxml
-
-    :param subelements:  All the subelements and corresponding keywords to be
-    added to the xml tree.
-    :type subelements:  dictionary
-    """
-
-    #Create a SubElement for each entry in the subelements dictionary
-    for key in sorted(subelements):
-        for entry in subelements[key]:
-            #Extract elements from tuple
-            parent = entry[0]
-            header_name = entry[1]
-            header_keyword = entry[2]
-
-            #Some header schemes don't use certain keywords
-            if header_keyword == "null":
-                continue
-
-            #Find parent and create new subelement
-            section = xmltree.find(parent)
-            new_subelement = etree.SubElement(section, key)
-            source = etree.SubElement(new_subelement, "source")
-            source.text = "HEADER"
-            name = etree.SubElement(new_subelement, "headerName")
-            name.text = header_name
-            keyword = etree.SubElement(new_subelement, "headerKeyword")
-            keyword.text = header_keyword
-
-            #Handle different default value cases
-            if key == "targetPosition_equinox":
-                default = "2000.0"
-            elif key == "targetPosition_coordsys":
-                default = "ICRS"
-            else:
-                default = "None"
-            default_value = etree.SubElement(new_subelement,
-                                             "headerDefaultValue")
-            default_value.text = default
-
-    return xmltree
-
-def update_xml_entry(xmltree, parent, parameter, new_value):
-    section = xmltree.find(parent)
-    if section:
-        entry = section.find(parameter)
-        entry.text = new_value
-        return xmltree
-    else:
-        for child in xmltree.iter():
-            if child.tag == parent:
-                try:
-                    entry = child.find(parameter)
-                    entry.text = new_value
-                    return xmltree
-                except AttributeError:
-                    logging.warning("{0} does not have a {1} parameter!"
-                                    .format(child, parameter))
-                    break
-    logging.warning("Could not find {0} in {1}!".format(parent,
-                                                        xmltree.getroot().tag))
-    return xmltree
+def add_value_caomxml(xmllist, dictionary):
+    for section in dictionary.keys():
+        section_dict = dictionary[section]
+        for element in section_dict.keys():
+            new_entry = CAOMxml(element)
+            new_entry.parent = section
+            new_entry.source = "VALUE"
+            new_entry.value = section_dict[element]
+            xmllist.append(new_entry)
+    return xmllist

@@ -28,9 +28,8 @@ class CAOMxml:
                     hdv = etree.SubElement(entry, "headerDefaultValue")
                     hdv.text = self.headerDefaultValue
                 return xmltree
-        print("send_to_lxml couldn't find {0} within the xmltree"
-              .format(self.parent))
-        return xmltree
+        new_parent = etree.SubElement(xmltree.getroot(), self.parent)
+        return self.send_to_lxml(xmltree)
 
 if __name__ == "__main__":
     x = CAOMxml()
