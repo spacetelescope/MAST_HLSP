@@ -7,7 +7,6 @@
 """
 
 from lxml import etree
-import util.add_xml_entries as axe
 import util.check_paths as cp
 import csv
 import logging

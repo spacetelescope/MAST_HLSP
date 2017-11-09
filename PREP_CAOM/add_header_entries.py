@@ -1,22 +1,13 @@
 """
-..module:: open_xml_file
-    :synopsis: Called from start_hlsp_xml.  Will either overwrite or create a
-    new xml file.
-
-..module:: get_header_keys
-    :synopsis:  Called from start_hlsp_xml.  Given a filepath for a .csv
-    keyword lookup table and a header type, will return a dictionary of CAOM
-    entries with their associated header keywords.
-
-..module:: start_hlsp_xml
-    :synopsis: With a given filepath, create a new xml file for CAOM ingestion
-    and add standard HLSP informaiton.
-
-..moduleauthor:: Peter Forshay <pforshay@stsci.edu>
+..module:: add_header_entries
+    :synopsis: This module opens a .csv file provided through tablepath, which
+    contains a translation table of CAOM XML elements to various FITS header
+    keyword standards.  The type of keywords used is determined by header_type.
+    The module then creates a CAOMxml object for each appropriate table entry,
+    and adds these objects to the xmllist.
 """
 
 from CAOMxml import *
-import util.add_xml_entries as axe
 import util.check_paths as cp
 import csv
 import logging
@@ -28,27 +19,29 @@ def add_header_entries(xmllist, tablepath, header_type):
     #Open the csv file and parse into a list
     tablepath = cp.check_existing_file(tablepath)
     print("Opening {0}...".format(tablepath))
-    keys = []
+    keywords = []
     with open(tablepath) as csvfile:
         hlsp_keys = csv.reader(csvfile, delimiter=",")
         for row in hlsp_keys:
-            keys.append(row)
+            keywords.append(row)
         csvfile.close()
 
-    #Get the indices for the section value, CAOM XML value, and designated
-    #header type
-    caom_index = keys[0].index("caom")
-    header_index = keys[0].index("headerName")
-    section_index = keys[0].index("section")
+    #Get the indices for the section value, CAOM XML value, the name of the
+    #header containing this keyword, and the designated header type.
+    caom_index = keywords[0].index("caom")
+    header_index = keywords[0].index("headerName")
+    section_index = keywords[0].index("section")
     try:
-        key_index = keys[0].index(header_type)
+        key_index = keywords[0].index(header_type)
     except ValueError:
         logging.error("'{0}' is not a header type defined in {1}"
                       .format(header_type, tablepath))
         print("Aborting, see log!")
         quit()
 
-    for row in keys[1:]:
+    #Create a CAOMxml object for each entry in the table (skipping the head
+    #row and 'null' entries).  Add each CAOMxml object to xmllist.
+    for row in keywords[1:]:
         if row[key_index] == "null":
             continue
         else:

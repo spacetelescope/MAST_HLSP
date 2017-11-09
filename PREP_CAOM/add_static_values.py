@@ -1,30 +1,25 @@
 """
-..module:: open_xml_file
-    :synopsis: Called from start_hlsp_xml.  Will either overwrite or create a
-    new xml file.
-
-..module:: get_header_keys
-    :synopsis:  Called from start_hlsp_xml.  Given a filepath for a .csv
-    keyword lookup table and a header type, will return a dictionary of CAOM
-    entries with their associated header keywords.
-
-..module:: start_hlsp_xml
-    :synopsis: With a given filepath, create a new xml file for CAOM ingestion
-    and add standard HLSP informaiton.
-
-..moduleauthor:: Peter Forshay <pforshay@stsci.edu>
+..module:: add_static_values
+    :synopsis: Given the full dictionary of possible static value xml entries,
+    this module decides which portions to actually add to the xmllist based
+    on various conditions.  (This is expected to grow as the list of static
+    values does as well)
 """
 
 from CAOMxml import *
-import util.add_xml_entries as axe
+from util.add_value_caomxml import add_value_caomxml
 import logging
 
 #--------------------
 
 def add_static_values(xmllist, statics, data_types, header_type):
+    """
+    Add entries from the statics dictionary to the xmllist by looking at
+    properties of data_types and header_type.  The add_value_caomxml module is
+    used to actually create the CAOMxml objects and add them to the xmllist.
+    """
 
-    #print("all statics = {0}".format(statics))
-    xmllist = axe.add_value_caomxml(xmllist, statics["hlsp"])
+    xmllist = add_value_caomxml(xmllist, statics["hlsp"])
     if "lightcurve" in data_types:
-        xmllist = axe.add_value_caomxml(xmllist, statics["lightcurve"])
+        xmllist = add_value_caomxml(xmllist, statics["lightcurve"])
     return xmllist
