@@ -156,17 +156,17 @@ def hlsp_to_xml(config):
 
     #Add CAOMxml elements to xmltree with some final tweaks
     for entry in xmllist:
-        if header_type == "kepler":
-            if entry.label == "instrument_keywords" and entry.headerKeyword == "FILTER":
-                entry.headerDefaultValue = "K"
         #Skip extra top-level entries caused by recursion in add_value_caomxml
         if xmltree.find(entry.label) is None:
             entry.send_to_lxml(xmltree)
 
     #Write the xml tree to the OUTPUT file
     #(doctype not a valid argument for python 2.x)
-    xmltree.write(output, encoding="utf-8", xml_declaration=True, doctype=head,
-               pretty_print=True)
+    xmltree.write(output,
+                  encoding="utf-8",
+                  xml_declaration=True,
+                  #doctype=head,
+                  pretty_print=True)
     print("XML file generated!")
 
     #Print out log stats before finishing

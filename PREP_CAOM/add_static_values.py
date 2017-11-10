@@ -22,4 +22,6 @@ def add_static_values(xmllist, statics, data_types, header_type):
     xmllist = add_value_caomxml(xmllist, statics["hlsp"])
     if "lightcurve" in data_types:
         xmllist = add_value_caomxml(xmllist, statics["lightcurve"])
+    if header_type == "kepler":
+        xmllist = add_value_caomxml(xmllist, statics["kepler"])
     return xmllist

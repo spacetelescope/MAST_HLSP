@@ -42,7 +42,6 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
     #column 0.
     #[file extension : (n parameters...)]
     extensions = {}
-    found_extensions = []
     with open(extensions_table) as csvfile:
         csv_object = csv.reader(csvfile, delimiter=",")
         for row in csv_object:
@@ -79,6 +78,7 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
     #extensions.  If the extension matches, create a product subelement with
     #matching parameters.
     print("...scanning files from {0}...".format(filepath))
+    found_extensions = []
     for path, subdirs, files in os.walk(filepath):
         #print("...adding files from {0}...".format(path))
         for name in files:
@@ -129,6 +129,9 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
             product.contentType = contentType.upper()
             print("...adding {0}...".format(product))
             xmllist.append(product)
+
+            if len(extensions.keys()) == 0:
+                print("...all defined extensions entered, still scanning...")
 
     #Check for any remaining unused file extensions.  Dictionary will still
     #contain one 'extension' entry.

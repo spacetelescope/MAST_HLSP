@@ -54,6 +54,9 @@ def add_header_entries(xmllist, tablepath, header_type):
                 new_entry.headerDefaultValue = "2000.0"
             elif caom_parameter == "targetPosition_coordsys":
                 new_entry.headerDefaultValue = "ICRS"
+            elif (header_type == "kepler" and
+                  new_entry.headerKeyword == "FILTER"):
+                new_entry.headerDefaultValue = "K"
             xmllist.append(new_entry)
 
     return xmllist
