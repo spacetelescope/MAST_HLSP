@@ -81,7 +81,7 @@ def check_new_file(path):
     if not os.path.exists(directory):
         try:
             os.makedirs(directory)
-            print("Creating new directories for {0}...".format(directory))
+            print("Creating new directories for {0}".format(directory))
         except FileExistsError:
             pass
     return fullpath

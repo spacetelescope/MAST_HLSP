@@ -100,9 +100,15 @@ class CAOMvalue(CAOMxml):
         self.source = "VALUE"
         self.value = "None"
 
+    def __str__(self):
+        return "{0}: parent={1}, value={2}".format(self.label,
+                                                   self.parent,
+                                                   self.value)
+
 #--------------------
 
 class CAOMheader(CAOMxml):
+    
     def __init__(self, label):
         CAOMxml.__init__(self, label)
         self.source = "HEADER"
@@ -110,9 +116,17 @@ class CAOMheader(CAOMxml):
         self.headerKeyword = None
         self.headerDefaultValue = "None"
 
+    def __str__(self):
+        return ("{0}: parent={1}, headerName={2}, headerKeyword={3}"
+                .format(self.label,
+                        self.parent,
+                        self.headerName,
+                        self.headerKeyword))
+
 #--------------------
 
 class CAOMproduct(CAOMxml):
+
     def __init__(self):
         CAOMxml.__init__(self, label="product")
         self.parent = "productList"
@@ -126,6 +140,13 @@ class CAOMproduct(CAOMxml):
         self.productType = None
         self.releaseType = "DATA"
         self.statusAction = None
+
+    def __str__(self):
+        return ("{0}: contentType={1}, fileType={2}, productType={3}"
+                .format(self.label,
+                        self.contentType,
+                        self.fileType,
+                        self.productType))
 
 #--------------------
 

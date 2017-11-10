@@ -127,6 +127,7 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
             contentType = ".".join(get_ext[1:])
             product.fileType = fileType.upper()
             product.contentType = contentType.upper()
+            print("...adding {0}...".format(product))
             xmllist.append(product)
 
     #Check for any remaining unused file extensions.  Dictionary will still

@@ -18,7 +18,7 @@ def add_header_entries(xmllist, tablepath, header_type):
 
     #Open the csv file and parse into a list
     tablepath = cp.check_existing_file(tablepath)
-    print("Opening {0}...".format(tablepath))
+    print("...opening {0}...".format(tablepath))
     keywords = []
     with open(tablepath) as csvfile:
         hlsp_keys = csv.reader(csvfile, delimiter=",")

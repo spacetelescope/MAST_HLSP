@@ -20,7 +20,7 @@ def read_yaml(path):
     #Try to open a yaml config file.
     try:
         stream = open(path, 'r')
-        print("Opening {0}...".format(path))
+        print("Opening {0}".format(path))
     except FileNotFoundError:
         print("{0} does not exist!".format(path))
         quit()

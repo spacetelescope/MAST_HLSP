@@ -106,7 +106,7 @@ def hlsp_to_xml(config):
 
     #Prepare the output file
     output = cp.check_new_file(output)
-    print("Opening {0}...".format(output))
+    print("Opening {0}".format(output))
     if overwrite or not os.path.isfile(output):
         with open(output, 'w') as xmlfile:
             xmlfile.close()
@@ -127,17 +127,23 @@ def hlsp_to_xml(config):
     #elements.
     statics = cp.check_existing_file(STATICS)
     static_values = read_yaml(statics)
+    print("Creating standard HLSP entries...")
     xmllist = []
     xmllist = add_static_values(xmllist,
                                 static_values,
                                 data_types,
                                 header_type)
+    print("...done!")
 
     #Add information from the header keywords table.
+    print("Adding entries from fits headers...")
     xmllist = add_header_entries(xmllist, KEYWORD_TABLE, header_type)
+    print("...done!")
 
     #Add CAOMxml entries for HLSP-specifiic CAOM parameters.
+    print("Adding unique entries for this HLSP...")
     xmllist = add_value_caomxml(xmllist, uniques)
+    print("...done!")
 
     #Add product entries to the list of CAOMxml objects
     xmllist = add_product_caomxml(xmllist, hlsppath, extensions)
