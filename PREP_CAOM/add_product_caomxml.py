@@ -6,7 +6,7 @@
     parameters.
 """
 
-from lxml import etree
+from CAOMxml import *
 import util.check_paths as cp
 import csv
 import logging
@@ -14,7 +14,7 @@ import os
 
 #--------------------
 
-def add_productlist_xml(filepath, extensions_table, static_values, tree):
+def add_product_caomxml(xmllist, filepath, extensions_table):
     """
     Walk filepath and create product entries for files by matching them with
     entries in extensions_table.
@@ -32,8 +32,6 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
     :type tree:  _ElementTree from lxml
     """
 
-    #All products will be subelements of the productList subelement
-    parent = tree.find("productList")
     print("Generating the product list...")
 
     #Make sure filepaths are full and valid
@@ -67,6 +65,16 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
         print("Aborting, see log!")
         quit()
 
+    try:
+        dpt_index = ext_list.index("dataProductType")
+        pt_index = ext_list.index("productType")
+        fs_index = ext_list.index("fileStatus")
+    except KeyError:
+        logging.error("{0} is missing a required parameter!"
+                      .format(extensions_table))
+        print("Aborting, see log!")
+        quit()
+
     #Walk filepath and check files found against the list of defined
     #extensions.  If the extension matches, create a product subelement with
     #matching parameters.
@@ -74,21 +82,21 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
     for path, subdirs, files in os.walk(filepath):
         #print("...adding files from {0}...".format(path))
         for name in files:
-            #Build static HLSP product information.
-            product_properties = static_values["product_properties"]
-
-            #Look for a match with an entry in extensions and fill in
-            #parameters.  If parameters is not filled, generate a warning in
-            #the log and skip the file.
-            parameters = {}
+            #Look for a match with an entry in extensions and create a
+            #CAOMproduct if found.  If the extension doesn't match one from
+            #the .csv file, generate a warning in the log and skip the file.
+            product = None
             for ext in extensions.keys():
                 if name.lower().endswith(ext):
-                    parameters = dict(zip(extensions['extension'],
-                                          extensions[ext]))
+                    this_ext = extensions[ext]
+                    product = CAOMproduct()
+                    product.dataProductType = this_ext[dpt_index]
+                    product.productType = this_ext[pt_index]
+                    product.fileStatus = this_ext[fs_index]
                     found_extensions.append(ext)
                     del extensions[ext]
                     break
-            if len(parameters) == 0:
+            if product is None:
                 found = False
                 for e in found_extensions:
                     if name.lower().endswith(e):
@@ -100,22 +108,11 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
                                     os.path.basename(extensions_table)))
                 continue
 
-            #Add the newly-filled parameters dictionary to the static
-            #properties defined previously.
-            product_properties.update(parameters)
-
             #Define statusAction depending on what fileStatus is assigned
-            try:
-                status = product_properties["fileStatus"]
-            except KeyError:
-                logging.error("{0} does not define 'fileStatus'!"
-                              .format(extensions_table))
-                print("Aborting, see log!")
-                quit()
-            if status == "REQUIRED":
-                product_properties["statusAction"] = "ERROR"
+            if product.fileStatus == "REQUIRED":
+                product.statusAction = "ERROR"
             else:
-                product_properties["statusAction"] = "WARNING"
+                product.statusAction = "WARNING"
 
             #Get fileType and contentType by operating on the filename.
             #Assumes that the filename ends with '_abc' to denote file type.
@@ -128,15 +125,9 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
                 filename = filename.split("-")
             fileType = filename[-1]
             contentType = ".".join(get_ext[1:])
-            product_properties["fileType"] = fileType.upper()
-            product_properties["contentType"] = contentType.upper()
-
-            #product_properties is now a dictionary of all necessary
-            #[CAOM: XML value] entries.
-            product = etree.SubElement(parent, "product")
-            for prop in sorted(product_properties):
-                sub = etree.SubElement(product, prop)
-                sub.text = str(product_properties[prop])
+            product.fileType = fileType.upper()
+            product.contentType = contentType.upper()
+            xmllist.append(product)
 
     #Check for any remaining unused file extensions.  Dictionary will still
     #contain one 'extension' entry.
@@ -149,4 +140,4 @@ def add_productlist_xml(filepath, extensions_table, static_values, tree):
                                 .format(ext, extensions_table, filepath))
 
     print("...done!")
-    return tree
+    return xmllist

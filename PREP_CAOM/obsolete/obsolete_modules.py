@@ -249,3 +249,142 @@ def update_xml_entry(xmltree, parent, parameter, new_value):
     logging.warning("Could not find {0} in {1}!".format(parent,
                                                         xmltree.getroot().tag))
     return xmltree
+
+#--------------------
+
+def add_productlist_xml(filepath, extensions_table, static_values, tree):
+    """
+    Walk filepath and create product entries for files by matching them with
+    entries in extensions_table.
+
+    :param filepath:  The path where all the files for the current HLSP are
+    located.
+    :type filepath:  string
+
+    :param extensions_table:  The filepath for a .csv file specific to the
+    current HLSP with file extensions expected to be found and corresponding
+    CAOM product parameters to associate with them.
+    :type extensions_table:  string
+
+    :param tree:  The xml tree object to add product subelements to.
+    :type tree:  _ElementTree from lxml
+    """
+
+    #All products will be subelements of the productList subelement
+    parent = tree.find("productList")
+    print("Generating the product list...")
+
+    #Make sure filepaths are full and valid
+    filepath = cp.check_existing_dir(filepath)
+    extensions_table = cp.check_existing_file(extensions_table)
+
+    #Read the extensions_table into a dictionary, ASSUMES extension name in
+    #column 0.
+    #[file extension : (n parameters...)]
+    extensions = {}
+    found_extensions = []
+    with open(extensions_table) as csvfile:
+        csv_object = csv.reader(csvfile, delimiter=",")
+        for row in csv_object:
+            if len(row) <= 1:
+                logging.error("Not enough columns in {0}"
+                              .format(extensions_table))
+                print("Aborting, see log!")
+                quit()
+            else:
+                extensions[row[0]] = tuple(row[1:])
+        csvfile.close()
+
+    #Check that 'extension' is a valid key in the extensions dictionary,
+    #otherwise it is not formatted correctly.
+    try:
+        ext_list = extensions['extension']
+    except KeyError:
+        logging.error("{0} needs 'extension' listed in column 0"
+                      .format(extensions_table))
+        print("Aborting, see log!")
+        quit()
+
+    #Walk filepath and check files found against the list of defined
+    #extensions.  If the extension matches, create a product subelement with
+    #matching parameters.
+    print("...scanning files from {0}...".format(filepath))
+    for path, subdirs, files in os.walk(filepath):
+        #print("...adding files from {0}...".format(path))
+        for name in files:
+            #Build static HLSP product information.
+            product_properties = static_values["product_properties"]
+
+            #Look for a match with an entry in extensions and fill in
+            #parameters.  If parameters is not filled, generate a warning in
+            #the log and skip the file.
+            parameters = {}
+            for ext in extensions.keys():
+                if name.lower().endswith(ext):
+                    parameters = dict(zip(extensions['extension'],
+                                          extensions[ext]))
+                    found_extensions.append(ext)
+                    del extensions[ext]
+                    break
+            if len(parameters) == 0:
+                found = False
+                for e in found_extensions:
+                    if name.lower().endswith(e):
+                        found = True
+                        break
+                if not found:
+                    logging.warning("Skipped {0}, extension not defined in {1}"
+                                    .format(os.path.join(path, name),
+                                    os.path.basename(extensions_table)))
+                continue
+
+            #Add the newly-filled parameters dictionary to the static
+            #properties defined previously.
+            product_properties.update(parameters)
+
+            #Define statusAction depending on what fileStatus is assigned
+            try:
+                status = product_properties["fileStatus"]
+            except KeyError:
+                logging.error("{0} does not define 'fileStatus'!"
+                              .format(extensions_table))
+                print("Aborting, see log!")
+                quit()
+            if status == "REQUIRED":
+                product_properties["statusAction"] = "ERROR"
+            else:
+                product_properties["statusAction"] = "WARNING"
+
+            #Get fileType and contentType by operating on the filename.
+            #Assumes that the filename ends with '_abc' to denote file type.
+            #Concatenates everything after the first '.' to get content type.
+            get_ext = name.split(".")
+            filename = get_ext[0]
+            if "_" in filename:
+                filename = filename.split("_")
+            elif "-" in filename:
+                filename = filename.split("-")
+            fileType = filename[-1]
+            contentType = ".".join(get_ext[1:])
+            product_properties["fileType"] = fileType.upper()
+            product_properties["contentType"] = contentType.upper()
+
+            #product_properties is now a dictionary of all necessary
+            #[CAOM: XML value] entries.
+            product = etree.SubElement(parent, "product")
+            for prop in sorted(product_properties):
+                sub = etree.SubElement(product, prop)
+                sub.text = str(product_properties[prop])
+
+    #Check for any remaining unused file extensions.  Dictionary will still
+    #contain one 'extension' entry.
+    if len(extensions) > 1:
+        for ext in sorted(extensions):
+            if ext == 'extension':
+                continue
+            else:
+                logging.warning("{0} was defined in {1}, but none found in {2}"
+                                .format(ext, extensions_table, filepath))
+
+    print("...done!")
+    return tree

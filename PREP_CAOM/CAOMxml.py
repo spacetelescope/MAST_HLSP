@@ -16,13 +16,10 @@ class CAOMxml:
         """
         Create a new CAOMxml object with a few default parameters.
         """
+        #Common properties
         self.label = label
         self.parent = "CompositeObservation"
         self.source = None
-        self.headerName = "PRIMARY"
-        self.headerKeyword = None
-        self.headerDefaultValue = "None"
-        self.value = "None"
 
     def send_to_lxml(self, xmltree):
         """
@@ -51,6 +48,27 @@ class CAOMxml:
                     hk.text = self.headerKeyword
                     hdv = etree.SubElement(entry, "headerDefaultValue")
                     hdv.text = self.headerDefaultValue
+                elif self.label == "product":
+                    cl = etree.SubElement(entry, "calibrationLevel")
+                    cl.text = self.calibrationLevel
+                    ct = etree.SubElement(entry, "contentType")
+                    ct.text = self.contentType
+                    dpt = etree.SubElement(entry, "dataProductType")
+                    dpt.text = self.dataProductType
+                    fnd = etree.SubElement(entry, "fileNameDescriptor")
+                    fnd.text = self.fileNameDescriptor
+                    fs = etree.SubElement(entry, "fileStatus")
+                    fs.text = self.fileStatus
+                    ft = etree.SubElement(entry, "fileType")
+                    ft.text = self.fileType
+                    pn = etree.SubElement(entry, "planeNumber")
+                    pn.text = self.planeNumber
+                    pt = etree.SubElement(entry, "productType")
+                    pt.text = self.productType
+                    rt = etree.SubElement(entry, "releaseType")
+                    rt.text = self.releaseType
+                    sa = etree.SubElement(entry, "statusAction")
+                    sa.text = self.statusAction
                 return xmltree
 
         #If the 'parent' parameter is not found in xmltree, create it as a new
@@ -75,8 +93,44 @@ class CAOMxml:
 
 #--------------------
 
+class CAOMvalue(CAOMxml):
+
+    def __init__(self, label):
+        CAOMxml.__init__(self, label)
+        self.source = "VALUE"
+        self.value = "None"
+
+#--------------------
+
+class CAOMheader(CAOMxml):
+    def __init__(self, label):
+        CAOMxml.__init__(self, label)
+        self.source = "HEADER"
+        self.headerName = "PRIMARY"
+        self.headerKeyword = None
+        self.headerDefaultValue = "None"
+
+#--------------------
+
+class CAOMproduct(CAOMxml):
+    def __init__(self):
+        CAOMxml.__init__(self, label="product")
+        self.parent = "productList"
+        self.calibrationLevel = "HLSP"
+        self.contentType = None
+        self.dataProductType = None
+        self.fileNameDescriptor = "FILEROOT"
+        self.fileStatus = None
+        self.fileType = None
+        self.planeNumber = "1"
+        self.productType = None
+        self.releaseType = "DATA"
+        self.statusAction = None
+
+#--------------------
+
 if __name__ == "__main__":
-    x = CAOMxml("test")
+    x = CAOMproduct()
+    print(x.label)
     print(x.parent)
-    x.parent = "Echo"
     x.properties()

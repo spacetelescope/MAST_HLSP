@@ -27,7 +27,7 @@ file types.
 from CAOMxml import *
 from lxml import etree
 from add_header_entries import add_header_entries
-from add_productlist_xml import add_productlist_xml
+from add_product_caomxml import add_product_caomxml
 from add_static_values import add_static_values
 from util.add_value_caomxml import add_value_caomxml
 from util.check_log import check_log
@@ -67,7 +67,7 @@ def hlsp_to_xml(config):
     necessary information specific to the HLSP being processed.
     :type config: string
     """
-    
+
     #Check the user-provided config file path.
     config = cp.check_existing_file(config)
 
@@ -116,6 +116,13 @@ def hlsp_to_xml(config):
         print("Aborting, see log!")
         quit()
 
+    #Begin the lxml tree and add the main subelements
+    composite = etree.Element("CompositeObservation")
+    xmltree = etree.ElementTree(composite)
+    metadata = etree.SubElement(composite, "metadataList")
+    provenance = etree.SubElement(composite, "provenance")
+    products = etree.SubElement(composite, "productList")
+
     #Read the static CAOM values from the yaml file, begin a list of CAOMxml
     #elements.
     statics = cp.check_existing_file(STATICS)
@@ -132,15 +139,8 @@ def hlsp_to_xml(config):
     #Add CAOMxml entries for HLSP-specifiic CAOM parameters.
     xmllist = add_value_caomxml(xmllist, uniques)
 
-    #Begin the lxml tree and add the main subelements
-    composite = etree.Element("CompositeObservation")
-    xmltree = etree.ElementTree(composite)
-    metadata = etree.SubElement(composite, "metadataList")
-    provenance = etree.SubElement(composite, "provenance")
-    products = etree.SubElement(composite, "productList")
-
-    #Add the product list to the xml tree
-    xmltree = add_productlist_xml(hlsppath, extensions, static_values, xmltree)
+    #Add product entries to the list of CAOMxml objects
+    xmllist = add_product_caomxml(xmllist, hlsppath, extensions)
 
     #Create the head string to write to doctype
     head_strings = []

@@ -46,17 +46,14 @@ def add_header_entries(xmllist, tablepath, header_type):
             continue
         else:
             caom_parameter = row[caom_index]
-            new_entry = CAOMxml(caom_parameter)
+            new_entry = CAOMheader(caom_parameter)
             new_entry.parent = row[section_index]
-            new_entry.source = "HEADER"
             new_entry.headerName = row[header_index]
             new_entry.headerKeyword = row[key_index]
             if caom_parameter == "targetPosition_equinox":
                 new_entry.headerDefaultValue = "2000.0"
             elif caom_parameter == "targetPosition_coordsys":
                 new_entry.headerDefaultValue = "ICRS"
-            else:
-                new_entry.headerDefaultValue = "None"
             xmllist.append(new_entry)
 
     return xmllist

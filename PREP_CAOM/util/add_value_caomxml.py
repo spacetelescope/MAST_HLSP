@@ -6,7 +6,7 @@
     objects are then added to xmllist and returned.
 """
 
-from CAOMxml import CAOMxml
+from CAOMxml import *
 from lxml import etree
 import logging
 
@@ -14,8 +14,8 @@ import logging
 
 def add_value_caomxml(xmllist, dictionary, parent="CompositeObservation"):
     """
-    Create CAOMxml object (of source = "VALUE") from entries in a dictionary.
-    Recursive operation allows nested parameters.
+    Create CAOMvalue objects from entries in a dictionary.  Recursive
+    operation allows nested parameters.
     """
     for element in dictionary.keys():
         if isinstance(dictionary[element], dict):
@@ -24,9 +24,8 @@ def add_value_caomxml(xmllist, dictionary, parent="CompositeObservation"):
             xmllist.append(blank_entry)
             xmllist = add_value_caomxml(xmllist, dictionary[element], element)
         else:
-            new_entry = CAOMxml(element)
+            new_entry = CAOMvalue(element)
             new_entry.parent = parent
-            new_entry.source = "VALUE"
             new_entry.value = dictionary[element]
             xmllist.append(new_entry)
     return xmllist
