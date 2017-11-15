@@ -11,6 +11,10 @@ kepler:
     metadataList:
         #Some K2 headers use "Kepler Photometer", want to standardize for portal.
         instrument_name: Kepler
+    shape:
+        circle:
+            center: targetPosition_cval1, targetPosition_cval2
+            radius: "4"
 product_properties:
     calibrationLevel: HLSP
     releaseType: DATA

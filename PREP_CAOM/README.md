@@ -15,27 +15,33 @@ The user must also provide a .yaml config file when launching this script,
 which is then parsed and checked for all necessary parameters and file  
 paths.  
 
++ "CAOMxml.py"  
+This defines a custom CAOMxml object class and subclasses for CAOMvalue  
+entries, CAOMheader entries, and CAOMproduct entries.  These classes help  
+carry multiple parameters for a given XML entry without resorting to  
+dictionaries in dictionaries.  String modules also simplify output of XML  
+entries for debugging purposes.
+
 + "add_static_values.py"  
 Read in all appropriate static values from hlsp_caom_staticvalues.yaml and  
-add these to the xml tree.
+create CAOMvalue objects.  Additions are made based on data types indicated  
+in the user-provided yaml config file, as well as the indicated FITS header  
+type.
 
 + "add_header_entries.py"  
 Read in the header keywords translation table based on which header type  
-the user has designated.  Add these to the xml tree.
+the user has designated.  Create a CAOMheader object for each header.
 
-+ "add_productlist_xml.py"  
-This script crawls the provided HLSP file path and creates a product  
-entry for each file type matching a set of defined file extensions.  
-
-+ "add_unique_xml.py"  
-This script adds CAOM parameters unique to a certain HLSP provided in the  
-.yaml config file.  
++ "add_product_caomxml.py"  
+This script crawls the provided HLSP file path and creates a CAOMproduct  
+object for each file type matching a set of defined file extensions.  
 ___
 ### /PREP_CAOM/util/
-+ "add_xml_entries.py"  
-This script is called from several others to generate xml subelements with  
-proper CAOM formatting.  Modules are available for creating both VALUE  
-subelements and HEADER subelements.  
++ "add_value_caomxml.py"  
+This script recursively creates CAOMvalue objects for dictionaries of  
+parameters.  This is used to create entries for the static values in  
+add_static_values.py and any user-provided unique parameters defined in the  
+yaml config file.
 
 + "check_log.py"  
 This script scans the resulting log file at the end of the script to display  

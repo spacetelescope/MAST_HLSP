@@ -56,7 +56,7 @@ def add_header_entries(xmllist, tablepath, header_type):
                 new_entry.headerDefaultValue = "ICRS"
             elif (header_type == "kepler" and
                   new_entry.headerKeyword == "FILTER"):
-                new_entry.headerDefaultValue = "K"
+                new_entry.headerDefaultValue = "Kepler"
             xmllist.append(new_entry)
 
     return xmllist
