@@ -1,5 +1,5 @@
 /MAST-HLSP/PREP_CAOM/README.md  
-:Updated: 2017 Nov 7  
+:Updated: 2017 Nov 15  
 :Author: Peter Forshay  
 
 The files in this directory are used to create an XML document that will  
