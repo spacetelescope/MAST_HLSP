@@ -19,7 +19,7 @@ paths.
 This defines a custom CAOMxml object class and subclasses for CAOMvalue  
 entries, CAOMheader entries, and CAOMproduct entries.  These classes help  
 carry multiple parameters for a given XML entry without resorting to  
-dictionaries in dictionaries.  String modules also simplify output of XML  
+dictionaries of dictionaries.  String modules also simplify output of XML  
 entries for debugging purposes.
 
 + "add_static_values.py"  
@@ -55,7 +55,7 @@ and potentially create new directories if they don't already exist.
 Read in a .yaml file and return the contents as a dictionary.  
 ___
 ### /PREP_CAOM/resources/
-+ "hlsp_caom_staticvalues.yaml"
++ "hlsp_caom_staticvalues.yaml"  
 This file contains CAOM parameters and static values to fill them with for  
 certain types of HLSPs.  
 

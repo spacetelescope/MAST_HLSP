@@ -142,7 +142,10 @@ def hlsp_to_xml(config):
 
     #Add CAOMxml entries for HLSP-specifiic CAOM parameters.
     print("Adding unique entries for this HLSP...")
-    xmllist = add_value_caomxml(xmllist, uniques)
+    if uniques is not None:
+        xmllist = add_value_caomxml(xmllist, uniques)
+    else:
+        logging.warning("No unique parameters provided in the yaml config.")
     print("...done!")
 
     #Add product entries to the list of CAOMxml objects
