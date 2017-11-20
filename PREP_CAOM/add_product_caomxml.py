@@ -117,13 +117,10 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
             #Get fileType and contentType by operating on the filename.
             #Assumes that the filename ends with '_abc' to denote file type.
             #Concatenates everything after the first '.' to get content type.
-            get_ext = name.split(".")
-            filename = get_ext[0]
-            if "_" in filename:
-                filename = filename.split("_")
-            elif "-" in filename:
-                filename = filename.split("-")
-            fileType = filename[-1]
+            full = name.split("_")
+            end = full[-1]
+            get_ext = end.split(".")
+            fileType = get_ext[0]
             contentType = ".".join(get_ext[1:])
             product.fileType = fileType.upper()
             product.contentType = contentType.upper()
