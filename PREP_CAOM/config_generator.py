@@ -3,9 +3,10 @@ import sys
 import yaml
 from hlsp_to_xml import hlsp_to_xml
 try:
-    from PyQt4.QtWidgets import *
-except ImportError:
     from PyQt5.QtWidgets import *
+except ImportError:
+    from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
 
 global SIZE
 SIZE = 9
