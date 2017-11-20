@@ -2,7 +2,10 @@ import os
 import sys
 import yaml
 from hlsp_to_xml import hlsp_to_xml
-from PyQt5.QtWidgets import *
+try:
+    from PyQt4.QtWidgets import *
+except ModuleNotFoundError:
+    from PyQt5.QtWidgets import *
 
 global SIZE
 SIZE = 9
