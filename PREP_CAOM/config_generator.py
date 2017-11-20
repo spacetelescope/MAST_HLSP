@@ -3,13 +3,14 @@ import sys
 import yaml
 from hlsp_to_xml import hlsp_to_xml
 try:
+    from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
 except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
 global SIZE
-SIZE = 9
+SIZE = 10
 
 #--------------------
 
@@ -59,10 +60,13 @@ class ConfigGenerator(QWidget):
         #these required.
         fp = QLabel("Filepaths:", self)
         data = QLabel("HLSP Data: ", fp)
+        data.setAlignment(Qt.AlignRight)
         self.data_edit = QLineEdit(data)
         ext = QLabel("File Extensions Table: ", fp)
+        ext.setAlignment(Qt.AlignRight)
         self.ext_edit = QLineEdit(ext)
         out = QLabel("Output File: ", fp)
+        out.setAlignment(Qt.AlignRight)
         self.out_edit = QLineEdit(out)
 
         #Overwrite flag is boolean, on by default.
@@ -86,8 +90,11 @@ class ConfigGenerator(QWidget):
         #metadataList and provenance.
         up = QLabel("HLSP-Unique Parameters: ", self)
         self.parent_param = QLabel("Parent:", up)
+        self.parent_param.setAlignment(Qt.AlignHCenter)
         caom_param = QLabel("CAOM Keyword:", up)
+        caom_param.setAlignment(Qt.AlignHCenter)
         value_param = QLabel("Value:", up)
+        value_param.setAlignment(Qt.AlignHCenter)
         parent_edit = QComboBox(self.parent_param, editable=True)
         parent_edit.addItem("")
         parent_edit.addItem("metadataList")
@@ -95,18 +102,22 @@ class ConfigGenerator(QWidget):
         caom_edit = QLineEdit(caom_param)
         value_edit = QLineEdit(value_param)
 
+        status_label = QLabel("Results:")
+        status_label.setAlignment(Qt.AlignHCenter)
+        self.status = QStatusBar()
+
         #Three buttons: Add a unique parameter entry, save as yaml file, or
         #save as yaml file and run hlsp_to_xml.
-        add_param = QPushButton("Additional Parameter", self)
+        add_param = QPushButton("+ add a new parameter")
         gen = QPushButton("Generate YAML File", self)
         gen.setStyleSheet("background-color: #7af442; \
                           border-radius: 4px; \
-                          height: 25px")
+                          height: 40px")
         gen.resize(200,20)
         run = QPushButton("Generate YAML and Run 'hlsp_to_xml.py'", self)
         run.setStyleSheet("background-color: #42d4f4; \
                           border-radius: 4px; \
-                          height: 25px")
+                          height: 40px")
 
         #Create a grid layout and add all the widgets.
         self.grid = QGridLayout()
@@ -136,9 +147,38 @@ class ConfigGenerator(QWidget):
         self.grid.addWidget(gen, 9, 0)
         self.grid.addWidget(run, 10, 0)
 
+        self.grid2 = QGridLayout()
+        self.grid2.setSpacing(SIZE)
+        self.grid2.addWidget(fp, 0, 0)
+        self.grid2.addWidget(gen, 0, 3, 2, 1)
+        self.grid2.addWidget(data, 1, 0)
+        self.grid2.addWidget(self.data_edit, 1, 1, 1, 2)
+        self.grid2.addWidget(run, 2, 3, 2, 1)
+        self.grid2.addWidget(ext, 2, 0)
+        self.grid2.addWidget(self.ext_edit, 2, 1, 1, 2)
+        self.grid2.addWidget(out, 3, 0)
+        self.grid2.addWidget(self.out_edit, 3, 1, 1, 2)
+        self.grid2.addWidget(ow, 4, 0)
+        self.grid2.addWidget(self.ow_on, 4, 1)
+        self.grid2.addWidget(self.ow_off, 4, 2)
+        self.grid2.addWidget(status_label, 4, 3)
+        self.grid2.addWidget(self.status, 5, 3, 5, 1)
+        self.grid2.addWidget(ht, 5, 0)
+        self.grid2.addWidget(self.header, 5, 1)
+        self.grid2.addWidget(dt, 6, 0)
+        self.grid2.addWidget(self.lightcurve, 6, 1)
+        self.grid2.addWidget(up, 7, 0)
+        self.grid2.addWidget(add_param, 7, 1)
+        self.grid2.addWidget(self.parent_param, 8, 0)
+        self.grid2.addWidget(caom_param, 8, 1)
+        self.grid2.addWidget(value_param, 8, 2)
+        self.grid2.addWidget(parent_edit, 9, 0)
+        self.grid2.addWidget(caom_edit, 9, 1)
+        self.grid2.addWidget(value_edit, 9, 2)
+
         #Set the window layout and show it.
-        self.setLayout(self.grid)
-        self.resize(700,300)
+        self.setLayout(self.grid2)
+        self.resize(800,300)
         self.setWindowTitle("ConfigGenerator")
         self.show()
 
@@ -158,9 +198,10 @@ class ConfigGenerator(QWidget):
         new_parent.addItem("provenance")
         new_caom = QLineEdit()
         new_value = QLineEdit()
-        self.grid.addWidget(new_parent, SIZE, 1)
-        self.grid.addWidget(new_caom, SIZE, 2)
-        self.grid.addWidget(new_value, SIZE, 3)
+        self.grid2.addWidget(new_parent, SIZE, 0)
+        self.grid2.addWidget(new_caom, SIZE, 1)
+        self.grid2.addWidget(new_value, SIZE, 2)
+        self.status.showMessage("Added!")
         SIZE += 1
 
     def collectInputs(self):
