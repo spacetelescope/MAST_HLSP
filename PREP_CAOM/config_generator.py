@@ -4,7 +4,7 @@ import yaml
 from hlsp_to_xml import hlsp_to_xml
 try:
     from PyQt4.QtWidgets import *
-except ModuleNotFoundError:
+except ImportError:
     from PyQt5.QtWidgets import *
 
 global SIZE
