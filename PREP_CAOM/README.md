@@ -9,6 +9,12 @@ templates and guidance for necessary HLSP-specific coding.  The file
 structure is described below:  
 ___
 ### /PREP_CAOM/  
++ "config_generator.py"  
+This script launches a PyQt GUI that will collect user inputs and generate a  
+.yaml config file that is properly formatted for hlsp_to_xml.  The user also  
+has the option to immediately launch the hlsp_to_xml script upon saving the  
+new config file.
+
 + "hlsp_to_xml.py"  
 This is the wrapper script intended to launch all necessary child scripts.  
 The user must also provide a .yaml config file when launching this script,  
