@@ -61,6 +61,7 @@ class ConfigGenerator(QWidget):
         fp = QLabel("Filepaths:", self)
         data = QLabel("HLSP Data: ", fp)
         data.setAlignment(Qt.AlignRight)
+        data.setToolTip("Enter the location of the HLSP data files to scan.")
         self.data_edit = QLineEdit(data)
         ext = QLabel("File Extensions Table: ", fp)
         ext.setAlignment(Qt.AlignRight)
@@ -104,20 +105,57 @@ class ConfigGenerator(QWidget):
 
         status_label = QLabel("Results:")
         status_label.setAlignment(Qt.AlignHCenter)
-        self.status = QStatusBar()
+        self.status = QTextEdit()
+        self.status.setReadOnly(True)
+        self.status.setLineWrapMode(QTextEdit.NoWrap)
+        self.status.setStyleSheet("border-style: solid; \
+                                  border-width: 1px; \
+                                  background: rgba(235,235,235,0%);")
 
         #Three buttons: Add a unique parameter entry, save as yaml file, or
         #save as yaml file and run hlsp_to_xml.
         add_param = QPushButton("+ add a new parameter")
+        add_param.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #dddddd;
+                                    border: 2px solid #afafaf;
+                                    border-radius: 8px;
+                                    height: 20px
+                                    }
+                                QPushButton:hover {
+                                    border: 4px solid #afafaf;
+                                    }
+                                QPushButton:pressed {
+                                    background-color: #afafaf;
+                                    }""")
         gen = QPushButton("Generate YAML File", self)
-        gen.setStyleSheet("background-color: #7af442; \
-                          border-radius: 4px; \
-                          height: 40px")
-        gen.resize(200,20)
-        run = QPushButton("Generate YAML and Run 'hlsp_to_xml.py'", self)
-        run.setStyleSheet("background-color: #42d4f4; \
-                          border-radius: 4px; \
-                          height: 40px")
+        gen.setStyleSheet("""
+                          QPushButton {
+                            background-color: #7af442;
+                            border: 2px solid #45a018;
+                            border-radius: 8px;
+                            height: 40px
+                            }
+                          QPushButton:hover {
+                            border: 4px solid #45a018;
+                            }
+                          QPushButton:pressed {
+                            background-color: #45a018;
+                            }""")
+        run = QPushButton("Generate YAML and Run Script", self)
+        run.setStyleSheet("""
+                          QPushButton {
+                            background-color: #42d4f4;
+                            border: 2px solid #4f9cad;
+                            border-radius: 8px;
+                            height: 40px
+                            }
+                          QPushButton:hover {
+                            border: 4px solid #4f9cad;
+                            }
+                          QPushButton:pressed {
+                            background-color: #4f9cad;
+                            }""")
 
         #Create a grid layout and add all the widgets.
         self.grid = QGridLayout()
@@ -149,6 +187,10 @@ class ConfigGenerator(QWidget):
 
         self.grid2 = QGridLayout()
         self.grid2.setSpacing(SIZE)
+        self.grid2.setColumnStretch(1, 1)
+        self.grid2.setColumnStretch(2, 1)
+        self.grid2.setColumnStretch(3, 2)
+        self.grid2.setRowStretch(SIZE, 2)
         self.grid2.addWidget(fp, 0, 0)
         self.grid2.addWidget(gen, 0, 3, 2, 1)
         self.grid2.addWidget(data, 1, 0)
@@ -162,7 +204,7 @@ class ConfigGenerator(QWidget):
         self.grid2.addWidget(self.ow_on, 4, 1)
         self.grid2.addWidget(self.ow_off, 4, 2)
         self.grid2.addWidget(status_label, 4, 3)
-        self.grid2.addWidget(self.status, 5, 3, 5, 1)
+        self.grid2.addWidget(self.status, 5, 3, -1, 1)
         self.grid2.addWidget(ht, 5, 0)
         self.grid2.addWidget(self.header, 5, 1)
         self.grid2.addWidget(dt, 6, 0)
@@ -178,8 +220,6 @@ class ConfigGenerator(QWidget):
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)
-        self.resize(800,300)
-        self.setWindowTitle("ConfigGenerator")
         self.show()
 
         #Add button actions.
@@ -201,7 +241,10 @@ class ConfigGenerator(QWidget):
         self.grid2.addWidget(new_parent, SIZE, 0)
         self.grid2.addWidget(new_caom, SIZE, 1)
         self.grid2.addWidget(new_value, SIZE, 2)
-        self.status.showMessage("Added!")
+        self.grid2.setRowStretch(SIZE, 0)
+        self.grid2.setRowStretch(SIZE+1, 1)
+        self.status.setTextColor(Qt.black)
+        self.status.append("Added new parameter row.")
         SIZE += 1
 
     def collectInputs(self):
@@ -215,13 +258,30 @@ class ConfigGenerator(QWidget):
         #Create the filepaths section of the dictionary from the edit boxes
         #and overwrite flag.
         filepaths = {}
-        filepaths["hlsppath"] = self.data_edit.text()
+
+        hlsppath = self.data_edit.text()
+        if hlsppath == "":
+            self.status.setTextColor(Qt.red)
+            self.status.append("HLSP Data file path is missing!")
+            return None
+        else:
+            filepaths["hlsppath"] = hlsppath
+
         extensions = self.ext_edit.text()
+        if extensions == "":
+            self.status.setTextColor(Qt.red)
+            self.status.append("Extensions file path is missing!")
+            return None
         #extensions table must end with .csv
         if not extensions.endswith(".csv"):
             extensions += ".csv"
         filepaths["extensions"] = extensions
+
         out = self.out_edit.text()
+        if out == "":
+            self.status.setTextColor(Qt.red)
+            self.status.append("Output file path is missing!")
+            return None
         #output file must end with .xml
         if not out.endswith(".xml"):
             out += ".xml"
@@ -287,7 +347,10 @@ class ConfigGenerator(QWidget):
                 saveit += ".yaml"
             with open(saveit, 'w') as output:
                 yaml.dump(config, output, default_flow_style=False)
-            print("Saved {}".format(saveit))
+            print("Saved {0}".format(saveit))
+            self.status.setTextColor(Qt.darkGreen)
+            self.status.append("Saved {0}".format(saveit))
+            output.close()
             return saveit
 
     def genClicked(self):
@@ -303,8 +366,11 @@ class ConfigGenerator(QWidget):
         and send the file to hlsp_to_xml.
         """
         config = self.collectInputs()
-        print("Launching hlsp_to_xml.py...")
-        hlsp_to_xml(config)
+        if config is not None:
+            self.status.setTextColor(Qt.darkGreen)
+            self.status.append("Launching hlsp_to_xml.py!")
+            self.status.append("See terminal for script output.")
+            hlsp_to_xml(config)
 
 #--------------------
 
