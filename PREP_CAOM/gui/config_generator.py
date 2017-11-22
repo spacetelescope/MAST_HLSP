@@ -117,7 +117,7 @@ class ConfigGenerator(QWidget):
         add_param = QPushButton("+ add a new parameter")
         add_param.setStyleSheet("""
                                 QPushButton {
-                                    background-color: #dddddd;
+                                    background-color: #f2f2f2;
                                     border: 2px solid #afafaf;
                                     border-radius: 8px;
                                     height: 20px

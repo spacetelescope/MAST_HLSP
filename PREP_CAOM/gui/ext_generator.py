@@ -20,7 +20,7 @@ class ExtGenerator(QWidget):
         add_file = QPushButton("+ add another file type")
         add_file.setStyleSheet("""
                                 QPushButton {
-                                    background-color: #dddddd;
+                                    background-color: #f2f2f2;
                                     border: 2px solid #afafaf;
                                     border-radius: 8px;
                                     height: 20px
@@ -144,13 +144,13 @@ class ExtGenerator(QWidget):
             read_dt = None
             read_pt = None
             read_req = None
-            #Skip totally empty rows, empty values are okay for defining a new
-            #parent.
             if add_ext is None:
                 continue
 
             ext_widget = add_ext.widget()
             read_ext = str(ext_widget.text())
+            if read_ext == "":
+                continue
             dt_widget = add_dt.widget()
             read_dt = dt_widget.currentText().upper()
             pt_widget = add_pt.widget()
@@ -164,6 +164,9 @@ class ExtGenerator(QWidget):
             as_tuple = (read_ext, read_dt, read_pt, read_req)
             line = ",".join(as_tuple)
             all_files.append(as_tuple)
+
+        if len(all_files) == 0:
+            return None
 
         head = ("extension", "dataProductType", "productType", "fileStatus")
         saveit = QFileDialog.getSaveFileName(self, "Save CSV file", ".")

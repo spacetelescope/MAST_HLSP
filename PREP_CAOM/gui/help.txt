@@ -1,0 +1,34 @@
+File Descriptions Help:
+    Here you will want to list each type of file you wish to add to CAOM that you expect to 
+    find in the HLSP directory you will be scanning.  Include the last portion of the 
+    filename as well as the extension (i.e. _img.fits).  Then select appropriate Data Type 
+    and Product Type descriptions for each file listed.  The Required flag does something.
+-----------------------    
+Config File Help:
+    This will assemble a YAML config file to use with hlsp_to_xml.py, which tries to 
+    automate as much of the process as possible, but the user must provide certain 
+    information.
+    
+    (relative filepaths should work in all cases)
+    HLSP Data:
+        Insert the file path to the HLSP data files you wish to scan.
+    File Extensions Table:
+        Insert the file path to the CSV file containing file descriptions for this HLSP.  
+        You may have just created this file with the previous widget.
+    Output File:
+        This provides the file path and name for the hlsp_to_xml.py output XML file.  Name 
+        this whatever you want.
+    Overwrite:
+        This will control overwriting an existing YAML config file.  On by default.
+    Header Type:
+        Indicate which type of FITS headers you expect to find with this HLSP.
+    Included Data Types:
+        Certain data types will define special parameters within CAOM.  Indicate which 
+        types you expect this HLSP to contain.
+    HLSP-Unique Parameters:
+        Define any parameters you would like to insert in CAOM that are not available in 
+        the FITS headers of these HLSP files.  'Parent' defines which section of the XML 
+        file to create the entry in.  'CAOM Keyword' will define how the parameter is 
+        inserted into CAOM.  'Value' is the value you'd like to associate with this keyword.  
+        A common entry is Parent="metadataList", CAOM Keyword="reference", Value=
+        "http://www...".
