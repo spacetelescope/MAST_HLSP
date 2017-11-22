@@ -11,12 +11,61 @@ except ImportError:
 global EXTSIZE
 EXTSIZE = 3
 
+#--------------------
+
+class DataTypeBox(QComboBox):
+    """
+    Create a subclass of QComboBox to contain Data Type options.
+    """
+    def __init__(self):
+        super().__init__()
+        self.addItem("Image")
+        self.addItem("Sepctrum")
+        self.addItem("TimeSeries")
+        self.addItem("Visibility")
+        self.addItem("EventList")
+        self.addItem("Cube")
+        self.addItem("Catalog")
+        self.addItem("Measurements")
+
+#--------------------
+
+class ProductTypeBox(QComboBox):
+    """
+    Create a subclass of QComboBox to contain Product Type options.
+    """
+    def __init__(self):
+        super().__init__()
+        self.addItem("Science")
+        self.addItem("Calibration")
+        self.addItem("Preview")
+        self.addItem("Auxiliary")
+        self.addItem("Thumbnail")
+        self.addItem("Bias")
+        self.addItem("Dark")
+        self.addItem("Flat")
+        self.addItem("WaveCal")
+        self.addItem("Noise")
+        self.addItem("Weight")
+        self.addItem("Info")
+        self.addItem("Catalog")
+
+#--------------------
+
 class ExtGenerator(QWidget):
+    """
+    Create a GUI to create a CSV table describing files to search for within
+    an HLSP directory and some CAOM parameters to apply to them.  This table
+    is necessary to run hlsp_to_xml.py.
+    """
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
+
+        #Add buttons to create a new file entry row and to launch the CSV file
+        #creation
         add_file = QPushButton("+ add another file type")
         add_file.setStyleSheet("""
                                 QPushButton {
@@ -48,34 +97,14 @@ class ExtGenerator(QWidget):
                             }""")
 
         self.ext_label = QLabel("File ends with:")
+        self.ext_label.setToolTip("Provide a distinctive filename ending to search for within this HLSP ('_img.fits')")
         self.dt_label = QLabel("Data Type:")
         self.pt_label = QLabel("Product Type:")
         self.req_label = QLabel("Required:")
 
         self.ext_edit = QLineEdit()
-        self.dt_box = QComboBox()
-        self.dt_box.addItem("Image")
-        self.dt_box.addItem("Sepctrum")
-        self.dt_box.addItem("TimeSeries")
-        self.dt_box.addItem("Visibility")
-        self.dt_box.addItem("EventList")
-        self.dt_box.addItem("Cube")
-        self.dt_box.addItem("Catalog")
-        self.dt_box.addItem("Measurements")
-        self.pt_box = QComboBox()
-        self.pt_box.addItem("Science")
-        self.pt_box.addItem("Calibration")
-        self.pt_box.addItem("Preview")
-        self.pt_box.addItem("Auxiliary")
-        self.pt_box.addItem("Thumbnail")
-        self.pt_box.addItem("Bias")
-        self.pt_box.addItem("Dark")
-        self.pt_box.addItem("Flat")
-        self.pt_box.addItem("WaveCal")
-        self.pt_box.addItem("Noise")
-        self.pt_box.addItem("Weight")
-        self.pt_box.addItem("Info")
-        self.pt_box.addItem("Catalog")
+        self.dt_box = DataTypeBox()
+        self.pt_box = ProductTypeBox()
         self.req_box = QCheckBox()
 
         self.grid = QGridLayout()
@@ -98,31 +127,14 @@ class ExtGenerator(QWidget):
         save.clicked.connect(self.saveClicked)
 
     def newFileClicked(self):
+        """
+        When 'add_file' is clicked, create a new row with the same file entry
+        options as the first row.
+        """
         global EXTSIZE
         new_ext = QLineEdit()
-        new_dt = QComboBox()
-        new_dt.addItem("Image")
-        new_dt.addItem("Sepctrum")
-        new_dt.addItem("TimeSeries")
-        new_dt.addItem("Visibility")
-        new_dt.addItem("EventList")
-        new_dt.addItem("Cube")
-        new_dt.addItem("Catalog")
-        new_dt.addItem("Measurements")
-        new_pt = QComboBox()
-        new_pt.addItem("Science")
-        new_pt.addItem("Calibration")
-        new_pt.addItem("Preview")
-        new_pt.addItem("Auxiliary")
-        new_pt.addItem("Thumbnail")
-        new_pt.addItem("Bias")
-        new_pt.addItem("Dark")
-        new_pt.addItem("Flat")
-        new_pt.addItem("WaveCal")
-        new_pt.addItem("Noise")
-        new_pt.addItem("Weight")
-        new_pt.addItem("Info")
-        new_pt.addItem("Catalog")
+        new_dt = DataTypeBox()
+        new_pt = ProductTypeBox()
         new_req = QCheckBox()
         self.grid.addWidget(new_ext, EXTSIZE, 0)
         self.grid.addWidget(new_dt, EXTSIZE, 1)
@@ -133,8 +145,14 @@ class ExtGenerator(QWidget):
         EXTSIZE += 1
 
     def saveClicked(self):
+        """
+        When 'save' is clicked, collect all the user entries and write the
+        CSV file.
+        """
         begin_row = 2
         all_files = []
+
+        #Loop over all rows the user might have created in the form.
         for row in range(begin_row, self.grid.rowCount()):
             add_ext = self.grid.itemAtPosition(row, 0)
             add_dt = self.grid.itemAtPosition(row, 1)
@@ -144,9 +162,12 @@ class ExtGenerator(QWidget):
             read_dt = None
             read_pt = None
             read_req = None
+            #Skip any empty rows (might not be possible/necessary)
             if add_ext is None:
                 continue
 
+            #Read the entries from the current row.  Skip if there is no text
+            #in the file extension entry.
             ext_widget = add_ext.widget()
             read_ext = str(ext_widget.text())
             if read_ext == "":
@@ -162,12 +183,14 @@ class ExtGenerator(QWidget):
             else:
                 read_req = "OPTIONAL"
             as_tuple = (read_ext, read_dt, read_pt, read_req)
-            line = ",".join(as_tuple)
             all_files.append(as_tuple)
 
+        #If all file entry rows have empty name entries, button takes no action
         if len(all_files) == 0:
             return None
 
+        #Create a header row, get a name to save the file, and write all
+        #content to the CSV file.
         head = ("extension", "dataProductType", "productType", "fileStatus")
         saveit = QFileDialog.getSaveFileName(self, "Save CSV file", ".")
         if len(saveit[0]) > 0:

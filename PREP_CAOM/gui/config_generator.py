@@ -65,31 +65,37 @@ class ConfigGenerator(QWidget):
         self.data_edit = QLineEdit(data)
         ext = QLabel("File Extensions Table: ", fp)
         ext.setAlignment(Qt.AlignRight)
+        ext.setToolTip("Enter the location of the CSV file containing HLSP file information.")
         self.ext_edit = QLineEdit(ext)
-        out = QLabel("Output File: ", fp)
+        out = QLabel("Output XML File: ", fp)
         out.setAlignment(Qt.AlignRight)
+        out.setToolTip("Provide a file path and name for the XML result file.")
         self.out_edit = QLineEdit(out)
 
         #Overwrite flag is boolean, on by default.
         ow = QLabel("Overwrite: ", self)
+        ow.setToolTip("Allow hlsp_to_xml.py to overwrite an existing XML file.")
         self.ow_on = QRadioButton("On", ow)
         self.ow_on.setChecked(True)
         self.ow_off = QRadioButton("Off", ow)
 
         #Add all accepted fits header types here.
         ht = QLabel("Header Type: ", self)
+        ht.setToolTip("Select the FITS header type this HLSP uses.")
         self.header = QComboBox(ht)
         self.header.addItem("Standard")
         self.header.addItem("Kepler")
 
         #Add all unique data types defined in the static values file here.
         dt = QLabel("Included Data Types: ", self)
+        dt.setToolTip("Add special CAOM parameters for various data types.")
         self.lightcurve = QCheckBox("Light Curves", dt)
 
         #Create custom unique parameters to write into the yaml file.  This
         #list is expandable.  Custom parents can be defined in addition to
         #metadataList and provenance.
         up = QLabel("HLSP-Unique Parameters: ", self)
+        up.setToolTip("Define additional CAOM parameters to insert that are not defined in the FITS headers.")
         self.parent_param = QLabel("Parent:", up)
         self.parent_param.setAlignment(Qt.AlignHCenter)
         caom_param = QLabel("CAOM Keyword:", up)
@@ -146,45 +152,18 @@ class ConfigGenerator(QWidget):
         run.setStyleSheet("""
                           QPushButton {
                             background-color: #42d4f4;
-                            border: 2px solid #4f9cad;
+                            border: 2px solid #005fa3;
                             border-radius: 8px;
                             height: 40px
                             }
                           QPushButton:hover {
-                            border: 4px solid #4f9cad;
+                            border: 4px solid #005fa3;
                             }
                           QPushButton:pressed {
-                            background-color: #4f9cad;
+                            background-color: #005fa3;
                             }""")
 
         #Create a grid layout and add all the widgets.
-        self.grid = QGridLayout()
-        self.grid.setSpacing(SIZE)
-        self.grid.addWidget(fp, 1, 0)
-        self.grid.addWidget(data, 1, 1)
-        self.grid.addWidget(self.data_edit, 1, 2, 1, 2)
-        self.grid.addWidget(ext, 2, 1)
-        self.grid.addWidget(self.ext_edit, 2, 2, 1, 2)
-        self.grid.addWidget(out, 3, 1)
-        self.grid.addWidget(self.out_edit, 3, 2, 1, 2)
-        self.grid.addWidget(ow, 4, 0)
-        self.grid.addWidget(self.ow_on, 4, 1)
-        self.grid.addWidget(self.ow_off, 4, 2)
-        self.grid.addWidget(ht, 5, 0)
-        self.grid.addWidget(self.header, 5, 1)
-        self.grid.addWidget(dt, 6, 0)
-        self.grid.addWidget(self.lightcurve, 6, 1)
-        self.grid.addWidget(up, 7, 0)
-        self.grid.addWidget(self.parent_param, 7, 1)
-        self.grid.addWidget(caom_param, 7, 2)
-        self.grid.addWidget(value_param, 7, 3)
-        self.grid.addWidget(add_param, 8, 0)
-        self.grid.addWidget(parent_edit, 8, 1)
-        self.grid.addWidget(caom_edit, 8, 2)
-        self.grid.addWidget(value_edit, 8, 3)
-        self.grid.addWidget(gen, 9, 0)
-        self.grid.addWidget(run, 10, 0)
-
         self.grid2 = QGridLayout()
         self.grid2.setSpacing(SIZE)
         self.grid2.setColumnStretch(1, 1)
@@ -301,12 +280,12 @@ class ConfigGenerator(QWidget):
 
         #Collect all the unique parameters the user has entered.  Start at row
         #8 and search through all rows the user may have added.
-        begin_row = 8
+        begin_row = 9
         uniques = {}
-        for row in range(begin_row, self.grid.rowCount()):
-            add_parent = self.grid.itemAtPosition(row, 1)
-            add_caom = self.grid.itemAtPosition(row, 2)
-            add_value = self.grid.itemAtPosition(row, 3)
+        for row in range(begin_row, self.grid2.rowCount()):
+            add_parent = self.grid2.itemAtPosition(row, 0)
+            add_caom = self.grid2.itemAtPosition(row, 1)
+            add_value = self.grid2.itemAtPosition(row, 2)
             unique_parent = None
             unique_caom = None
             unique_value = None
@@ -316,7 +295,7 @@ class ConfigGenerator(QWidget):
                 continue
             if add_parent is not None:
                 parent_widget = add_parent.widget()
-                unique_parent = parent_widget.currentText()
+                unique_parent = str(parent_widget.currentText())
             if add_caom is not None:
                 caom_widget = add_caom.widget()
                 unique_caom = str(caom_widget.text())
