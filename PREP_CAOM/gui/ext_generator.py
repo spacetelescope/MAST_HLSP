@@ -8,8 +8,10 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
-global EXTSIZE
-EXTSIZE = 3
+global FIRST_ENTRY
+FIRST_ENTRY = 3
+global NEXT_ENTRY
+NEXT_ENTRY = FIRST_ENTRY + 1
 
 #--------------------
 
@@ -19,14 +21,15 @@ class DataTypeBox(QComboBox):
     """
     def __init__(self):
         super().__init__()
-        self.addItem("Image")
-        self.addItem("Sepctrum")
-        self.addItem("TimeSeries")
-        self.addItem("Visibility")
-        self.addItem("EventList")
-        self.addItem("Cube")
-        self.addItem("Catalog")
-        self.addItem("Measurements")
+        self.entries = ["IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
+                        "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
+        for item in self.entries:
+            self.addItem(item)
+
+    def setCurrentType(self, ctype):
+        if ctype in self.entries:
+            index = self.entries.index(ctype)
+        return QComboBox.setCurrentIndex(self, index)
 
 #--------------------
 
@@ -36,19 +39,16 @@ class ProductTypeBox(QComboBox):
     """
     def __init__(self):
         super().__init__()
-        self.addItem("Science")
-        self.addItem("Calibration")
-        self.addItem("Preview")
-        self.addItem("Auxiliary")
-        self.addItem("Thumbnail")
-        self.addItem("Bias")
-        self.addItem("Dark")
-        self.addItem("Flat")
-        self.addItem("WaveCal")
-        self.addItem("Noise")
-        self.addItem("Weight")
-        self.addItem("Info")
-        self.addItem("Catalog")
+        self.entries = ["SCIENCE", "CALIBRATION", "PREVIEW", "AUXILIARY",
+                        "THUMBNAIL", "BIAS", "DARK", "FLAT", "WAVECAL",
+                        "NOISE", "WEIGHT", "INFO", "CATALOG"]
+        for item in self.entries:
+            self.addItem(item)
+
+    def setCurrentType(self, ctype):
+        if ctype in self.entries:
+            index = self.entries.index(ctype)
+        return QComboBox.setCurrentIndex(self, index)
 
 #--------------------
 
@@ -80,7 +80,34 @@ class ExtGenerator(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
-        add_file.setMaximumWidth(200)
+        clear = QPushButton("- clear table")
+        clear.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #f2f2f2;
+                                    border: 2px solid #afafaf;
+                                    border-radius: 8px;
+                                    height: 20px
+                                    }
+                                QPushButton:hover {
+                                    border: 4px solid #afafaf;
+                                    }
+                                QPushButton:pressed {
+                                    background-color: #afafaf;
+                                    }""")
+        load = QPushButton("Load File")
+        load.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #f2f2f2;
+                                    border: 2px solid #afafaf;
+                                    border-radius: 8px;
+                                    height: 40px
+                                    }
+                                QPushButton:hover {
+                                    border: 4px solid #afafaf;
+                                    }
+                                QPushButton:pressed {
+                                    background-color: #afafaf;
+                                    }""")
         save = QPushButton("Save To .csv File", self)
         save.setStyleSheet("""
                           QPushButton {
@@ -101,29 +128,43 @@ class ExtGenerator(QWidget):
         self.dt_label = QLabel("Data Type:")
         self.pt_label = QLabel("Product Type:")
         self.req_label = QLabel("Required:")
+        self.res_label = QLabel("Results:")
+        self.res_label.setAlignment(Qt.AlignHCenter)
 
         self.ext_edit = QLineEdit()
         self.dt_box = DataTypeBox()
         self.pt_box = ProductTypeBox()
         self.req_box = QCheckBox()
+        self.status = QTextEdit()
+        self.status.setReadOnly(True)
+        self.status.setLineWrapMode(QTextEdit.NoWrap)
+        self.status.setStyleSheet("border-style: solid; \
+                                  border-width: 1px; \
+                                  background: rgba(235,235,235,0%);")
 
         self.grid = QGridLayout()
-        self.grid.setRowStretch(EXTSIZE, 2)
+        self.grid.setRowStretch(NEXT_ENTRY, 2)
         self.grid.addWidget(add_file, 0, 0)
-        self.grid.addWidget(save, 0, 1, 1, 3)
-        self.grid.addWidget(self.ext_label, 1, 0)
-        self.grid.addWidget(self.dt_label, 1, 1)
-        self.grid.addWidget(self.pt_label, 1, 2)
-        self.grid.addWidget(self.req_label, 1, 3)
-        self.grid.addWidget(self.ext_edit, 2, 0)
-        self.grid.addWidget(self.dt_box, 2, 1)
-        self.grid.addWidget(self.pt_box, 2, 2)
-        self.grid.addWidget(self.req_box, 2, 3)
+        self.grid.addWidget(clear, 1, 0)
+        self.grid.addWidget(load, 0, 2, 2, 1)
+        self.grid.addWidget(save, 0, 3, 2, 2)
+        self.grid.addWidget(self.ext_label, 2, 0)
+        self.grid.addWidget(self.dt_label, 2, 1)
+        self.grid.addWidget(self.pt_label, 2, 2)
+        self.grid.addWidget(self.req_label, 2, 3)
+        self.grid.addWidget(self.res_label, 2, 4)
+        self.grid.addWidget(self.ext_edit, 3, 0)
+        self.grid.addWidget(self.dt_box, 3, 1)
+        self.grid.addWidget(self.pt_box, 3, 2)
+        self.grid.addWidget(self.req_box, 3, 3)
+        self.grid.addWidget(self.status, 3, 4, -1, 1)
 
         self.setLayout(self.grid)
         self.show()
 
         add_file.clicked.connect(self.newFileClicked)
+        clear.clicked.connect(self.clearClicked)
+        load.clicked.connect(self.loadClicked)
         save.clicked.connect(self.saveClicked)
 
     def newFileClicked(self):
@@ -131,29 +172,95 @@ class ExtGenerator(QWidget):
         When 'add_file' is clicked, create a new row with the same file entry
         options as the first row.
         """
-        global EXTSIZE
+        global NEXT_ENTRY
         new_ext = QLineEdit()
         new_dt = DataTypeBox()
         new_pt = ProductTypeBox()
         new_req = QCheckBox()
-        self.grid.addWidget(new_ext, EXTSIZE, 0)
-        self.grid.addWidget(new_dt, EXTSIZE, 1)
-        self.grid.addWidget(new_pt, EXTSIZE, 2)
-        self.grid.addWidget(new_req, EXTSIZE, 3)
-        self.grid.setRowStretch(EXTSIZE, 0)
-        self.grid.setRowStretch(EXTSIZE+1, 1)
-        EXTSIZE += 1
+        self.grid.addWidget(new_ext, NEXT_ENTRY, 0)
+        self.grid.addWidget(new_dt, NEXT_ENTRY, 1)
+        self.grid.addWidget(new_pt, NEXT_ENTRY, 2)
+        self.grid.addWidget(new_req, NEXT_ENTRY, 3)
+        self.grid.setRowStretch(NEXT_ENTRY, 0)
+        self.grid.setRowStretch(NEXT_ENTRY+1, 1)
+        self.setLayout(self.grid)
+        self.show()
+        NEXT_ENTRY += 1
+
+    def clearClicked(self):
+        global FIRST_ENTRY
+        global NEXT_ENTRY
+        delete_these = list(reversed(range(FIRST_ENTRY+1,
+                                           self.grid.rowCount()-1)))
+        if len(delete_these) > 1:
+            for n in delete_these:
+                test = self.grid.itemAtPosition(n,0)
+                if test == None:
+                    continue
+                self.grid.itemAtPosition(n,0).widget().setParent(None)
+                self.grid.itemAtPosition(n,1).widget().setParent(None)
+                self.grid.itemAtPosition(n,2).widget().setParent(None)
+                self.grid.itemAtPosition(n,3).widget().setParent(None)
+        NEXT_ENTRY = FIRST_ENTRY+1
+        self.status.setTextColor(Qt.black)
+        self.status.append("Table cleared.")
+
+    def loadClicked(self):
+        global FIRST_ENTRY
+        global NEXT_ENTRY
+        loadit = QFileDialog.getOpenFileName(self, "Load a CSV file", ".")
+        filename = loadit[0]
+        if not filename.endswith(".csv"):
+            self.status.setTextColor(Qt.red)
+            self.status.append("{0} is not a .csv file!".format(filename))
+            return None
+        files = []
+        with open(filename, 'r') as csvfile:
+            read = csv.reader(csvfile)
+            for row in read:
+                files.append(row)
+            csvfile.close()
+        if len(files) <= 1:
+            self.status.setTextColor(Qt.red)
+            self.status.append("No data rows in {0}".format(filename))
+            return None
+
+        self.clearClicked()
+
+        row_num = FIRST_ENTRY
+        for entry in files[1:]:
+            ext_box = self.grid.itemAtPosition(row_num, 0)
+            if ext_box is None:
+                self.newFileClicked()
+            ext_box = self.grid.itemAtPosition(row_num, 0)
+            dt_box = self.grid.itemAtPosition(row_num, 1)
+            pt_box = self.grid.itemAtPosition(row_num, 2)
+            req_box = self.grid.itemAtPosition(row_num, 3)
+            ext_widget = ext_box.widget()
+            dt_widget = dt_box.widget()
+            pt_widget = pt_box.widget()
+            req_widget = req_box.widget()
+            ext_widget.setText(entry[0])
+            dt_widget.setCurrentType(entry[1])
+            pt_widget.setCurrentType(entry[2])
+            if entry[3] == "REQUIRED":
+                req_widget.setChecked(True)
+            else:
+                req_widget.setChecked(False)
+            row_num += 1
+        self.status.setTextColor(Qt.darkGreen)
+        self.status.append("Loaded {0}".format(filename))
 
     def saveClicked(self):
         """
         When 'save' is clicked, collect all the user entries and write the
         CSV file.
         """
-        begin_row = 2
+        global FIRST_ENTRY
         all_files = []
 
         #Loop over all rows the user might have created in the form.
-        for row in range(begin_row, self.grid.rowCount()):
+        for row in range(FIRST_ENTRY, self.grid.rowCount()):
             add_ext = self.grid.itemAtPosition(row, 0)
             add_dt = self.grid.itemAtPosition(row, 1)
             add_pt = self.grid.itemAtPosition(row, 2)
@@ -187,6 +294,8 @@ class ExtGenerator(QWidget):
 
         #If all file entry rows have empty name entries, button takes no action
         if len(all_files) == 0:
+            self.status.setTextColor(Qt.red)
+            self.status.append("No file types to save!")
             return None
 
         #Create a header row, get a name to save the file, and write all
@@ -202,5 +311,7 @@ class ExtGenerator(QWidget):
                 writer.writerow(head)
                 writer.writerows(all_files)
             print("Saved {0}".format(saveit))
+            self.status.setTextColor(Qt.darkGreen)
+            self.status.append("Saved {0}".format(saveit))
             output.close()
             return saveit
