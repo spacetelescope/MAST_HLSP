@@ -52,6 +52,41 @@ class ProductTypeBox(QComboBox):
 
 #--------------------
 
+class ClearConfirm(QDialog):
+
+    def __init__(self):
+        super().__init__()
+        self.confirmUI()
+
+    def confirmUI(self):
+        self.confirm = False
+        label = QLabel("Reset all current changes to this form?")
+        label.setAlignment(Qt.AlignHCenter)
+        yes = QPushButton("Yes")
+        no = QPushButton("No")
+
+        g = QGridLayout()
+        g.addWidget(label, 0, 0, 1, -1)
+        g.addWidget(yes, 1, 0)
+        g.addWidget(no, 1, 1)
+        self.setLayout(g)
+        self.setWindowTitle("Confirm Clear")
+        self.resize(300, 50)
+        self.show()
+
+        yes.clicked.connect(self.yesClicked)
+        no.clicked.connect(self.noClicked)
+
+    def yesClicked(self):
+        self.confirm = True
+        self.close()
+
+    def noClicked(self):
+        self.confirm = False
+        self.close()
+
+#--------------------
+
 class ExtGenerator(QWidget):
     """
     Create a GUI to create a CSV table describing files to search for within
@@ -80,6 +115,7 @@ class ExtGenerator(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
+        add_file.setMaximumWidth(175)
         clear = QPushButton("- clear table")
         clear.setStyleSheet("""
                                 QPushButton {
@@ -94,6 +130,7 @@ class ExtGenerator(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
+        clear.setMaximumWidth(175)
         load = QPushButton("Load File")
         load.setStyleSheet("""
                                 QPushButton {
@@ -187,9 +224,21 @@ class ExtGenerator(QWidget):
         self.show()
         NEXT_ENTRY += 1
 
-    def clearClicked(self):
+    def clearClicked(self, source="clicked"):
         global FIRST_ENTRY
         global NEXT_ENTRY
+
+        if not source == "load":
+            self.cc = ClearConfirm()
+            self.cc.exec_()
+            if not self.cc.confirm:
+                return None
+
+        self.grid.itemAtPosition(FIRST_ENTRY,0).widget().clear()
+        self.grid.itemAtPosition(FIRST_ENTRY,1).widget().setCurrentIndex(0)
+        self.grid.itemAtPosition(FIRST_ENTRY,2).widget().setCurrentIndex(0)
+        self.grid.itemAtPosition(FIRST_ENTRY,3).widget().setChecked(False)
+
         delete_these = list(reversed(range(FIRST_ENTRY+1,
                                            self.grid.rowCount()-1)))
         if len(delete_these) > 1:
@@ -225,7 +274,7 @@ class ExtGenerator(QWidget):
             self.status.append("No data rows in {0}".format(filename))
             return None
 
-        self.clearClicked()
+        self.clearClicked(source="load")
 
         row_num = FIRST_ENTRY
         for entry in files[1:]:

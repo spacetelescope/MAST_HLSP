@@ -90,7 +90,7 @@ class HLSPIngest(QTabWidget):
         self.box.addWidget(self.quit, 0, 1)
         self.box.addWidget(self.space, 0, 2)
         self.setLayout(self.box)
-        self.resize(900,300)
+        self.resize(1000,300)
         self.setWindowTitle("ConfigGenerator")
         self.show()
 

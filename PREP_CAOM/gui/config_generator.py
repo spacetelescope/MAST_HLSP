@@ -2,6 +2,7 @@ import os
 import sys
 import yaml
 from hlsp_to_xml import hlsp_to_xml
+from util.read_yaml import read_yaml
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -9,8 +10,10 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
-global SIZE
-SIZE = 10
+global FIRST_ENTRY
+FIRST_ENTRY = 9
+global NEXT_ENTRY
+NEXT_ENTRY = FIRST_ENTRY+1
 
 #--------------------
 
@@ -40,6 +43,41 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
                 dictionary[current_keys[ind]] = sub_dictionary
 
     return (dictionary, inserted)
+
+#--------------------
+
+class ResetConfirm(QDialog):
+
+    def __init__(self):
+        super().__init__()
+        self.confirmUI()
+
+    def confirmUI(self):
+        self.confirm = False
+        label = QLabel("Reset all current changes to this form?")
+        label.setAlignment(Qt.AlignHCenter)
+        yes = QPushButton("Yes")
+        no = QPushButton("No")
+
+        g = QGridLayout()
+        g.addWidget(label, 0, 0, 1, -1)
+        g.addWidget(yes, 1, 0)
+        g.addWidget(no, 1, 1)
+        self.setLayout(g)
+        self.setWindowTitle("Confirm Reset")
+        self.resize(300, 50)
+        self.show()
+
+        yes.clicked.connect(self.yesClicked)
+        no.clicked.connect(self.noClicked)
+
+    def yesClicked(self):
+        self.confirm = True
+        self.close()
+
+    def noClicked(self):
+        self.confirm = False
+        self.close()
 
 #--------------------
 
@@ -83,8 +121,9 @@ class ConfigGenerator(QWidget):
         ht = QLabel("Header Type: ", self)
         ht.setToolTip("Select the FITS header type this HLSP uses.")
         self.header = QComboBox(ht)
-        self.header.addItem("Standard")
-        self.header.addItem("Kepler")
+        self.header_types = ["Standard", "Kepler"]
+        for typ in self.header_types:
+            self.header.addItem(typ)
 
         #Add all unique data types defined in the static values file here.
         dt = QLabel("Included Data Types: ", self)
@@ -103,9 +142,9 @@ class ConfigGenerator(QWidget):
         value_param = QLabel("Value:", up)
         value_param.setAlignment(Qt.AlignHCenter)
         parent_edit = QComboBox(self.parent_param, editable=True)
-        parent_edit.addItem("")
-        parent_edit.addItem("metadataList")
-        parent_edit.addItem("provenance")
+        self.xml_parents = ["", "metadataList", "provenance"]
+        for p in self.xml_parents:
+            parent_edit.addItem(p)
         caom_edit = QLineEdit(caom_param)
         value_edit = QLineEdit(value_param)
 
@@ -134,6 +173,36 @@ class ConfigGenerator(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
+        load = QPushButton("Load YAML File")
+        load.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #f2f2f2;
+                                    border: 2px solid #afafaf;
+                                    border-radius: 8px;
+                                    height: 40px
+                                    }
+                                QPushButton:hover {
+                                    border: 4px solid #afafaf;
+                                    }
+                                QPushButton:pressed {
+                                    background-color: #afafaf;
+                                    }""")
+        load.setMinimumWidth(125)
+        reset = QPushButton("Reset Form")
+        reset.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #f2f2f2;
+                                    border: 2px solid #afafaf;
+                                    border-radius: 8px;
+                                    height: 40px
+                                    }
+                                QPushButton:hover {
+                                    border: 4px solid #afafaf;
+                                    }
+                                QPushButton:pressed {
+                                    background-color: #afafaf;
+                                    }""")
+        reset.setMinimumWidth(125)
         gen = QPushButton("Generate YAML File", self)
         gen.setStyleSheet("""
                           QPushButton {
@@ -165,16 +234,19 @@ class ConfigGenerator(QWidget):
 
         #Create a grid layout and add all the widgets.
         self.grid2 = QGridLayout()
-        self.grid2.setSpacing(SIZE)
+        self.grid2.setSpacing(FIRST_ENTRY)
         self.grid2.setColumnStretch(1, 1)
         self.grid2.setColumnStretch(2, 1)
-        self.grid2.setColumnStretch(3, 2)
-        self.grid2.setRowStretch(SIZE, 2)
+        self.grid2.setColumnStretch(3, 0)
+        self.grid2.setColumnStretch(4, 2)
+        self.grid2.setRowStretch(NEXT_ENTRY, 2)
         self.grid2.addWidget(fp, 0, 0)
-        self.grid2.addWidget(gen, 0, 3, 2, 1)
+        self.grid2.addWidget(load, 0, 3, 2, 1)
+        self.grid2.addWidget(gen, 0, 4, 2, 1)
         self.grid2.addWidget(data, 1, 0)
         self.grid2.addWidget(self.data_edit, 1, 1, 1, 2)
-        self.grid2.addWidget(run, 2, 3, 2, 1)
+        self.grid2.addWidget(reset, 2, 3, 2, 1)
+        self.grid2.addWidget(run, 2, 4, 2, 1)
         self.grid2.addWidget(ext, 2, 0)
         self.grid2.addWidget(self.ext_edit, 2, 1, 1, 2)
         self.grid2.addWidget(out, 3, 0)
@@ -182,8 +254,8 @@ class ConfigGenerator(QWidget):
         self.grid2.addWidget(ow, 4, 0)
         self.grid2.addWidget(self.ow_on, 4, 1)
         self.grid2.addWidget(self.ow_off, 4, 2)
-        self.grid2.addWidget(status_label, 4, 3)
-        self.grid2.addWidget(self.status, 5, 3, -1, 1)
+        self.grid2.addWidget(status_label, 4, 3, 1, 2)
+        self.grid2.addWidget(self.status, 5, 3, -1, 2)
         self.grid2.addWidget(ht, 5, 0)
         self.grid2.addWidget(self.header, 5, 1)
         self.grid2.addWidget(dt, 6, 0)
@@ -203,28 +275,131 @@ class ConfigGenerator(QWidget):
 
         #Add button actions.
         add_param.clicked.connect(self.addClicked)
+        load.clicked.connect(self.loadClicked)
+        reset.clicked.connect(self.resetClicked)
         gen.clicked.connect(self.genClicked)
         run.clicked.connect(self.runClicked)
 
     def addClicked(self):
         """
-        Use the global SIZE variable to add a new unique parameter entry row.
+        Use the global NEXT_ENTRY variable to add a new unique parameter
+        entry row.
         """
-        global SIZE
+        global NEXT_ENTRY
         new_parent = QComboBox(editable=True)
         new_parent.addItem("")
         new_parent.addItem("metadataList")
         new_parent.addItem("provenance")
         new_caom = QLineEdit()
         new_value = QLineEdit()
-        self.grid2.addWidget(new_parent, SIZE, 0)
-        self.grid2.addWidget(new_caom, SIZE, 1)
-        self.grid2.addWidget(new_value, SIZE, 2)
-        self.grid2.setRowStretch(SIZE, 0)
-        self.grid2.setRowStretch(SIZE+1, 1)
+        self.grid2.addWidget(new_parent, NEXT_ENTRY, 0)
+        self.grid2.addWidget(new_caom, NEXT_ENTRY, 1)
+        self.grid2.addWidget(new_value, NEXT_ENTRY, 2)
+        self.grid2.setRowStretch(NEXT_ENTRY, 0)
+        self.grid2.setRowStretch(NEXT_ENTRY+1, 1)
+        NEXT_ENTRY += 1
+
+    def loadDictionaries(self, uniques):
+        global FIRST_ENTRY
+        global NEXT_ENTRY
+
+        parents = uniques.keys()
+        for p in parents:
+            sub_dictionary = uniques[p]
+            first_parent = self.grid2.itemAtPosition(FIRST_ENTRY,0).widget()
+            print(sub_dictionary)
+            for param in sub_dictionary.keys():
+                if first_parent.currentText() == "":
+                    row = FIRST_ENTRY
+                else:
+                    row = NEXT_ENTRY
+                    self.addClicked()
+                print("row = {0}".format(row))
+                parent_box = self.grid2.itemAtPosition(row,0).widget()
+                if p in self.xml_parents:
+                    parent_index = self.xml_parents.index(p)
+                    parent_box.setCurrentIndex(parent_index)
+                else:
+                    parent_box.setCurrentIndex(p)
+                caom_box = self.grid2.itemAtPosition(row,1).widget()
+                caom_box.insert(param)
+                if isinstance(sub_dictionary[param], dict):
+                    loadDictionaries(sub_dictionary)
+                else:
+                    value_box = self.grid2.itemAtPosition(row,2).widget()
+                    value_box.insert(sub_dictionary[param])
+
+    def loadClicked(self):
+        global FIRST_ENTRY
+        global NEXT_ENTRY
+        loadit = QFileDialog.getOpenFileName(self, "Load a YAML file", ".")
+        filename = loadit[0]
+        if not filename.endswith(".yaml"):
+            self.status.setTextColor(Qt.red)
+            self.status.append("{0} is not a .yaml file!".format(filename))
+            return None
+        yamlfile = read_yaml(filename)
+        self.resetClicked(source="load")
+        print(yamlfile)
+        filepaths = yamlfile["filepaths"]
+        header_type = yamlfile["header_type"]
+        data_types = yamlfile["data_types"]
+        uniques = yamlfile["unique_parameters"]
+        self.data_edit.insert(filepaths["hlsppath"])
+        self.ext_edit.insert(filepaths["extensions"])
+        self.out_edit.insert(filepaths["output"])
+        if filepaths["overwrite"]:
+            self.ow_on.setChecked(True)
+        else:
+            self.ow_off.setChecked(True)
+
+        header_index = self.header_types.index(header_type.capitalize())
+
+        if "lightcurve" in data_types:
+            self.lightcurve.setChecked(True)
+        else:
+            self.lightcurve.setChecked(False)
+        self.header.setCurrentIndex(header_index)
+
+        self.loadDictionaries(uniques)
+
+        self.status.setTextColor(Qt.darkGreen)
+        self.status.append("Loaded {0}.".format(filename))
+
+
+    def resetClicked(self, source="clicked"):
+        global FIRST_ENTRY
+        global NEXT_ENTRY
+
+        if not source == "load":
+            self.reset = ResetConfirm()
+            self.reset.exec_()
+            if not self.reset.confirm:
+                return None
+
+        self.data_edit.clear()
+        self.ext_edit.clear()
+        self.out_edit.clear()
+        self.ow_on.setChecked(True)
+        self.header.setCurrentIndex(0)
+        self.lightcurve.setChecked(False)
+        self.grid2.itemAtPosition(FIRST_ENTRY,0).widget().setCurrentIndex(0)
+        self.grid2.itemAtPosition(FIRST_ENTRY,1).widget().clear()
+        self.grid2.itemAtPosition(FIRST_ENTRY,2).widget().clear()
+
+        delete_these = list(reversed(range(FIRST_ENTRY+1,
+                                           self.grid2.rowCount())))
+        if len(delete_these) > 1:
+            for n in delete_these:
+                test = self.grid2.itemAtPosition(n,0)
+                if test == None:
+                    continue
+                self.grid2.itemAtPosition(n,0).widget().setParent(None)
+                self.grid2.itemAtPosition(n,1).widget().setParent(None)
+                self.grid2.itemAtPosition(n,2).widget().setParent(None)
+        NEXT_ENTRY = FIRST_ENTRY+1
         self.status.setTextColor(Qt.black)
-        self.status.append("Added new parameter row.")
-        SIZE += 1
+        self.status.append("Form reset.")
 
     def collectInputs(self):
         """
