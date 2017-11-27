@@ -20,10 +20,11 @@ class HelpPopup(QDialog):
         self.helpbox = QTextEdit()
         self.helpbox.setReadOnly(True)
         self.helpbox.setLineWrapMode(QTextEdit.NoWrap)
-        self.helpbox.setStyleSheet("line-height: 0.1;")
         with open(help_path, "r") as helpfile:
             for line in helpfile.readlines():
-                self.helpbox.append(line)
+                raw_line = line.strip("\n")
+                self.helpbox.append(raw_line)
+            helpfile.close()
 
         self.closebutton = QPushButton("Close")
         self.closebutton.clicked.connect(self.closeClicked)
@@ -32,7 +33,7 @@ class HelpPopup(QDialog):
         self.vbox.addWidget(self.helpbox)
         self.vbox.addWidget(self.closebutton)
         self.setLayout(self.vbox)
-        self.setWindowTitle("Help")
+        self.setWindowTitle("ConfigGenerator Help")
         self.resize(600, 600)
         self.show()
 
