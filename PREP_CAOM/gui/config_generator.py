@@ -10,8 +10,10 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
+#Define the first row for the unique parameters table.
 global FIRST_ENTRY
 FIRST_ENTRY = 9
+#Keep track of where to add a new unique parameter entry
 global NEXT_ENTRY
 NEXT_ENTRY = FIRST_ENTRY+1
 
@@ -47,6 +49,9 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
 #--------------------
 
 class ResetConfirm(QDialog):
+    """
+    Create a reset confirmation dialog window before clearing all changes.
+    """
 
     def __init__(self):
         super().__init__()
@@ -92,6 +97,7 @@ class ConfigGenerator(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+
 
     def initUI(self):
         #Filepaths sections contains filepath entry boxes.  May want to make
@@ -280,6 +286,7 @@ class ConfigGenerator(QWidget):
         gen.clicked.connect(self.genClicked)
         run.clicked.connect(self.runClicked)
 
+
     def addClicked(self):
         """
         Use the global NEXT_ENTRY variable to add a new unique parameter
@@ -287,9 +294,8 @@ class ConfigGenerator(QWidget):
         """
         global NEXT_ENTRY
         new_parent = QComboBox(editable=True)
-        new_parent.addItem("")
-        new_parent.addItem("metadataList")
-        new_parent.addItem("provenance")
+        for p in self.xml_parents:
+            new_parent.addItem(p)
         new_caom = QLineEdit()
         new_value = QLineEdit()
         self.grid2.addWidget(new_parent, NEXT_ENTRY, 0)
@@ -299,48 +305,80 @@ class ConfigGenerator(QWidget):
         self.grid2.setRowStretch(NEXT_ENTRY+1, 1)
         NEXT_ENTRY += 1
 
+
     def loadDictionaries(self, uniques):
+        """
+        Recursively handles loading multi-level dictionaries to the unique
+        parameters table.
+        """
+
         global FIRST_ENTRY
         global NEXT_ENTRY
 
         parents = uniques.keys()
         for p in parents:
             sub_dictionary = uniques[p]
+
+            #Look at the first row to see if you're loading into FIRST_ENTRY
+            #or NEXT_ENTRY.
             first_parent = self.grid2.itemAtPosition(FIRST_ENTRY,0).widget()
-            print(sub_dictionary)
             for param in sub_dictionary.keys():
                 if first_parent.currentText() == "":
                     row = FIRST_ENTRY
                 else:
                     row = NEXT_ENTRY
                     self.addClicked()
-                print("row = {0}".format(row))
+
+                #Get the Parent combo box for the current row.
                 parent_box = self.grid2.itemAtPosition(row,0).widget()
+
+                #If the desired parent is already an option, set to that.
+                #Otherwise add it as a new option in the combo box.
                 if p in self.xml_parents:
                     parent_index = self.xml_parents.index(p)
                     parent_box.setCurrentIndex(parent_index)
                 else:
-                    parent_box.setCurrentIndex(p)
+                    parent_box.addItem(p)
+                    parent_box.setCurrentIndex(parent_box.findText(p))
+                    self.xml_parents.append(p)
+
+                #Fill in the CAOM line edit box.
                 caom_box = self.grid2.itemAtPosition(row,1).widget()
                 caom_box.insert(param)
+
+                #If the next level is still a dictionary, repeat this process.
+                #Otherwise, fill in the Value line edit box.
                 if isinstance(sub_dictionary[param], dict):
-                    loadDictionaries(sub_dictionary)
+                    self.loadDictionaries(sub_dictionary)
                 else:
                     value_box = self.grid2.itemAtPosition(row,2).widget()
                     value_box.insert(sub_dictionary[param])
 
+
     def loadClicked(self):
-        global FIRST_ENTRY
-        global NEXT_ENTRY
+        """
+        Open a user-selected YAML file and load the elements into the form.
+        """
+
         loadit = QFileDialog.getOpenFileName(self, "Load a YAML file", ".")
         filename = loadit[0]
-        if not filename.endswith(".yaml"):
+
+        #Check that the selected file is a valid choice.  Uses the QFileDialog
+        #so not worrying about picking a file that doesn't exist.
+        if filename == "":
+            return None
+        elif not filename.endswith(".yaml"):
             self.status.setTextColor(Qt.red)
             self.status.append("{0} is not a .yaml file!".format(filename))
             return None
+
+        #Read the YAML entries into a dictionary.
         yamlfile = read_yaml(filename)
+
+        #Clear any existing form values before loading the new data.
         self.resetClicked(source="load")
-        print(yamlfile)
+
+        #Pull out the data and insert into the form.
         filepaths = yamlfile["filepaths"]
         header_type = yamlfile["header_type"]
         data_types = yamlfile["data_types"]
@@ -361,6 +399,7 @@ class ConfigGenerator(QWidget):
             self.lightcurve.setChecked(False)
         self.header.setCurrentIndex(header_index)
 
+        #Load the unique parameters dictionary into the unique parameters table
         self.loadDictionaries(uniques)
 
         self.status.setTextColor(Qt.darkGreen)
@@ -368,9 +407,15 @@ class ConfigGenerator(QWidget):
 
 
     def resetClicked(self, source="clicked"):
+        """
+        Clear any changes to the form.
+        """
+
         global FIRST_ENTRY
         global NEXT_ENTRY
 
+        #Confirm the user wants to clear the form, except in the case of a
+        #load operation.
         if not source == "load":
             self.reset = ResetConfirm()
             self.reset.exec_()
@@ -387,9 +432,10 @@ class ConfigGenerator(QWidget):
         self.grid2.itemAtPosition(FIRST_ENTRY,1).widget().clear()
         self.grid2.itemAtPosition(FIRST_ENTRY,2).widget().clear()
 
+        #Delete any unique parameter entries beyond the first table row.
         delete_these = list(reversed(range(FIRST_ENTRY+1,
                                            self.grid2.rowCount())))
-        if len(delete_these) > 1:
+        if len(delete_these) > 0:
             for n in delete_these:
                 test = self.grid2.itemAtPosition(n,0)
                 if test == None:
@@ -400,6 +446,7 @@ class ConfigGenerator(QWidget):
         NEXT_ENTRY = FIRST_ENTRY+1
         self.status.setTextColor(Qt.black)
         self.status.append("Form reset.")
+
 
     def collectInputs(self):
         """
@@ -455,9 +502,8 @@ class ConfigGenerator(QWidget):
 
         #Collect all the unique parameters the user has entered.  Start at row
         #8 and search through all rows the user may have added.
-        begin_row = 9
         uniques = {}
-        for row in range(begin_row, self.grid2.rowCount()):
+        for row in range(FIRST_ENTRY, self.grid2.rowCount()):
             add_parent = self.grid2.itemAtPosition(row, 0)
             add_caom = self.grid2.itemAtPosition(row, 1)
             add_value = self.grid2.itemAtPosition(row, 2)
@@ -507,12 +553,14 @@ class ConfigGenerator(QWidget):
             output.close()
             return saveit
 
+
     def genClicked(self):
         """
         When generate is clicked, collect all the user inputs and write the
         yaml file.
         """
         self.collectInputs()
+
 
     def runClicked(self):
         """
