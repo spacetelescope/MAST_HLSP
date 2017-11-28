@@ -24,7 +24,7 @@ Config File Help:
         this whatever you want.
         
     Overwrite:
-        This will control overwriting an existing YAML config file.  On by default.
+        This will control overwriting an existing XML file.  On by default.
         
     Header Type:
         Indicate which type of FITS headers you expect to find with this HLSP.

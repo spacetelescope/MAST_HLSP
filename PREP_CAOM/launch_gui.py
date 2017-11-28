@@ -9,12 +9,20 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
+#--------------------
+
 class HelpPopup(QDialog):
+    """
+    Define the help popup window that appears when the user clicks the 'Help'
+    button.
+    """
+
     def __init__(self):
         super().__init__()
         self.helpUI()
 
     def helpUI(self):
+        #Get the help text from a .txt file.
         path = "gui/help.txt"
         help_path = os.path.abspath(path)
         self.helpbox = QTextEdit()
@@ -40,7 +48,14 @@ class HelpPopup(QDialog):
     def closeClicked(self):
         self.close()
 
+#--------------------
+
 class HLSPIngest(QTabWidget):
+    """
+    Create a tab widget to contain widgets from /gui/ext_generator.py and
+    /gui/config_generator.py.  Provide options to quit or open a help dialog.
+    """
+
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -82,6 +97,9 @@ class HLSPIngest(QTabWidget):
                                 QPushButton:pressed {
                                     background-color: #ff9195;
                                     }""")
+                                    
+        #Create a third column to stretch so the Help and Quit buttons
+        #remain over to the left.
         self.space = QLabel("")
 
         self.box = QGridLayout()
@@ -103,6 +121,8 @@ class HLSPIngest(QTabWidget):
     def helpClicked(self):
         self.helppop = HelpPopup()
         self.helppop.exec_()
+
+#--------------------
 
 if __name__=="__main__":
     app = QApplication(sys.argv)

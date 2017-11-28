@@ -179,6 +179,7 @@ class ConfigGenerator(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
+        add_param.setMinimumWidth(165)
         load = QPushButton("Load YAML File")
         load.setStyleSheet("""
                                 QPushButton {
@@ -260,8 +261,8 @@ class ConfigGenerator(QWidget):
         self.grid2.addWidget(ow, 4, 0)
         self.grid2.addWidget(self.ow_on, 4, 1)
         self.grid2.addWidget(self.ow_off, 4, 2)
-        self.grid2.addWidget(status_label, 4, 3, 1, 2)
-        self.grid2.addWidget(self.status, 5, 3, -1, 2)
+        self.grid2.addWidget(status_label, 4, 4, 1, 1)
+        self.grid2.addWidget(self.status, 5, 4, -1, 1)
         self.grid2.addWidget(ht, 5, 0)
         self.grid2.addWidget(self.header, 5, 1)
         self.grid2.addWidget(dt, 6, 0)
@@ -270,10 +271,10 @@ class ConfigGenerator(QWidget):
         self.grid2.addWidget(add_param, 7, 1)
         self.grid2.addWidget(self.parent_param, 8, 0)
         self.grid2.addWidget(caom_param, 8, 1)
-        self.grid2.addWidget(value_param, 8, 2)
+        self.grid2.addWidget(value_param, 8, 2, 1, 2)
         self.grid2.addWidget(parent_edit, 9, 0)
         self.grid2.addWidget(caom_edit, 9, 1)
-        self.grid2.addWidget(value_edit, 9, 2)
+        self.grid2.addWidget(value_edit, 9, 2, 1, 2)
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)
@@ -292,6 +293,7 @@ class ConfigGenerator(QWidget):
         Use the global NEXT_ENTRY variable to add a new unique parameter
         entry row.
         """
+
         global NEXT_ENTRY
         new_parent = QComboBox(editable=True)
         for p in self.xml_parents:
@@ -300,7 +302,7 @@ class ConfigGenerator(QWidget):
         new_value = QLineEdit()
         self.grid2.addWidget(new_parent, NEXT_ENTRY, 0)
         self.grid2.addWidget(new_caom, NEXT_ENTRY, 1)
-        self.grid2.addWidget(new_value, NEXT_ENTRY, 2)
+        self.grid2.addWidget(new_value, NEXT_ENTRY, 2, 1, 2)
         self.grid2.setRowStretch(NEXT_ENTRY, 0)
         self.grid2.setRowStretch(NEXT_ENTRY+1, 1)
         NEXT_ENTRY += 1
@@ -315,14 +317,18 @@ class ConfigGenerator(QWidget):
         global FIRST_ENTRY
         global NEXT_ENTRY
 
+        print("uniques = {0}".format(uniques))
         parents = uniques.keys()
         for p in parents:
             sub_dictionary = uniques[p]
+            print("--sub_dictionary = {0}".format(sub_dictionary))
 
             #Look at the first row to see if you're loading into FIRST_ENTRY
             #or NEXT_ENTRY.
             first_parent = self.grid2.itemAtPosition(FIRST_ENTRY,0).widget()
             for param in sub_dictionary.keys():
+                value = sub_dictionary[param]
+                print("----value = {0}".format(value))
                 if first_parent.currentText() == "":
                     row = FIRST_ENTRY
                 else:
@@ -331,6 +337,8 @@ class ConfigGenerator(QWidget):
 
                 #Get the Parent combo box for the current row.
                 parent_box = self.grid2.itemAtPosition(row,0).widget()
+                caom_box = self.grid2.itemAtPosition(row,1).widget()
+                value_box = self.grid2.itemAtPosition(row,2).widget()
 
                 #If the desired parent is already an option, set to that.
                 #Otherwise add it as a new option in the combo box.
@@ -343,7 +351,6 @@ class ConfigGenerator(QWidget):
                     self.xml_parents.append(p)
 
                 #Fill in the CAOM line edit box.
-                caom_box = self.grid2.itemAtPosition(row,1).widget()
                 caom_box.insert(param)
 
                 #If the next level is still a dictionary, repeat this process.
@@ -351,7 +358,6 @@ class ConfigGenerator(QWidget):
                 if isinstance(sub_dictionary[param], dict):
                     self.loadDictionaries(sub_dictionary)
                 else:
-                    value_box = self.grid2.itemAtPosition(row,2).widget()
                     value_box.insert(sub_dictionary[param])
 
 
@@ -444,8 +450,10 @@ class ConfigGenerator(QWidget):
                 self.grid2.itemAtPosition(n,1).widget().setParent(None)
                 self.grid2.itemAtPosition(n,2).widget().setParent(None)
         NEXT_ENTRY = FIRST_ENTRY+1
-        self.status.setTextColor(Qt.black)
-        self.status.append("Form reset.")
+
+        if not source == "load":
+            self.status.setTextColor(Qt.black)
+            self.status.append("Form reset.")
 
 
     def collectInputs(self):

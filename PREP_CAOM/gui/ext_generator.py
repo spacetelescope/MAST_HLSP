@@ -53,6 +53,10 @@ class ProductTypeBox(QComboBox):
 #--------------------
 
 class ClearConfirm(QDialog):
+    """
+    Pop up a confirmation dialog window before clearing all changes to the
+    form.
+    """
 
     def __init__(self):
         super().__init__()
@@ -204,6 +208,7 @@ class ExtGenerator(QWidget):
         load.clicked.connect(self.loadClicked)
         save.clicked.connect(self.saveClicked)
 
+
     def newFileClicked(self):
         """
         When 'add_file' is clicked, create a new row with the same file entry
@@ -224,21 +229,30 @@ class ExtGenerator(QWidget):
         self.show()
         NEXT_ENTRY += 1
 
+
     def clearClicked(self, source="clicked"):
+        """
+        Clear any changes made to the form and reset to original state.
+        """
+
         global FIRST_ENTRY
         global NEXT_ENTRY
 
+        #Pop up a confirmation dialog if this is not being called from the load
+        #function.
         if not source == "load":
             self.cc = ClearConfirm()
             self.cc.exec_()
             if not self.cc.confirm:
                 return None
 
+        #Empty the items in the first row but don't delete them.
         self.grid.itemAtPosition(FIRST_ENTRY,0).widget().clear()
         self.grid.itemAtPosition(FIRST_ENTRY,1).widget().setCurrentIndex(0)
         self.grid.itemAtPosition(FIRST_ENTRY,2).widget().setCurrentIndex(0)
         self.grid.itemAtPosition(FIRST_ENTRY,3).widget().setChecked(False)
 
+        #Remove all elements beyond the first row.
         delete_these = list(reversed(range(FIRST_ENTRY+1,
                                            self.grid.rowCount()-1)))
         if len(delete_these) > 1:
@@ -251,54 +265,82 @@ class ExtGenerator(QWidget):
                 self.grid.itemAtPosition(n,2).widget().setParent(None)
                 self.grid.itemAtPosition(n,3).widget().setParent(None)
         NEXT_ENTRY = FIRST_ENTRY+1
-        self.status.setTextColor(Qt.black)
-        self.status.append("Table cleared.")
+
+        if not source == "load":
+            self.status.setTextColor(Qt.black)
+            self.status.append("Table cleared.")
+
 
     def loadClicked(self):
+        """
+        Open an existing CSV file and load the contents into the form.
+        """
+
         global FIRST_ENTRY
         global NEXT_ENTRY
+
         loadit = QFileDialog.getOpenFileName(self, "Load a CSV file", ".")
         filename = loadit[0]
-        if not filename.endswith(".csv"):
+
+        #Check the filename, but from a dialog so we expect it to exist.
+        if filename == "":
+            return None
+        elif not filename.endswith(".csv"):
             self.status.setTextColor(Qt.red)
             self.status.append("{0} is not a .csv file!".format(filename))
             return None
+
+        #Read the CSV contents into a list.
         files = []
         with open(filename, 'r') as csvfile:
             read = csv.reader(csvfile)
             for row in read:
                 files.append(row)
             csvfile.close()
+
+        #Check that there are any data types to insert.
         if len(files) <= 1:
             self.status.setTextColor(Qt.red)
             self.status.append("No data rows in {0}".format(filename))
             return None
 
+        #Check the CSV header row and make sure it has the right data.
+        header = files[0]
+        try:
+            ext_index = header.index("extension")
+            dt_index = header.index("dataProductType")
+            pt_index = header.index("productType")
+            req_index = header.index("fileStatus")
+        except ValueError:
+            self.status.setTextColor(Qt.red)
+            self.status.append("Could not read {0}".format(filename))
+            return None
+
+        #Clear any changes already made to the form.
         self.clearClicked(source="load")
 
+        #Begin at the first data row and insert values into the form elements.
+        #(skip the CSV header row)
         row_num = FIRST_ENTRY
         for entry in files[1:]:
             ext_box = self.grid.itemAtPosition(row_num, 0)
             if ext_box is None:
                 self.newFileClicked()
-            ext_box = self.grid.itemAtPosition(row_num, 0)
-            dt_box = self.grid.itemAtPosition(row_num, 1)
-            pt_box = self.grid.itemAtPosition(row_num, 2)
-            req_box = self.grid.itemAtPosition(row_num, 3)
-            ext_widget = ext_box.widget()
-            dt_widget = dt_box.widget()
-            pt_widget = pt_box.widget()
-            req_widget = req_box.widget()
-            ext_widget.setText(entry[0])
-            dt_widget.setCurrentType(entry[1])
-            pt_widget.setCurrentType(entry[2])
-            if entry[3] == "REQUIRED":
-                req_widget.setChecked(True)
+            ext_box = self.grid.itemAtPosition(row_num, 0).widget()
+            dt_box = self.grid.itemAtPosition(row_num, 1).widget()
+            pt_box = self.grid.itemAtPosition(row_num, 2).widget()
+            req_box = self.grid.itemAtPosition(row_num, 3).widget()
+            ext_box.setText(entry[ext_index])
+            dt_box.setCurrentType(entry[dt_index])
+            pt_box.setCurrentType(entry[pt_index])
+            if entry[req_index] == "REQUIRED":
+                req_box.setChecked(True)
             else:
-                req_widget.setChecked(False)
+                req_box.setChecked(False)
             row_num += 1
         self.status.setTextColor(Qt.darkGreen)
         self.status.append("Loaded {0}".format(filename))
+
 
     def saveClicked(self):
         """
