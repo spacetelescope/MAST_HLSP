@@ -1,3 +1,4 @@
+import copy
 import os
 import sys
 import yaml
@@ -6,6 +7,7 @@ from util.read_yaml import read_yaml
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
+    from PyQt5.QtGui import *
 except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
@@ -165,6 +167,25 @@ class ConfigGenerator(QWidget):
 
         #Three buttons: Add a unique parameter entry, save as yaml file, or
         #save as yaml file and run hlsp_to_xml.
+        test = QIcon.fromTheme("edit-undo")
+        browse_hlsp = QPushButton()
+        hst = browse_hlsp.style()
+        icon = hst.standardIcon(QStyle.SP_DirIcon)
+        browse_hlsp.setIcon(icon)
+        browse_hlsp.setIconSize(QSize(14,14))
+        browse_hlsp.setMaximumWidth(26)
+        browse_hlsp.setMaximumHeight(22)
+        browse_ext = QPushButton()
+        browse_ext.setIcon(icon)
+        browse_ext.setIconSize(QSize(14,14))
+        browse_ext.setMaximumWidth(26)
+        browse_ext.setMaximumHeight(22)
+        browse_out = QPushButton()
+        browse_out.setIcon(icon)
+        browse_out.setIconSize(QSize(14,14))
+        browse_out.setMaximumWidth(26)
+        browse_out.setMaximumHeight(22)
+
         add_param = QPushButton("+ add a new parameter")
         add_param.setStyleSheet("""
                                 QPushButton {
@@ -245,24 +266,28 @@ class ConfigGenerator(QWidget):
         self.grid2.setColumnStretch(1, 1)
         self.grid2.setColumnStretch(2, 1)
         self.grid2.setColumnStretch(3, 0)
-        self.grid2.setColumnStretch(4, 2)
+        self.grid2.setColumnStretch(4, 0)
+        self.grid2.setColumnStretch(5, 2)
         self.grid2.setRowStretch(NEXT_ENTRY, 2)
         self.grid2.addWidget(fp, 0, 0)
-        self.grid2.addWidget(load, 0, 3, 2, 1)
-        self.grid2.addWidget(gen, 0, 4, 2, 1)
+        self.grid2.addWidget(load, 0, 4, 2, 1)
+        self.grid2.addWidget(gen, 0, 5, 2, 1)
         self.grid2.addWidget(data, 1, 0)
         self.grid2.addWidget(self.data_edit, 1, 1, 1, 2)
-        self.grid2.addWidget(reset, 2, 3, 2, 1)
-        self.grid2.addWidget(run, 2, 4, 2, 1)
+        self.grid2.addWidget(browse_hlsp, 1, 3)
+        self.grid2.addWidget(reset, 2, 4, 2, 1)
+        self.grid2.addWidget(run, 2, 5, 2, 1)
         self.grid2.addWidget(ext, 2, 0)
         self.grid2.addWidget(self.ext_edit, 2, 1, 1, 2)
+        self.grid2.addWidget(browse_ext, 2, 3)
         self.grid2.addWidget(out, 3, 0)
         self.grid2.addWidget(self.out_edit, 3, 1, 1, 2)
+        self.grid2.addWidget(browse_out, 3, 3)
         self.grid2.addWidget(ow, 4, 0)
         self.grid2.addWidget(self.ow_on, 4, 1)
         self.grid2.addWidget(self.ow_off, 4, 2)
-        self.grid2.addWidget(status_label, 4, 4, 1, 1)
-        self.grid2.addWidget(self.status, 5, 4, -1, 1)
+        self.grid2.addWidget(status_label, 4, 5, 1, 1)
+        self.grid2.addWidget(self.status, 5, 5, -1, 1)
         self.grid2.addWidget(ht, 5, 0)
         self.grid2.addWidget(self.header, 5, 1)
         self.grid2.addWidget(dt, 6, 0)
@@ -271,21 +296,44 @@ class ConfigGenerator(QWidget):
         self.grid2.addWidget(add_param, 7, 1)
         self.grid2.addWidget(self.parent_param, 8, 0)
         self.grid2.addWidget(caom_param, 8, 1)
-        self.grid2.addWidget(value_param, 8, 2, 1, 2)
+        self.grid2.addWidget(value_param, 8, 2, 1, 3)
         self.grid2.addWidget(parent_edit, 9, 0)
         self.grid2.addWidget(caom_edit, 9, 1)
-        self.grid2.addWidget(value_edit, 9, 2, 1, 2)
+        self.grid2.addWidget(value_edit, 9, 2, 1, 3)
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)
         self.show()
 
         #Add button actions.
+        browse_hlsp.clicked.connect(self.hlspClicked)
+        browse_ext.clicked.connect(self.extensionsClicked)
+        browse_out.clicked.connect(self.outputClicked)
         add_param.clicked.connect(self.addClicked)
         load.clicked.connect(self.loadClicked)
         reset.clicked.connect(self.resetClicked)
         gen.clicked.connect(self.genClicked)
         run.clicked.connect(self.runClicked)
+
+
+    def hlspClicked(self):
+        navigate = QFileDialog.getExistingDirectory(self,"", ".")
+        self.data_edit.clear()
+        self.data_edit.insert(navigate)
+
+
+    def extensionsClicked(self):
+        navigate = QFileDialog.getOpenFileName(self, "", ".")
+        path = navigate[0]
+        self.ext_edit.clear()
+        self.ext_edit.insert(path)
+
+
+    def outputClicked(self):
+        navigate = QFileDialog.getSaveFileName(self, "", ".")
+        path = navigate[0]
+        self.out_edit.clear()
+        self.out_edit.insert(path)
 
 
     def addClicked(self):
@@ -302,7 +350,7 @@ class ConfigGenerator(QWidget):
         new_value = QLineEdit()
         self.grid2.addWidget(new_parent, NEXT_ENTRY, 0)
         self.grid2.addWidget(new_caom, NEXT_ENTRY, 1)
-        self.grid2.addWidget(new_value, NEXT_ENTRY, 2, 1, 2)
+        self.grid2.addWidget(new_value, NEXT_ENTRY, 2, 1, 3)
         self.grid2.setRowStretch(NEXT_ENTRY, 0)
         self.grid2.setRowStretch(NEXT_ENTRY+1, 1)
         NEXT_ENTRY += 1
@@ -321,6 +369,7 @@ class ConfigGenerator(QWidget):
         parents = uniques.keys()
         for p in parents:
             sub_dictionary = uniques[p]
+            copy_dictionary = copy.deepcopy(sub_dictionary)
             print("--sub_dictionary = {0}".format(sub_dictionary))
 
             #Look at the first row to see if you're loading into FIRST_ENTRY
@@ -349,16 +398,22 @@ class ConfigGenerator(QWidget):
                     parent_box.addItem(p)
                     parent_box.setCurrentIndex(parent_box.findText(p))
                     self.xml_parents.append(p)
+                print("parent set to {0}".format(p))
 
                 #Fill in the CAOM line edit box.
                 caom_box.insert(param)
+                print("caom set to {0}".format(param))
 
                 #If the next level is still a dictionary, repeat this process.
                 #Otherwise, fill in the Value line edit box.
                 if isinstance(sub_dictionary[param], dict):
-                    self.loadDictionaries(sub_dictionary)
+                    print("value found a dict")
+                    self.loadDictionaries(copy_dictionary)
                 else:
+                    print("value set to {0}".format(sub_dictionary[param]))
                     value_box.insert(sub_dictionary[param])
+                    del copy_dictionary[param]
+
 
 
     def loadClicked(self):
