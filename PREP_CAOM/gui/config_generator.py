@@ -12,13 +12,6 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
-#Define the first row for the unique parameters table.
-global FIRST_ENTRY
-FIRST_ENTRY = 9
-#Keep track of where to add a new unique parameter entry
-global NEXT_ENTRY
-NEXT_ENTRY = FIRST_ENTRY+1
-
 #--------------------
 
 def crawl_dictionary(dictionary, parent, parameter, inserted=False):
@@ -104,7 +97,9 @@ class ConfigGenerator(QWidget):
     def initUI(self):
         #Filepaths sections contains filepath entry boxes.  May want to make
         #these required.
+        firstcol = 140
         fp = QLabel("Filepaths:", self)
+
         data = QLabel("HLSP Data: ", fp)
         data.setAlignment(Qt.AlignRight)
         data.setToolTip("Enter the location of the HLSP data files to scan.")
@@ -117,57 +112,6 @@ class ConfigGenerator(QWidget):
         out.setAlignment(Qt.AlignRight)
         out.setToolTip("Provide a file path and name for the XML result file.")
         self.out_edit = QLineEdit(out)
-
-        #Overwrite flag is boolean, on by default.
-        ow = QLabel("Overwrite: ", self)
-        ow.setToolTip("Allow hlsp_to_xml.py to overwrite an existing XML file.")
-        self.ow_on = QRadioButton("On", ow)
-        self.ow_on.setChecked(True)
-        self.ow_off = QRadioButton("Off", ow)
-
-        #Add all accepted fits header types here.
-        ht = QLabel("Header Type: ", self)
-        ht.setToolTip("Select the FITS header type this HLSP uses.")
-        self.header = QComboBox(ht)
-        self.header_types = ["Standard", "Kepler"]
-        for typ in self.header_types:
-            self.header.addItem(typ)
-
-        #Add all unique data types defined in the static values file here.
-        dt = QLabel("Included Data Types: ", self)
-        dt.setToolTip("Add special CAOM parameters for various data types.")
-        self.lightcurve = QCheckBox("Light Curves", dt)
-
-        #Create custom unique parameters to write into the yaml file.  This
-        #list is expandable.  Custom parents can be defined in addition to
-        #metadataList and provenance.
-        up = QLabel("HLSP-Unique Parameters: ", self)
-        up.setToolTip("Define additional CAOM parameters to insert that are not defined in the FITS headers.")
-        self.parent_param = QLabel("Parent:", up)
-        self.parent_param.setAlignment(Qt.AlignHCenter)
-        caom_param = QLabel("CAOM Keyword:", up)
-        caom_param.setAlignment(Qt.AlignHCenter)
-        value_param = QLabel("Value:", up)
-        value_param.setAlignment(Qt.AlignHCenter)
-        parent_edit = QComboBox(self.parent_param, editable=True)
-        self.xml_parents = ["", "metadataList", "provenance"]
-        for p in self.xml_parents:
-            parent_edit.addItem(p)
-        caom_edit = QLineEdit(caom_param)
-        value_edit = QLineEdit(value_param)
-
-        status_label = QLabel("Results:")
-        status_label.setAlignment(Qt.AlignHCenter)
-        self.status = QTextEdit()
-        self.status.setReadOnly(True)
-        self.status.setLineWrapMode(QTextEdit.NoWrap)
-        self.status.setStyleSheet("border-style: solid; \
-                                  border-width: 1px; \
-                                  background: rgba(235,235,235,0%);")
-
-        #Three buttons: Add a unique parameter entry, save as yaml file, or
-        #save as yaml file and run hlsp_to_xml.
-        test = QIcon.fromTheme("edit-undo")
         browse_hlsp = QPushButton()
         hst = browse_hlsp.style()
         icon = hst.standardIcon(QStyle.SP_DirIcon)
@@ -185,7 +129,56 @@ class ConfigGenerator(QWidget):
         browse_out.setIconSize(QSize(14,14))
         browse_out.setMaximumWidth(26)
         browse_out.setMaximumHeight(22)
+        self.pathsgrid = QGridLayout()
+        self.pathsgrid.addWidget(data, 0, 0)
+        self.pathsgrid.addWidget(self.data_edit, 0, 1)
+        self.pathsgrid.addWidget(browse_hlsp, 0, 2)
+        self.pathsgrid.addWidget(ext, 1, 0)
+        self.pathsgrid.addWidget(self.ext_edit, 1, 1)
+        self.pathsgrid.addWidget(browse_ext, 1, 2)
+        self.pathsgrid.addWidget(out, 2, 0)
+        self.pathsgrid.addWidget(self.out_edit, 2, 1)
+        self.pathsgrid.addWidget(browse_out, 2, 2)
 
+        #Overwrite flag is boolean, on by default.
+        ow = QLabel("Overwrite: ", self)
+        ow.setMinimumWidth(firstcol)
+        ow.setToolTip("Allow hlsp_to_xml.py to overwrite an existing XML file.")
+        self.ow_on = QRadioButton("On", ow)
+        self.ow_on.setChecked(True)
+        #self.ow_on.setMaximumWidth(75)
+        self.ow_off = QRadioButton("Off", ow)
+        self.overwritegrid = QGridLayout()
+        self.overwritegrid.addWidget(ow, 0, 0)
+        self.overwritegrid.addWidget(self.ow_on, 0, 1)
+        self.overwritegrid.addWidget(self.ow_off, 0, 2)
+
+        #Add all accepted fits header types here.
+        ht = QLabel("Header Type: ", self)
+        ht.setMinimumWidth(firstcol)
+        ht.setToolTip("Select the FITS header type this HLSP uses.")
+        self.header = QComboBox(ht)
+        self.header_types = ["Standard", "Kepler"]
+        for typ in self.header_types:
+            self.header.addItem(typ)
+        self.headergrid = QGridLayout()
+        self.headergrid.addWidget(ht, 0, 0)
+        self.headergrid.addWidget(self.header, 0, 1)
+
+        #Add all unique data types defined in the static values file here.
+        dt = QLabel("Included Data Types: ", self)
+        dt.setMinimumWidth(firstcol)
+        dt.setToolTip("Add special CAOM parameters for various data types.")
+        self.lightcurve = QCheckBox("Light Curves", dt)
+        self.datatypesgrid = QGridLayout()
+        self.datatypesgrid.addWidget(dt, 0, 0)
+        self.datatypesgrid.addWidget(self.lightcurve, 0, 1)
+
+        #Create custom unique parameters to write into the yaml file.  This
+        #list is expandable.  Custom parents can be defined in addition to
+        #metadataList and provenance.
+        up = QLabel("HLSP-Unique Parameters: ", self)
+        up.setToolTip("Define additional CAOM parameters to insert that are not defined in the FITS headers.")
         add_param = QPushButton("+ add a new parameter")
         add_param.setStyleSheet("""
                                 QPushButton {
@@ -201,9 +194,47 @@ class ConfigGenerator(QWidget):
                                     background-color: #afafaf;
                                     }""")
         add_param.setMinimumWidth(165)
+        parent_param = QLabel("Parent:", up)
+        parent_param.setAlignment(Qt.AlignHCenter)
+        caom_param = QLabel("CAOM Keyword:", up)
+        caom_param.setAlignment(Qt.AlignHCenter)
+        value_param = QLabel("Value:", up)
+        value_param.setAlignment(Qt.AlignHCenter)
+        parent_edit = QComboBox(parent_param, editable=True)
+        self.xml_parents = ["", "metadataList", "provenance"]
+        for p in self.xml_parents:
+            parent_edit.addItem(p)
+        caom_edit = QLineEdit(caom_param)
+        value_edit = QLineEdit(value_param)
+        self.uniquesgrid = QGridLayout()
+        self.uniquesgrid.addWidget(up, 0, 0)
+        self.uniquesgrid.addWidget(add_param, 0, 1)
+        self.uniquesgrid.addWidget(parent_param, 1, 0)
+        self.uniquesgrid.addWidget(caom_param, 1, 1)
+        self.uniquesgrid.addWidget(value_param, 1, 2)
+        self.uniquesgrid.addWidget(parent_edit, 2, 0)
+        self.uniquesgrid.addWidget(caom_edit, 2, 1)
+        self.uniquesgrid.addWidget(value_edit, 2, 2)
+        self.firstrow = 2
+        self.nextrow = 3
+        self.uniquesgrid.setRowStretch(self.nextrow, 1)
+        self.uniquesgrid.setColumnStretch(0, 0)
+        self.uniquesgrid.setColumnStretch(1, 1)
+        self.uniquesgrid.setColumnStretch(2, 1)
+
+        status_label = QLabel("Results:")
+        status_label.setAlignment(Qt.AlignHCenter)
+        self.status = QTextEdit()
+        self.status.setReadOnly(True)
+        self.status.setLineWrapMode(QTextEdit.NoWrap)
+        self.status.setStyleSheet("border-style: solid; \
+                                  border-width: 1px; \
+                                  background: rgba(235,235,235,0%);")
+
         load = QPushButton("Load YAML File")
         load.setStyleSheet("""
                                 QPushButton {
+                                    width: 125px;
                                     background-color: #f2f2f2;
                                     border: 2px solid #afafaf;
                                     border-radius: 8px;
@@ -215,14 +246,13 @@ class ConfigGenerator(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
-        load.setMinimumWidth(125)
         reset = QPushButton("Reset Form")
         reset.setStyleSheet("""
                                 QPushButton {
                                     background-color: #f2f2f2;
                                     border: 2px solid #afafaf;
                                     border-radius: 8px;
-                                    height: 40px
+                                    height: 40px;
                                     }
                                 QPushButton:hover {
                                     border: 4px solid #afafaf;
@@ -231,6 +261,7 @@ class ConfigGenerator(QWidget):
                                     background-color: #afafaf;
                                     }""")
         reset.setMinimumWidth(125)
+        reset.setMaximumWidth(125)
         gen = QPushButton("Generate YAML File", self)
         gen.setStyleSheet("""
                           QPushButton {
@@ -259,47 +290,33 @@ class ConfigGenerator(QWidget):
                           QPushButton:pressed {
                             background-color: #005fa3;
                             }""")
+        self.buttonsgrid = QGridLayout()
+        empty = QSpacerItem(25, 1)
+        self.buttonsgrid.setColumnStretch(0, 0)
+        self.buttonsgrid.setColumnStretch(1, 0)
+        self.buttonsgrid.addItem(empty, 0, 0, -1, 1)
+        self.buttonsgrid.addWidget(load, 0, 1)
+        self.buttonsgrid.addWidget(gen, 0, 2)
+        self.buttonsgrid.addWidget(reset, 1, 1)
+        self.buttonsgrid.addWidget(run, 1, 2)
 
         #Create a grid layout and add all the widgets.
         self.grid2 = QGridLayout()
-        self.grid2.setSpacing(FIRST_ENTRY)
         self.grid2.setColumnStretch(1, 1)
         self.grid2.setColumnStretch(2, 1)
         self.grid2.setColumnStretch(3, 0)
         self.grid2.setColumnStretch(4, 0)
+        self.grid2.setColumnMinimumWidth(4, 150)
         self.grid2.setColumnStretch(5, 2)
-        self.grid2.setRowStretch(NEXT_ENTRY, 2)
         self.grid2.addWidget(fp, 0, 0)
-        self.grid2.addWidget(load, 0, 4, 2, 1)
-        self.grid2.addWidget(gen, 0, 5, 2, 1)
-        self.grid2.addWidget(data, 1, 0)
-        self.grid2.addWidget(self.data_edit, 1, 1, 1, 2)
-        self.grid2.addWidget(browse_hlsp, 1, 3)
-        self.grid2.addWidget(reset, 2, 4, 2, 1)
-        self.grid2.addWidget(run, 2, 5, 2, 1)
-        self.grid2.addWidget(ext, 2, 0)
-        self.grid2.addWidget(self.ext_edit, 2, 1, 1, 2)
-        self.grid2.addWidget(browse_ext, 2, 3)
-        self.grid2.addWidget(out, 3, 0)
-        self.grid2.addWidget(self.out_edit, 3, 1, 1, 2)
-        self.grid2.addWidget(browse_out, 3, 3)
-        self.grid2.addWidget(ow, 4, 0)
-        self.grid2.addWidget(self.ow_on, 4, 1)
-        self.grid2.addWidget(self.ow_off, 4, 2)
-        self.grid2.addWidget(status_label, 4, 5, 1, 1)
-        self.grid2.addWidget(self.status, 5, 5, -1, 1)
-        self.grid2.addWidget(ht, 5, 0)
-        self.grid2.addWidget(self.header, 5, 1)
-        self.grid2.addWidget(dt, 6, 0)
-        self.grid2.addWidget(self.lightcurve, 6, 1)
-        self.grid2.addWidget(up, 7, 0)
-        self.grid2.addWidget(add_param, 7, 1)
-        self.grid2.addWidget(self.parent_param, 8, 0)
-        self.grid2.addWidget(caom_param, 8, 1)
-        self.grid2.addWidget(value_param, 8, 2, 1, 3)
-        self.grid2.addWidget(parent_edit, 9, 0)
-        self.grid2.addWidget(caom_edit, 9, 1)
-        self.grid2.addWidget(value_edit, 9, 2, 1, 3)
+        self.grid2.addLayout(self.buttonsgrid, 0, 4, 4, 2)
+        self.grid2.addLayout(self.pathsgrid, 1, 0, 3, 4)
+        self.grid2.addLayout(self.overwritegrid, 4, 5, 1, 2)
+        self.grid2.addLayout(self.uniquesgrid, 4, 0, 3, 5)
+        self.grid2.addLayout(self.headergrid, 5, 5)
+        self.grid2.addLayout(self.datatypesgrid, 6, 5)
+        self.grid2.addWidget(status_label, 7, 0, 1, -1)
+        self.grid2.addWidget(self.status, 8, 0, -1, -1)
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)
@@ -342,18 +359,17 @@ class ConfigGenerator(QWidget):
         entry row.
         """
 
-        global NEXT_ENTRY
         new_parent = QComboBox(editable=True)
         for p in self.xml_parents:
             new_parent.addItem(p)
         new_caom = QLineEdit()
         new_value = QLineEdit()
-        self.grid2.addWidget(new_parent, NEXT_ENTRY, 0)
-        self.grid2.addWidget(new_caom, NEXT_ENTRY, 1)
-        self.grid2.addWidget(new_value, NEXT_ENTRY, 2, 1, 3)
-        self.grid2.setRowStretch(NEXT_ENTRY, 0)
-        self.grid2.setRowStretch(NEXT_ENTRY+1, 1)
-        NEXT_ENTRY += 1
+        self.uniquesgrid.addWidget(new_parent, self.nextrow, 0)
+        self.uniquesgrid.addWidget(new_caom, self.nextrow, 1)
+        self.uniquesgrid.addWidget(new_value, self.nextrow, 2)
+        self.uniquesgrid.setRowStretch(self.nextrow, 0)
+        self.uniquesgrid.setRowStretch(self.nextrow+1, 1)
+        self.nextrow += 1
 
 
     def loadDictionaries(self, uniques):
@@ -362,32 +378,26 @@ class ConfigGenerator(QWidget):
         parameters table.
         """
 
-        global FIRST_ENTRY
-        global NEXT_ENTRY
-
-        print("uniques = {0}".format(uniques))
         parents = uniques.keys()
         for p in parents:
             sub_dictionary = uniques[p]
             copy_dictionary = copy.deepcopy(sub_dictionary)
-            print("--sub_dictionary = {0}".format(sub_dictionary))
 
             #Look at the first row to see if you're loading into FIRST_ENTRY
             #or NEXT_ENTRY.
-            first_parent = self.grid2.itemAtPosition(FIRST_ENTRY,0).widget()
+            first_parent = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
             for param in sub_dictionary.keys():
                 value = sub_dictionary[param]
-                print("----value = {0}".format(value))
                 if first_parent.currentText() == "":
-                    row = FIRST_ENTRY
+                    row = self.firstrow
                 else:
-                    row = NEXT_ENTRY
+                    row = self.nextrow
                     self.addClicked()
 
                 #Get the Parent combo box for the current row.
-                parent_box = self.grid2.itemAtPosition(row,0).widget()
-                caom_box = self.grid2.itemAtPosition(row,1).widget()
-                value_box = self.grid2.itemAtPosition(row,2).widget()
+                parent_box = self.uniquesgrid.itemAtPosition(row,0).widget()
+                caom_box = self.uniquesgrid.itemAtPosition(row,1).widget()
+                value_box = self.uniquesgrid.itemAtPosition(row,2).widget()
 
                 #If the desired parent is already an option, set to that.
                 #Otherwise add it as a new option in the combo box.
@@ -398,19 +408,15 @@ class ConfigGenerator(QWidget):
                     parent_box.addItem(p)
                     parent_box.setCurrentIndex(parent_box.findText(p))
                     self.xml_parents.append(p)
-                print("parent set to {0}".format(p))
 
                 #Fill in the CAOM line edit box.
                 caom_box.insert(param)
-                print("caom set to {0}".format(param))
 
                 #If the next level is still a dictionary, repeat this process.
                 #Otherwise, fill in the Value line edit box.
                 if isinstance(sub_dictionary[param], dict):
-                    print("value found a dict")
                     self.loadDictionaries(copy_dictionary)
                 else:
-                    print("value set to {0}".format(sub_dictionary[param]))
                     value_box.insert(sub_dictionary[param])
                     del copy_dictionary[param]
 
@@ -472,9 +478,6 @@ class ConfigGenerator(QWidget):
         Clear any changes to the form.
         """
 
-        global FIRST_ENTRY
-        global NEXT_ENTRY
-
         #Confirm the user wants to clear the form, except in the case of a
         #load operation.
         if not source == "load":
@@ -483,28 +486,32 @@ class ConfigGenerator(QWidget):
             if not self.reset.confirm:
                 return None
 
+        #Empty the immediately-available elements.
         self.data_edit.clear()
         self.ext_edit.clear()
         self.out_edit.clear()
         self.ow_on.setChecked(True)
         self.header.setCurrentIndex(0)
         self.lightcurve.setChecked(False)
-        self.grid2.itemAtPosition(FIRST_ENTRY,0).widget().setCurrentIndex(0)
-        self.grid2.itemAtPosition(FIRST_ENTRY,1).widget().clear()
-        self.grid2.itemAtPosition(FIRST_ENTRY,2).widget().clear()
+        p_one = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
+        p_one.setCurrentIndex(0)
+        c_one = self.uniquesgrid.itemAtPosition(self.firstrow,1).widget()
+        c_one.clear()
+        v_one = self.uniquesgrid.itemAtPosition(2,2).widget()
+        v_one.clear()
 
         #Delete any unique parameter entries beyond the first table row.
-        delete_these = list(reversed(range(FIRST_ENTRY+1,
-                                           self.grid2.rowCount())))
+        delete_these = list(reversed(range(self.firstrow+1,
+                                           self.uniquesgrid.rowCount())))
         if len(delete_these) > 0:
             for n in delete_these:
-                test = self.grid2.itemAtPosition(n,0)
+                test = self.uniquesgrid.itemAtPosition(n,0)
                 if test == None:
                     continue
-                self.grid2.itemAtPosition(n,0).widget().setParent(None)
-                self.grid2.itemAtPosition(n,1).widget().setParent(None)
-                self.grid2.itemAtPosition(n,2).widget().setParent(None)
-        NEXT_ENTRY = FIRST_ENTRY+1
+                self.uniquesgrid.itemAtPosition(n,0).widget().setParent(None)
+                self.uniquesgrid.itemAtPosition(n,1).widget().setParent(None)
+                self.uniquesgrid.itemAtPosition(n,2).widget().setParent(None)
+        self.nextrow = 3
 
         if not source == "load":
             self.status.setTextColor(Qt.black)
@@ -566,10 +573,10 @@ class ConfigGenerator(QWidget):
         #Collect all the unique parameters the user has entered.  Start at row
         #8 and search through all rows the user may have added.
         uniques = {}
-        for row in range(FIRST_ENTRY, self.grid2.rowCount()):
-            add_parent = self.grid2.itemAtPosition(row, 0)
-            add_caom = self.grid2.itemAtPosition(row, 1)
-            add_value = self.grid2.itemAtPosition(row, 2)
+        for row in range(self.firstrow, self.uniquesgrid.rowCount()):
+            add_parent = self.uniquesgrid.itemAtPosition(row, 0)
+            add_caom = self.uniquesgrid.itemAtPosition(row, 1)
+            add_value = self.uniquesgrid.itemAtPosition(row, 2)
             unique_parent = None
             unique_caom = None
             unique_value = None

@@ -163,19 +163,37 @@ class ExtGenerator(QWidget):
                           QPushButton:pressed {
                             background-color: #45a018;
                             }""")
+        empty = QSpacerItem(200, 1)
+        self.buttonsgrid = QGridLayout()
+        self.buttonsgrid.addWidget(add_file, 0, 0)
+        self.buttonsgrid.addWidget(clear, 1, 0)
+        self.buttonsgrid.addItem(empty, 0, 1)
+        self.buttonsgrid.addWidget(load, 0, 2, 2, 1)
+        self.buttonsgrid.addWidget(save, 0, 3, 2, 2)
 
-        self.ext_label = QLabel("File ends with:")
-        self.ext_label.setToolTip("Provide a distinctive filename ending to search for within this HLSP ('_img.fits')")
-        self.dt_label = QLabel("Data Type:")
-        self.pt_label = QLabel("Product Type:")
-        self.req_label = QLabel("Required:")
-        self.res_label = QLabel("Results:")
-        self.res_label.setAlignment(Qt.AlignHCenter)
-
+        ext_label = QLabel("File ends with:")
+        ext_label.setToolTip("Provide a distinctive filename ending to search for within this HLSP ('_img.fits')")
+        dt_label = QLabel("Data Type:")
+        pt_label = QLabel("Product Type:")
+        req_label = QLabel("Required:")
         self.ext_edit = QLineEdit()
         self.dt_box = DataTypeBox()
         self.pt_box = ProductTypeBox()
         self.req_box = QCheckBox()
+        self.firstrow = 1
+        self.nextrow = 2
+        self.filetypegrid = QGridLayout()
+        self.filetypegrid.addWidget(ext_label, 0, 0)
+        self.filetypegrid.addWidget(dt_label, 0, 1)
+        self.filetypegrid.addWidget(pt_label, 0, 2)
+        self.filetypegrid.addWidget(req_label, 0, 3)
+        self.filetypegrid.addWidget(self.ext_edit, 1, 0)
+        self.filetypegrid.addWidget(self.dt_box, 1, 1)
+        self.filetypegrid.addWidget(self.pt_box, 1, 2)
+        self.filetypegrid.addWidget(self.req_box, 1, 3)
+
+        res_label = QLabel("Results:")
+        res_label.setAlignment(Qt.AlignHCenter)
         self.status = QTextEdit()
         self.status.setReadOnly(True)
         self.status.setLineWrapMode(QTextEdit.NoWrap)
@@ -184,6 +202,11 @@ class ExtGenerator(QWidget):
                                   background: rgba(235,235,235,0%);")
 
         self.grid = QGridLayout()
+        self.grid.addLayout(self.buttonsgrid, 0, 0)
+        self.grid.addLayout(self.filetypegrid, 1, 0)
+        self.grid.addWidget(res_label, 2, 0)
+        self.grid.addWidget(self.status)
+        """
         self.grid.setRowStretch(NEXT_ENTRY, 2)
         self.grid.addWidget(add_file, 0, 0)
         self.grid.addWidget(clear, 1, 0)
@@ -199,6 +222,7 @@ class ExtGenerator(QWidget):
         self.grid.addWidget(self.pt_box, 3, 2)
         self.grid.addWidget(self.req_box, 3, 3)
         self.grid.addWidget(self.status, 3, 4, -1, 1)
+        """
 
         self.setLayout(self.grid)
         self.show()
@@ -214,29 +238,23 @@ class ExtGenerator(QWidget):
         When 'add_file' is clicked, create a new row with the same file entry
         options as the first row.
         """
-        global NEXT_ENTRY
         new_ext = QLineEdit()
         new_dt = DataTypeBox()
         new_pt = ProductTypeBox()
         new_req = QCheckBox()
-        self.grid.addWidget(new_ext, NEXT_ENTRY, 0)
-        self.grid.addWidget(new_dt, NEXT_ENTRY, 1)
-        self.grid.addWidget(new_pt, NEXT_ENTRY, 2)
-        self.grid.addWidget(new_req, NEXT_ENTRY, 3)
-        self.grid.setRowStretch(NEXT_ENTRY, 0)
-        self.grid.setRowStretch(NEXT_ENTRY+1, 1)
-        self.setLayout(self.grid)
-        self.show()
-        NEXT_ENTRY += 1
+        self.filetypegrid.addWidget(new_ext, self.nextrow, 0)
+        self.filetypegrid.addWidget(new_dt, self.nextrow, 1)
+        self.filetypegrid.addWidget(new_pt, self.nextrow, 2)
+        self.filetypegrid.addWidget(new_req, self.nextrow, 3)
+        self.filetypegrid.setRowStretch(self.nextrow, 0)
+        self.filetypegrid.setRowStretch(self.nextrow+1, 1)
+        self.nextrow += 1
 
 
     def clearClicked(self, source="clicked"):
         """
         Clear any changes made to the form and reset to original state.
         """
-
-        global FIRST_ENTRY
-        global NEXT_ENTRY
 
         #Pop up a confirmation dialog if this is not being called from the load
         #function.
@@ -247,24 +265,28 @@ class ExtGenerator(QWidget):
                 return None
 
         #Empty the items in the first row but don't delete them.
-        self.grid.itemAtPosition(FIRST_ENTRY,0).widget().clear()
-        self.grid.itemAtPosition(FIRST_ENTRY,1).widget().setCurrentIndex(0)
-        self.grid.itemAtPosition(FIRST_ENTRY,2).widget().setCurrentIndex(0)
-        self.grid.itemAtPosition(FIRST_ENTRY,3).widget().setChecked(False)
+        p_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
+        p_one.clear()
+        dt_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
+        dt_one.setCurrentIndex(0)
+        pt_one = self.filetypegrid.itemAtPosition(self.firstrow,2).widget()
+        pt_one.setCurrentIndex(0)
+        req_one = self.filetypegrid.itemAtPosition(self.firstrow,3).widget()
+        req_one.setChecked(False)
 
         #Remove all elements beyond the first row.
-        delete_these = list(reversed(range(FIRST_ENTRY+1,
-                                           self.grid.rowCount()-1)))
+        delete_these = list(reversed(range(self.firstrow+1,
+                                           self.filetypegrid.rowCount()-1)))
         if len(delete_these) > 1:
             for n in delete_these:
-                test = self.grid.itemAtPosition(n,0)
+                test = self.filetypegrid.itemAtPosition(n,0)
                 if test == None:
                     continue
-                self.grid.itemAtPosition(n,0).widget().setParent(None)
-                self.grid.itemAtPosition(n,1).widget().setParent(None)
-                self.grid.itemAtPosition(n,2).widget().setParent(None)
-                self.grid.itemAtPosition(n,3).widget().setParent(None)
-        NEXT_ENTRY = FIRST_ENTRY+1
+                self.filetypegrid.itemAtPosition(n,0).widget().setParent(None)
+                self.filetypegrid.itemAtPosition(n,1).widget().setParent(None)
+                self.filetypegrid.itemAtPosition(n,2).widget().setParent(None)
+                self.filetypegrid.itemAtPosition(n,3).widget().setParent(None)
+        self.nextrow = self.firstrow + 1
 
         if not source == "load":
             self.status.setTextColor(Qt.black)
@@ -275,9 +297,6 @@ class ExtGenerator(QWidget):
         """
         Open an existing CSV file and load the contents into the form.
         """
-
-        global FIRST_ENTRY
-        global NEXT_ENTRY
 
         loadit = QFileDialog.getOpenFileName(self, "Load a CSV file", ".")
         filename = loadit[0]
@@ -321,15 +340,15 @@ class ExtGenerator(QWidget):
 
         #Begin at the first data row and insert values into the form elements.
         #(skip the CSV header row)
-        row_num = FIRST_ENTRY
+        row_num = self.firstrow
         for entry in files[1:]:
-            ext_box = self.grid.itemAtPosition(row_num, 0)
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 0)
             if ext_box is None:
                 self.newFileClicked()
-            ext_box = self.grid.itemAtPosition(row_num, 0).widget()
-            dt_box = self.grid.itemAtPosition(row_num, 1).widget()
-            pt_box = self.grid.itemAtPosition(row_num, 2).widget()
-            req_box = self.grid.itemAtPosition(row_num, 3).widget()
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
+            dt_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
+            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
+            req_box = self.filetypegrid.itemAtPosition(row_num, 3).widget()
             ext_box.setText(entry[ext_index])
             dt_box.setCurrentType(entry[dt_index])
             pt_box.setCurrentType(entry[pt_index])
@@ -347,15 +366,14 @@ class ExtGenerator(QWidget):
         When 'save' is clicked, collect all the user entries and write the
         CSV file.
         """
-        global FIRST_ENTRY
         all_files = []
 
         #Loop over all rows the user might have created in the form.
-        for row in range(FIRST_ENTRY, self.grid.rowCount()):
-            add_ext = self.grid.itemAtPosition(row, 0)
-            add_dt = self.grid.itemAtPosition(row, 1)
-            add_pt = self.grid.itemAtPosition(row, 2)
-            add_req = self.grid.itemAtPosition(row, 3)
+        for row in range(self.firstrow, self.filetypegrid.rowCount()):
+            add_ext = self.filetypegrid.itemAtPosition(row, 0)
+            add_dt = self.filetypegrid.itemAtPosition(row, 1)
+            add_pt = self.filetypegrid.itemAtPosition(row, 2)
+            add_req = self.filetypegrid.itemAtPosition(row, 3)
             read_ext = None
             read_dt = None
             read_pt = None
