@@ -98,6 +98,8 @@ class ConfigGenerator(QWidget):
         #Filepaths sections contains filepath entry boxes.  May want to make
         #these required.
         firstcol = 140
+        space = QSpacerItem(30, 1)
+
         fp = QLabel("Filepaths:", self)
 
         data = QLabel("HLSP Data: ", fp)
@@ -149,9 +151,10 @@ class ConfigGenerator(QWidget):
         #self.ow_on.setMaximumWidth(75)
         self.ow_off = QRadioButton("Off", ow)
         self.overwritegrid = QGridLayout()
-        self.overwritegrid.addWidget(ow, 0, 0)
-        self.overwritegrid.addWidget(self.ow_on, 0, 1)
-        self.overwritegrid.addWidget(self.ow_off, 0, 2)
+        self.overwritegrid.addItem(space, 0, 0)
+        self.overwritegrid.addWidget(ow, 0, 1)
+        self.overwritegrid.addWidget(self.ow_on, 0, 2)
+        self.overwritegrid.addWidget(self.ow_off, 0, 3)
 
         #Add all accepted fits header types here.
         ht = QLabel("Header Type: ", self)
@@ -162,17 +165,25 @@ class ConfigGenerator(QWidget):
         for typ in self.header_types:
             self.header.addItem(typ)
         self.headergrid = QGridLayout()
-        self.headergrid.addWidget(ht, 0, 0)
-        self.headergrid.addWidget(self.header, 0, 1)
+        self.headergrid.addItem(space, 0, 0)
+        self.headergrid.addWidget(ht, 0, 1)
+        self.headergrid.addWidget(self.header, 0, 2)
 
         #Add all unique data types defined in the static values file here.
         dt = QLabel("Included Data Types: ", self)
         dt.setMinimumWidth(firstcol)
         dt.setToolTip("Add special CAOM parameters for various data types.")
         self.lightcurve = QCheckBox("Light Curves", dt)
+        self.spectra = QCheckBox("Spectra", dt)
+        self.catalog = QCheckBox("Catalogs", dt)
+        self.simulation = QCheckBox("Models / Sims", dt)
         self.datatypesgrid = QGridLayout()
-        self.datatypesgrid.addWidget(dt, 0, 0)
-        self.datatypesgrid.addWidget(self.lightcurve, 0, 1)
+        self.datatypesgrid.addItem(space, 0, 0, -1, 1)
+        self.datatypesgrid.addWidget(dt, 0, 1)
+        self.datatypesgrid.addWidget(self.lightcurve, 0, 2)
+        self.datatypesgrid.addWidget(self.spectra, 1, 2)
+        self.datatypesgrid.addWidget(self.catalog, 2, 2)
+        self.datatypesgrid.addWidget(self.simulation, 3, 2)
 
         #Create custom unique parameters to write into the yaml file.  This
         #list is expandable.  Custom parents can be defined in addition to
@@ -215,6 +226,7 @@ class ConfigGenerator(QWidget):
         self.uniquesgrid.addWidget(parent_edit, 2, 0)
         self.uniquesgrid.addWidget(caom_edit, 2, 1)
         self.uniquesgrid.addWidget(value_edit, 2, 2)
+        #self.uniquesgrid.addItem(space, 0, 3, -1, 1)
         self.firstrow = 2
         self.nextrow = 3
         self.uniquesgrid.setRowStretch(self.nextrow, 1)
@@ -234,7 +246,6 @@ class ConfigGenerator(QWidget):
         load = QPushButton("Load YAML File")
         load.setStyleSheet("""
                                 QPushButton {
-                                    width: 125px;
                                     background-color: #f2f2f2;
                                     border: 2px solid #afafaf;
                                     border-radius: 8px;
@@ -306,17 +317,20 @@ class ConfigGenerator(QWidget):
         self.grid2.setColumnStretch(2, 1)
         self.grid2.setColumnStretch(3, 0)
         self.grid2.setColumnStretch(4, 0)
-        self.grid2.setColumnMinimumWidth(4, 150)
-        self.grid2.setColumnStretch(5, 2)
+        self.grid2.setColumnMinimumWidth(4, 100)
+        self.grid2.setColumnStretch(5, 0)
+        self.grid2.setRowStretch(9, 0)
+        self.grid2.setRowStretch(10, 1)
         self.grid2.addWidget(fp, 0, 0)
         self.grid2.addLayout(self.buttonsgrid, 0, 4, 4, 2)
         self.grid2.addLayout(self.pathsgrid, 1, 0, 3, 4)
         self.grid2.addLayout(self.overwritegrid, 4, 5, 1, 2)
-        self.grid2.addLayout(self.uniquesgrid, 4, 0, 3, 5)
+        self.grid2.addLayout(self.uniquesgrid, 4, 0, 4, 5)
         self.grid2.addLayout(self.headergrid, 5, 5)
-        self.grid2.addLayout(self.datatypesgrid, 6, 5)
-        self.grid2.addWidget(status_label, 7, 0, 1, -1)
-        self.grid2.addWidget(self.status, 8, 0, -1, -1)
+        self.grid2.addLayout(self.datatypesgrid, 6, 5, 4, 1)
+        self.grid2.addWidget(status_label, 8, 0, 1, 5)
+        self.grid2.addWidget(self.status, 9, 0, 2, 5)
+        self.grid2.addItem(space, 10, 0, -1, -1)
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)
@@ -334,20 +348,26 @@ class ConfigGenerator(QWidget):
 
 
     def hlspClicked(self):
-        navigate = QFileDialog.getExistingDirectory(self,"", ".")
+        navigate = QFileDialog.getExistingDirectory(self,
+                                                    "Select HLSP Directory",
+                                                    ".")
         self.data_edit.clear()
         self.data_edit.insert(navigate)
 
 
     def extensionsClicked(self):
-        navigate = QFileDialog.getOpenFileName(self, "", ".")
+        navigate = QFileDialog.getOpenFileName(self,
+                                               "Select File Descriptions File",
+                                               ".")
         path = navigate[0]
         self.ext_edit.clear()
         self.ext_edit.insert(path)
 
 
     def outputClicked(self):
-        navigate = QFileDialog.getSaveFileName(self, "", ".")
+        navigate = QFileDialog.getSaveFileName(self,
+                                               "Save Output XML File",
+                                               ".")
         path = navigate[0]
         self.out_edit.clear()
         self.out_edit.insert(path)
@@ -377,6 +397,9 @@ class ConfigGenerator(QWidget):
         Recursively handles loading multi-level dictionaries to the unique
         parameters table.
         """
+
+        if uniques is None:
+            return None
 
         parents = uniques.keys()
         for p in parents:
@@ -511,7 +534,7 @@ class ConfigGenerator(QWidget):
                 self.uniquesgrid.itemAtPosition(n,0).widget().setParent(None)
                 self.uniquesgrid.itemAtPosition(n,1).widget().setParent(None)
                 self.uniquesgrid.itemAtPosition(n,2).widget().setParent(None)
-        self.nextrow = 3
+        self.nextrow = self.firstrow + 1
 
         if not source == "load":
             self.status.setTextColor(Qt.black)
@@ -593,6 +616,10 @@ class ConfigGenerator(QWidget):
             if add_value is not None:
                 value_widget = add_value.widget()
                 unique_value = str(value_widget.text())
+            if unique_parent =="" and unique_caom =="" and unique_value =="":
+                continue
+            elif unique_parent == "":
+                unique_parent = "CompositeObservation"
             parameter = {}
             parameter[unique_caom] = unique_value
             insert = crawl_dictionary(uniques, unique_parent, parameter)

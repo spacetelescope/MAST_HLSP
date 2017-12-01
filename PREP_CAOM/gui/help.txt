@@ -39,4 +39,5 @@ Config File Help:
         file to create the entry in.  'CAOM Keyword' will define how the parameter is 
         inserted into CAOM.  'Value' is the value you'd like to associate with this keyword.  
         A common entry is Parent="provenance", CAOM Keyword="reference", Value=
-        "http://www...".
+        "http://www...".  Parameters defined in this section will also overwrite existing
+        parameters of the same CAOM keyword.

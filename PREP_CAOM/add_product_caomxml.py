@@ -14,7 +14,7 @@ import os
 
 #--------------------
 
-def add_product_caomxml(xmllist, filepath, extensions_table):
+def add_product_caomxml(caomlist, filepath, extensions_table):
     """
     Walk filepath and create product entries for files by matching them with
     entries in extensions_table.
@@ -125,7 +125,7 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
             product.fileType = fileType.upper()
             product.contentType = contentType.upper()
             print("...adding {0}...".format(product))
-            xmllist.append(product)
+            caomlist.add(product)
 
             if len(extensions.keys()) == 0:
                 print("...all defined extensions entered, still scanning...")
@@ -141,4 +141,4 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
                                 .format(ext, extensions_table, filepath))
 
     print("...done!")
-    return xmllist
+    return caomlist
