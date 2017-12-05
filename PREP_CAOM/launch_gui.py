@@ -1,3 +1,21 @@
+"""
+The classes defined here will create a GUI to handle two custom PyQt widgets
+inside a QTabWidget.  This GUI will contain any meta-level user functions
+(launch a help window, quit the program), and a tabs frame to allow the user to switch back and forth between widgets.
+
+..class:: HelpPopup
+    :synopsis: This class creates a simple popup GUI with a text edit window
+    and a button to close the popup.  The text edit portion is not editable
+    by the user, but rather gets populated from a .txt file.
+
+..class:: HLSPIngest
+    :synopsis: This class launches a PyQt window with two buttons: Help, which
+    launches a HelpPopup class object, and Quit, which closes this window.
+    This class also contains a QTabWidget with two tabs: one containing an
+    ExtGenerator class object, the other containing a ConfigGenerator class
+    object
+"""
+
 import os
 import sys
 from gui.config_generator import *
@@ -97,7 +115,7 @@ class HLSPIngest(QTabWidget):
                                 QPushButton:pressed {
                                     background-color: #ff9195;
                                     }""")
-                                    
+
         #Create a third column to stretch so the Help and Quit buttons
         #remain over to the left.
         self.space = QLabel("")

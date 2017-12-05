@@ -1,3 +1,29 @@
+"""
+..module:: crawl_dictionary
+    :synopsis:  This module is designed to add a given parameter to a provided
+    dictionary under a designated parent.  It searches for the parent
+    recursively in order to examine all possible levels of nested dictionaries.
+    If the parent is found, the parameter is added to the dictionary.  The
+    entire dictionary is returned, along with a boolean flag to indicate
+    whether or not the insertion was successful.
+
+..class:: ResetConfirm
+    :synopsis:  This class defines a PyQt window to display a confirmation
+    popup dialog window.  The user can either choose 'yes' or 'no', which will
+    set the self.confirm boolean and close the popup window.  This is used when
+    the user chooses to reset the main ConfigGenerator form.
+
+..class:: ConfigGenerator
+    :synopsis:  This class defines PyQt widget that uses multiple methods to
+    collect user input in order to generate a .yaml config file needed by
+    ../hlsp_to_xml.py.  This will help to ensure that these config files are
+    properly formatted and include the necessary information.  This form
+    includes functionality to add extra rows for unique parameter definitions,
+    load an existing .yaml file into the form, reset all changes made to the
+    form, save all inputs to a .yaml config file, or save a .yaml file and
+    immediately launch ../hlsp_to_xml.py with said file.
+"""
+
 import copy
 import os
 import sys
@@ -19,6 +45,22 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
     Recursively look for a given parent within a potential dictionary of
     dictionaries.  If the parent is found, insert the new parameter and update
     the 'inserted' flag.  Return both the updated dictionary and inserted flag.
+
+    :param dictionary:  A dict object containing CAOM parameters.  Nested
+    dictionaries are possible in this object.
+    :type dictionary:  dict
+
+    :param parent:  The parent to search dictionary keys for.  May not be
+    currently present.
+    :type parent:  str
+
+    :param parameter:  parameter is a single-key single-value dictionary, to be
+    inserted to the existing dictionary under the parent key.
+    :type parameter:  dict
+
+    :param inserted:  A flag to keep track of whether or not parent has been
+    found and the parameter inserted.
+    :type inserted:  bool
     """
 
     current_keys = tuple(dictionary.keys())
@@ -53,6 +95,9 @@ class ResetConfirm(QDialog):
         self.confirmUI()
 
     def confirmUI(self):
+        """
+        Launch a confirmation dialog with yes/no button options.
+        """
         self.confirm = False
         label = QLabel("Reset all current changes to this form?")
         label.setAlignment(Qt.AlignHCenter)
@@ -72,10 +117,16 @@ class ResetConfirm(QDialog):
         no.clicked.connect(self.noClicked)
 
     def yesClicked(self):
+        """
+        Set the confirm boolean to True if 'Yes' is clicked.
+        """
         self.confirm = True
         self.close()
 
     def noClicked(self):
+        """
+        Set the confirm boolean to False if 'No' is clicked.
+        """
         self.confirm = False
         self.close()
 
@@ -95,13 +146,19 @@ class ConfigGenerator(QWidget):
 
 
     def initUI(self):
-        #Filepaths sections contains filepath entry boxes.  May want to make
-        #these required.
+        """
+        Create a GUI with input fields for multiple parameters, which will be
+        aggregated into a .yaml config file.
+        """
+
+        #Create some formatting items for use throughout.
         firstcol = 140
         space = QSpacerItem(30, 1)
 
+        #Create a section for input of filepath variables.  Includes lineedit
+        #objects and buttons to launch file dialogs if the desired paths are
+        #local.
         fp = QLabel("Filepaths:", self)
-
         data = QLabel("HLSP Data: ", fp)
         data.setAlignment(Qt.AlignRight)
         data.setToolTip("Enter the location of the HLSP data files to scan.")
@@ -142,13 +199,12 @@ class ConfigGenerator(QWidget):
         self.pathsgrid.addWidget(self.out_edit, 2, 1)
         self.pathsgrid.addWidget(browse_out, 2, 2)
 
-        #Overwrite flag is boolean, on by default.
+        #Set the boolean overwrite parameter with on/off radio button objects.
         ow = QLabel("Overwrite: ", self)
         ow.setMinimumWidth(firstcol)
         ow.setToolTip("Allow hlsp_to_xml.py to overwrite an existing XML file.")
         self.ow_on = QRadioButton("On", ow)
         self.ow_on.setChecked(True)
-        #self.ow_on.setMaximumWidth(75)
         self.ow_off = QRadioButton("Off", ow)
         self.overwritegrid = QGridLayout()
         self.overwritegrid.addItem(space, 0, 0)
@@ -156,7 +212,7 @@ class ConfigGenerator(QWidget):
         self.overwritegrid.addWidget(self.ow_on, 0, 2)
         self.overwritegrid.addWidget(self.ow_off, 0, 3)
 
-        #Add all accepted fits header types here.
+        #Set the type of .fits headers with a QComboBox object.
         ht = QLabel("Header Type: ", self)
         ht.setMinimumWidth(firstcol)
         ht.setToolTip("Select the FITS header type this HLSP uses.")
@@ -169,7 +225,7 @@ class ConfigGenerator(QWidget):
         self.headergrid.addWidget(ht, 0, 1)
         self.headergrid.addWidget(self.header, 0, 2)
 
-        #Add all unique data types defined in the static values file here.
+        #Select all appropriate data types to apply to the config file.
         dt = QLabel("Included Data Types: ", self)
         dt.setMinimumWidth(firstcol)
         dt.setToolTip("Add special CAOM parameters for various data types.")
@@ -226,7 +282,6 @@ class ConfigGenerator(QWidget):
         self.uniquesgrid.addWidget(parent_edit, 2, 0)
         self.uniquesgrid.addWidget(caom_edit, 2, 1)
         self.uniquesgrid.addWidget(value_edit, 2, 2)
-        #self.uniquesgrid.addItem(space, 0, 3, -1, 1)
         self.firstrow = 2
         self.nextrow = 3
         self.uniquesgrid.setRowStretch(self.nextrow, 1)
@@ -234,6 +289,7 @@ class ConfigGenerator(QWidget):
         self.uniquesgrid.setColumnStretch(1, 1)
         self.uniquesgrid.setColumnStretch(2, 1)
 
+        #Create an area for program output messages.
         status_label = QLabel("Results:")
         status_label.setAlignment(Qt.AlignHCenter)
         self.status = QTextEdit()
@@ -243,6 +299,7 @@ class ConfigGenerator(QWidget):
                                   border-width: 1px; \
                                   background: rgba(235,235,235,0%);")
 
+        #Create the four main buttons for the widget.
         load = QPushButton("Load YAML File")
         load.setStyleSheet("""
                                 QPushButton {
@@ -311,7 +368,7 @@ class ConfigGenerator(QWidget):
         self.buttonsgrid.addWidget(reset, 1, 1)
         self.buttonsgrid.addWidget(run, 1, 2)
 
-        #Create a grid layout and add all the widgets.
+        #Create a grid layout and add all the layouts and remaining widgets.
         self.grid2 = QGridLayout()
         self.grid2.setColumnStretch(1, 1)
         self.grid2.setColumnStretch(2, 1)
@@ -348,6 +405,10 @@ class ConfigGenerator(QWidget):
 
 
     def hlspClicked(self):
+        """
+        Launch a file dialog to select a directory containing HLSP data.
+        """
+
         navigate = QFileDialog.getExistingDirectory(self,
                                                     "Select HLSP Directory",
                                                     ".")
@@ -356,6 +417,10 @@ class ConfigGenerator(QWidget):
 
 
     def extensionsClicked(self):
+        """
+        Launch a file dialog to select a .csv file containing data definitions.
+        """
+
         navigate = QFileDialog.getOpenFileName(self,
                                                "Select File Descriptions File",
                                                ".")
@@ -365,6 +430,10 @@ class ConfigGenerator(QWidget):
 
 
     def outputClicked(self):
+        """
+        Launch a file dialog to define the XML output file name & path.
+        """
+
         navigate = QFileDialog.getSaveFileName(self,
                                                "Save Output XML File",
                                                ".")
@@ -396,6 +465,10 @@ class ConfigGenerator(QWidget):
         """
         Recursively handles loading multi-level dictionaries to the unique
         parameters table.
+
+        :param uniques:  A dictionary containing CAOM parameters.  May contain
+        nested dictionaries.
+        :type uniques:  dict
         """
 
         if uniques is None:
@@ -450,6 +523,7 @@ class ConfigGenerator(QWidget):
         Open a user-selected YAML file and load the elements into the form.
         """
 
+        #Launch a file dialog for user file selection.
         loadit = QFileDialog.getOpenFileName(self, "Load a YAML file", ".")
         filename = loadit[0]
 
@@ -520,7 +594,7 @@ class ConfigGenerator(QWidget):
         p_one.setCurrentIndex(0)
         c_one = self.uniquesgrid.itemAtPosition(self.firstrow,1).widget()
         c_one.clear()
-        v_one = self.uniquesgrid.itemAtPosition(2,2).widget()
+        v_one = self.uniquesgrid.itemAtPosition(self.firstrow,2).widget()
         v_one.clear()
 
         #Delete any unique parameter entries beyond the first table row.
@@ -594,7 +668,7 @@ class ConfigGenerator(QWidget):
         config["data_types"] = data_types
 
         #Collect all the unique parameters the user has entered.  Start at row
-        #8 and search through all rows the user may have added.
+        #self.firstrow and search through all rows the user may have added.
         uniques = {}
         for row in range(self.firstrow, self.uniquesgrid.rowCount()):
             add_parent = self.uniquesgrid.itemAtPosition(row, 0)
@@ -603,6 +677,7 @@ class ConfigGenerator(QWidget):
             unique_parent = None
             unique_caom = None
             unique_value = None
+
             #Skip totally empty rows, empty values are okay for defining a new
             #parent.
             if add_parent is None and add_caom is None and add_value is None:
@@ -623,10 +698,12 @@ class ConfigGenerator(QWidget):
             parameter = {}
             parameter[unique_caom] = unique_value
             insert = crawl_dictionary(uniques, unique_parent, parameter)
+
             #crawl_dictionary returns a tuple: (updated dictionary, inserted
             #boolean flag)
             new_uniques = insert[0]
             inserted = insert[1]
+            
             #If crawl_dictionary did not insert the new parameter, the defined
             #parent is not currently present in the dictionary, so create a
             #new entry.

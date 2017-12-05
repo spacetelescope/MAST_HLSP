@@ -1,3 +1,26 @@
+"""
+..class::  DataTypeBox
+    :synopsis:  A subclass of QComboBox to define a desired data type.  Allows
+    setting the QComboBox index via string.
+
+..class::  ProductTypeBox
+    :synopsis:  A subclass of QComboBox to define a desired product data type.
+    Allows setting the QComboBox index via string.
+
+..class::  ClearConfirm
+    :synopsis:  Creates a PyQt popup window with a yes/no confirmation dialog.
+    Used before clearing changes made to the form.
+
+..class::  ExtGenerator
+    :synopsis:  Creates a PyQt widget that allows a user to define data file
+    types with various PyQt tools.  These data definitions tell
+    ../hlsp_to_xml.py what HLSP data files to look for while browsing a given
+    directory.  This information is saved into a .csv table and passed along
+    to ../hlsp_to_xml.py via a .yaml config file.  The user can add additional
+    rows, load an existing .csv file into the form, save the contents of the
+    form to a new .csv file, or clear all changes made to the form.
+"""
+
 import csv
 import os
 import sys
@@ -103,8 +126,9 @@ class ExtGenerator(QWidget):
 
     def initUI(self):
 
-        #Add buttons to create a new file entry row and to launch the CSV file
-        #creation
+        #Add buttons to create a new file entry row, clear all entries in the
+        #table, load an existing .csv file, or write the current contents to a
+        #new .csv file.
         add_file = QPushButton("+ add another file type")
         add_file.setStyleSheet("""
                                 QPushButton {
@@ -206,23 +230,6 @@ class ExtGenerator(QWidget):
         self.grid.addLayout(self.filetypegrid, 1, 0)
         self.grid.addWidget(res_label, 2, 0)
         self.grid.addWidget(self.status)
-        """
-        self.grid.setRowStretch(NEXT_ENTRY, 2)
-        self.grid.addWidget(add_file, 0, 0)
-        self.grid.addWidget(clear, 1, 0)
-        self.grid.addWidget(load, 0, 2, 2, 1)
-        self.grid.addWidget(save, 0, 3, 2, 2)
-        self.grid.addWidget(self.ext_label, 2, 0)
-        self.grid.addWidget(self.dt_label, 2, 1)
-        self.grid.addWidget(self.pt_label, 2, 2)
-        self.grid.addWidget(self.req_label, 2, 3)
-        self.grid.addWidget(self.res_label, 2, 4)
-        self.grid.addWidget(self.ext_edit, 3, 0)
-        self.grid.addWidget(self.dt_box, 3, 1)
-        self.grid.addWidget(self.pt_box, 3, 2)
-        self.grid.addWidget(self.req_box, 3, 3)
-        self.grid.addWidget(self.status, 3, 4, -1, 1)
-        """
 
         self.setLayout(self.grid)
         self.show()
@@ -238,6 +245,7 @@ class ExtGenerator(QWidget):
         When 'add_file' is clicked, create a new row with the same file entry
         options as the first row.
         """
+
         new_ext = QLineEdit()
         new_dt = DataTypeBox()
         new_pt = ProductTypeBox()
@@ -366,6 +374,7 @@ class ExtGenerator(QWidget):
         When 'save' is clicked, collect all the user entries and write the
         CSV file.
         """
+
         all_files = []
 
         #Loop over all rows the user might have created in the form.
