@@ -79,6 +79,7 @@ def add_product_caomxml(caomlist, filepath, extensions_table):
     #matching parameters.
     print("...scanning files from {0}...".format(filepath))
     found_extensions = []
+    projects = []
     for path, subdirs, files in os.walk(filepath):
         #print("...adding files from {0}...".format(path))
         for name in files:
@@ -95,6 +96,9 @@ def add_product_caomxml(caomlist, filepath, extensions_table):
                     product.fileStatus = this_ext[fs_index]
                     found_extensions.append(ext)
                     del extensions[ext]
+                    spl = str.split(name, "_")
+                    if spl[0] == "hlsp" and spl[1] not in projects:
+                        projects.append(spl[1])
                     break
             if product is None:
                 found = False
@@ -129,6 +133,12 @@ def add_product_caomxml(caomlist, filepath, extensions_table):
 
             if len(extensions.keys()) == 0:
                 print("...all defined extensions entered, still scanning...")
+
+    if len(projects) == 1:
+        name = CAOMvalue("name")
+        name.parent = "provenance"
+        name.value = projects[0].upper()
+        caomlist.add(name)
 
     #Check for any remaining unused file extensions.  Dictionary will still
     #contain one 'extension' entry.

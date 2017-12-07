@@ -153,7 +153,7 @@ class ConfigGenerator(QWidget):
 
         #Create some formatting items for use throughout.
         firstcol = 140
-        space = QSpacerItem(30, 1)
+        space = QSpacerItem(50, 1)
 
         #Create a section for input of filepath variables.  Includes lineedit
         #objects and buttons to launch file dialogs if the desired paths are
@@ -217,6 +217,7 @@ class ConfigGenerator(QWidget):
         ht.setMinimumWidth(firstcol)
         ht.setToolTip("Select the FITS header type this HLSP uses.")
         self.header = QComboBox(ht)
+        self.header.setMinimumWidth(175)
         self.header_types = ["Standard", "Kepler"]
         for typ in self.header_types:
             self.header.addItem(typ)
@@ -226,20 +227,25 @@ class ConfigGenerator(QWidget):
         self.headergrid.addWidget(self.header, 0, 2)
 
         #Select all appropriate data types to apply to the config file.
-        dt = QLabel("Included Data Types: ", self)
+        dt = QLabel("Data Type: ", self)
         dt.setMinimumWidth(firstcol)
         dt.setToolTip("Add special CAOM parameters for various data types.")
+        self.datatypes = ["IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
+                          "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
+        self.dt_box = QComboBox()
+        self.dt_box.setMinimumWidth(175)
+        for typ in self.datatypes:
+            self.dt_box.addItem(typ)
+        """
         self.lightcurve = QCheckBox("Light Curves", dt)
         self.spectra = QCheckBox("Spectra", dt)
         self.catalog = QCheckBox("Catalogs", dt)
         self.simulation = QCheckBox("Models / Sims", dt)
+        """
         self.datatypesgrid = QGridLayout()
         self.datatypesgrid.addItem(space, 0, 0, -1, 1)
         self.datatypesgrid.addWidget(dt, 0, 1)
-        self.datatypesgrid.addWidget(self.lightcurve, 0, 2)
-        self.datatypesgrid.addWidget(self.spectra, 1, 2)
-        self.datatypesgrid.addWidget(self.catalog, 2, 2)
-        self.datatypesgrid.addWidget(self.simulation, 3, 2)
+        self.datatypesgrid.addWidget(self.dt_box, 0, 2)
 
         #Create custom unique parameters to write into the yaml file.  This
         #list is expandable.  Custom parents can be defined in addition to
@@ -384,9 +390,9 @@ class ConfigGenerator(QWidget):
         self.grid2.addLayout(self.overwritegrid, 4, 5, 1, 2)
         self.grid2.addLayout(self.uniquesgrid, 4, 0, 4, 5)
         self.grid2.addLayout(self.headergrid, 5, 5)
-        self.grid2.addLayout(self.datatypesgrid, 6, 5, 4, 1)
-        self.grid2.addWidget(status_label, 8, 0, 1, 5)
-        self.grid2.addWidget(self.status, 9, 0, 2, 5)
+        self.grid2.addLayout(self.datatypesgrid, 6, 5, 1, 1)
+        self.grid2.addWidget(status_label, 8, 0, 1, 6)
+        self.grid2.addWidget(self.status, 9, 0, 2, 6)
         self.grid2.addItem(space, 10, 0, -1, -1)
 
         #Set the window layout and show it.
@@ -703,7 +709,7 @@ class ConfigGenerator(QWidget):
             #boolean flag)
             new_uniques = insert[0]
             inserted = insert[1]
-            
+
             #If crawl_dictionary did not insert the new parameter, the defined
             #parent is not currently present in the dictionary, so create a
             #new entry.

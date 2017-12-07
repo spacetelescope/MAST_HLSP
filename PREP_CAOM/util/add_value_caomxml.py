@@ -24,9 +24,6 @@ def add_value_caomxml(caomlist, dictionary, parent="CompositeObservation"):
                 blank_entry = CAOMxml(element)
                 blank_entry.parent = parent
                 caomlist.add(blank_entry)
-                print("Made a blank entry: {0}".format(blank_entry))
-            else:
-                print("Skipped {0}".format(element))
             caomlist = add_value_caomxml(caomlist,
                                          dictionary[element],
                                          element)
@@ -35,11 +32,11 @@ def add_value_caomxml(caomlist, dictionary, parent="CompositeObservation"):
             if existing is not None:
                 existing.parent = parent
                 existing.value = dictionary[element]
-                print("Updated existing: {0}".format(existing))
+                #print("Updated existing: {0}".format(existing))
             else:
                 new_entry = CAOMvalue(element)
                 new_entry.parent = parent
                 new_entry.value = dictionary[element]
                 caomlist.add(new_entry)
-                print("Made a new entry: {0}".format(new_entry))
+                #print("Made a new entry: {0}".format(new_entry))
     return caomlist

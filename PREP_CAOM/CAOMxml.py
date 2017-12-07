@@ -33,7 +33,6 @@ class CAOMxml:
             #Create a new subelement if an element matches the CAOMxml object's
             #'parent' parameter.
             if element.tag == self.parent:
-                print("Found parent for {1}: {0}".format(self.parent, self.label))
                 entry = etree.SubElement(element, self.label)
                 if self.source == "VALUE":
                     s = etree.SubElement(entry, "source")
@@ -140,36 +139,45 @@ class CAOMproduct(CAOMxml):
 
 #--------------------
 
-class CAOMxmlList:
+class CAOMxmlList(list):
 
     def __init__(self):
-        self.members = []
+        super().__init__
         self.labels = []
 
     def add(self, caom_obj):
         if not isinstance(caom_obj, CAOMxml):
             print("CAOMxmlList cannot accept members other than CAOMxml!")
             return self
-        self.members.append(caom_obj)
+        self.append(caom_obj)
         self.labels.append(caom_obj.label)
 
     def findlabel(self, target):
         assert isinstance(target, str)
         if target in self.labels:
-            for m in self.members:
-                if m.label == target:
-                    return m
+            for member in self:
+                if member.label == target:
+                    return member
         else:
             return None
 
     def findheader(self, target):
         assert isinstance(target, str)
-        for m in self.members:
-            if isinstance(m, CAOMheader):
-                if m.headerKeyword == target:
-                    return m
+        for member in self:
+            if isinstance(member, CAOMheader):
+                if member.headerKeyword == target:
+                    return member
         else:
             return None
+
+    def sort(self):
+        sorted_labels = sorted(self.labels)
+        sorted_objs = CAOMxmlList()
+        for label in sorted_labels:
+            obj = self.findlabel(label)
+            sorted_objs.add(obj)
+            self.remove(obj)
+        return sorted_objs
 
 #--------------------
 

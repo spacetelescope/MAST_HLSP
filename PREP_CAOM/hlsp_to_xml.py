@@ -169,7 +169,8 @@ def hlsp_to_xml(config):
         obj.headerDefaultValue = "Kepler"
 
     #Add CAOMxml elements to xmltree with some final tweaks
-    for entry in caomlist.members:
+    caomlist = caomlist.sort()
+    for entry in caomlist:
         #Skip extra top-level entries caused by recursion in add_value_caomxml
         if xmltree.find(entry.label) is None:
             entry.send_to_lxml(xmltree)
