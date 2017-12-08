@@ -157,17 +157,6 @@ def hlsp_to_xml(config):
     head_strings.append("")
     head = "\n".join(head_strings)
 
-    #Adjust header default values
-    obj = caomlist.findlabel("targetPosition_equinox")
-    if isinstance(obj, CAOMheader):
-        obj.headerDefaultValue = "2000.0"
-    obj = caomlist.findlabel("targetPosition_coordsys")
-    if isinstance(obj, CAOMheader):
-        obj.headerDefaultValue = "ICRS"
-    obj = caomlist.findheader("FILTER")
-    if header_type == "kepler" and isinstance(obj, CAOMheader):
-        obj.headerDefaultValue = "Kepler"
-
     #Add CAOMxml elements to xmltree with some final tweaks
     caomlist = caomlist.sort()
     for entry in caomlist:

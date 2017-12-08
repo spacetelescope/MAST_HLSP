@@ -14,7 +14,7 @@
     the user chooses to reset the main ConfigGenerator form.
 
 ..class:: ConfigGenerator
-    :synopsis:  This class defines PyQt widget that uses multiple methods to
+    :synopsis:  This class defines a PyQt widget that uses multiple methods to
     collect user input in order to generate a .yaml config file needed by
     ../hlsp_to_xml.py.  This will help to ensure that these config files are
     properly formatted and include the necessary information.  This form
@@ -227,9 +227,10 @@ class ConfigGenerator(QWidget):
         self.headergrid.addWidget(self.header, 0, 2)
 
         #Select all appropriate data types to apply to the config file.
-        dt = QLabel("Data Type: ", self)
+        dt = QLabel("Data Types: ", self)
         dt.setMinimumWidth(firstcol)
         dt.setToolTip("Add special CAOM parameters for various data types.")
+        """
         self.datatypes = ["IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
                           "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
         self.dt_box = QComboBox()
@@ -241,11 +242,14 @@ class ConfigGenerator(QWidget):
         self.spectra = QCheckBox("Spectra", dt)
         self.catalog = QCheckBox("Catalogs", dt)
         self.simulation = QCheckBox("Models / Sims", dt)
-        """
+
         self.datatypesgrid = QGridLayout()
         self.datatypesgrid.addItem(space, 0, 0, -1, 1)
         self.datatypesgrid.addWidget(dt, 0, 1)
-        self.datatypesgrid.addWidget(self.dt_box, 0, 2)
+        self.datatypesgrid.addWidget(self.lightcurve, 0, 2)
+        self.datatypesgrid.addWidget(self.spectra, 1, 2)
+        self.datatypesgrid.addWidget(self.catalog, 2, 2)
+        self.datatypesgrid.addWidget(self.simulation, 3, 2)
 
         #Create custom unique parameters to write into the yaml file.  This
         #list is expandable.  Custom parents can be defined in addition to
@@ -390,10 +394,10 @@ class ConfigGenerator(QWidget):
         self.grid2.addLayout(self.overwritegrid, 4, 5, 1, 2)
         self.grid2.addLayout(self.uniquesgrid, 4, 0, 4, 5)
         self.grid2.addLayout(self.headergrid, 5, 5)
-        self.grid2.addLayout(self.datatypesgrid, 6, 5, 1, 1)
-        self.grid2.addWidget(status_label, 8, 0, 1, 6)
-        self.grid2.addWidget(self.status, 9, 0, 2, 6)
-        self.grid2.addItem(space, 10, 0, -1, -1)
+        self.grid2.addLayout(self.datatypesgrid, 6, 5, 4, 1)
+        self.grid2.addWidget(status_label, 8, 0, 1, 5)
+        self.grid2.addWidget(self.status, 9, 0, 2, 5)
+        self.grid2.addItem(space, 6, 5, -1, -1)
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)

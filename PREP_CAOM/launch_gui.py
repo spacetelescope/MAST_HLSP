@@ -68,6 +68,45 @@ class HelpPopup(QDialog):
 
 #--------------------
 
+class CAOMPopup(QDialog):
+    """
+    Define the help popup window that appears when the user clicks the 'Help'
+    button.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.caomUI()
+
+    def caomUI(self):
+        #Get the help text from a .txt file.
+        path = "gui/caom_parameters.txt"
+        caom_path = os.path.abspath(path)
+        self.caombox = QTextEdit()
+        self.caombox.setReadOnly(True)
+        self.caombox.setLineWrapMode(QTextEdit.NoWrap)
+        with open(caom_path, "r") as caomfile:
+            for line in caomfile.readlines():
+                raw_line = line.strip("\n")
+                self.caombox.append(raw_line)
+            caomfile.close()
+
+        self.closebutton = QPushButton("Close")
+        self.closebutton.clicked.connect(self.closeClicked)
+
+        self.vbox = QVBoxLayout()
+        self.vbox.addWidget(self.caombox)
+        self.vbox.addWidget(self.closebutton)
+        self.setLayout(self.vbox)
+        self.setWindowTitle("CAOM Parameters")
+        self.resize(600, 600)
+        self.show()
+
+    def closeClicked(self):
+        self.close()
+
+#--------------------
+
 class HLSPIngest(QTabWidget):
     """
     Create a tab widget to contain widgets from /gui/ext_generator.py and
@@ -88,6 +127,21 @@ class HLSPIngest(QTabWidget):
         self.help = QPushButton("Help")
         self.help.setMaximumWidth(75)
         self.help.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #f2f2f2;
+                                    border: 2px solid #afafaf;
+                                    border-radius: 8px;
+                                    height: 20px
+                                    }
+                                QPushButton:hover {
+                                    border: 4px solid #afafaf;
+                                    }
+                                QPushButton:pressed {
+                                    background-color: #afafaf;
+                                    }""")
+        self.caom = QPushButton("CAOM")
+        self.caom.setMaximumWidth(75)
+        self.caom.setStyleSheet("""
                                 QPushButton {
                                     background-color: #f2f2f2;
                                     border: 2px solid #afafaf;
@@ -123,8 +177,9 @@ class HLSPIngest(QTabWidget):
         self.box = QGridLayout()
         self.box.addWidget(self.tabs, 1, 0, -1, -1)
         self.box.addWidget(self.help, 0, 0)
-        self.box.addWidget(self.quit, 0, 1)
-        self.box.addWidget(self.space, 0, 2)
+        self.box.addWidget(self.caom, 0, 1)
+        self.box.addWidget(self.quit, 0, 2)
+        self.box.addWidget(self.space, 0, 3)
         self.setLayout(self.box)
         self.resize(1000,300)
         self.setWindowTitle("ConfigGenerator")
@@ -132,6 +187,7 @@ class HLSPIngest(QTabWidget):
 
         self.quit.clicked.connect(self.quitClicked)
         self.help.clicked.connect(self.helpClicked)
+        self.caom.clicked.connect(self.caomClicked)
 
     def quitClicked(self):
         self.close()
@@ -139,6 +195,10 @@ class HLSPIngest(QTabWidget):
     def helpClicked(self):
         self.helppop = HelpPopup()
         self.helppop.exec_()
+
+    def caomClicked(self):
+        self.caompop = CAOMPopup()
+        self.caompop.exec_()
 
 #--------------------
 

@@ -50,6 +50,16 @@ def add_header_entries(caomlist, tablepath, header_type):
             new_entry.parent = row[section_index]
             new_entry.headerName = row[header_index]
             new_entry.headerKeyword = row[key_index]
+
+            #Adjust default values as needed.  CAOMheader defaults to 'None'.
+            if caom_parameter == "targetPosition_equinox":
+                new_entry.headerDefaultValue = "2000.0"
+            elif caom_parameter == "targetPosition_coordsys":
+                new_entry.headerDefaultValue = "ICRS"
+            elif new_entry.headerKeyword == "FILTER":
+                if header_type == "kepler":
+                    new_entry.headerDefaultValue = "Kepler"
+
             caomlist.add(new_entry)
 
     return caomlist

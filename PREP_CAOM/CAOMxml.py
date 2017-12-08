@@ -1,9 +1,15 @@
 """
-..class:: CAOMxml
+..class::  CAOMxml
     :synopsis: The CAOMxml class allows for more reliable transport of multiple
     variables associated with a CAOM XML entry by reducing the number of
     complex dictionary operations and indexing assumptions needed in
     hlsp_to_xml.py and its children.
+
+..class::  CAOMxmlList
+    :synopsis:  This class maintains a list of CAOMxml objects, providing a
+    ready-made list of labels contained in the list, modules for returning list
+    members based on various search parameters, and a way to sort the list for
+    final writing to file.
 """
 
 from lxml import etree
@@ -11,10 +17,17 @@ from lxml import etree
 #--------------------
 
 class CAOMxml:
+    """
+    A CAOMxml object pairs a CAOM parameter with various information depending
+    on what type of parameter is being defined.
+    """
 
     def __init__(self, label):
         """
         Create a new CAOMxml object with a few default parameters.
+
+        :param label:  This is the actual CAOM parameter being defined.
+        :type label:  str
         """
         #Common properties
         self.label = label
@@ -26,6 +39,10 @@ class CAOMxml:
         Create a new subelement within xmltree for a given CAOMxml object.
         Multiple parameters read from the CAOMxml object are used to organize,
         label, and otherwise fill out the XML entry.
+
+        :param xmltree:  This is an lxml tree where CAOMxml objects are
+        described in order to ingest files into CAOM.
+        :type xmltree:  lxml etree.ElementTree
         """
         #Search every element of the xmltree.
         for element in xmltree.iter():
@@ -83,6 +100,9 @@ class CAOMxml:
 #--------------------
 
 class CAOMvalue(CAOMxml):
+    """
+    A CAOMvalue object sets source to VALUE and adds a value parameter.
+    """
 
     def __init__(self, label):
         CAOMxml.__init__(self, label)
@@ -97,6 +117,10 @@ class CAOMvalue(CAOMxml):
 #--------------------
 
 class CAOMheader(CAOMxml):
+    """
+    A CAOMheader object sets source to HEADER, creates a few header parameters
+    and sets a few default values.
+    """
 
     def __init__(self, label):
         CAOMxml.__init__(self, label)
@@ -115,6 +139,10 @@ class CAOMheader(CAOMxml):
 #--------------------
 
 class CAOMproduct(CAOMxml):
+    """
+    A CAOMproduct adds a number of new parameters and default values, even
+    setting the label to default to "product".
+    """
 
     def __init__(self):
         CAOMxml.__init__(self, label="product")
@@ -140,6 +168,9 @@ class CAOMproduct(CAOMxml):
 #--------------------
 
 class CAOMxmlList(list):
+    """
+    A CAOMxmlList object maintains a list of CAOMxml (and subtypes) objects.
+    """
 
     def __init__(self):
         super().__init__
