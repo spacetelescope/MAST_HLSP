@@ -98,10 +98,14 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
                                 ' string: ' + ifile)
 
             # The eighth field is a product and extension piece.  This is fairly
-            # free-form, but generally must be <x>.<y>.
-            product_extension_splits = splits[7].split('.')
+            # free-form, but generally must be <x>.<y>.  An exception is if a
+            # file is gzipped, in which case the format is <x>.<y>.gz.
+            prod_ext_str = splits[7]
+            if splits[7][-3:] == '.gz':
+                prod_ext_str = prod_ext_str.strip('.gz')
+            product_extension_splits = prod_ext_str.split('.')
             if len(product_extension_splits) != 2:
-                logging.warning('Field 8 does not have <product>.<extension>'
-                                ' format: ' + ifile)
+                logging.warning('Field 8 does not have <product>.<extension> '
+                                'format: ' + ifile)
 
 #--------------------

@@ -89,6 +89,8 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
 
     # Get list of all files.
     all_file_list = get_all_files(idir)
+    # Record the total number of files found, in case user needs to confirm.
+    logging.info('Total files found: ' + str(len(all_file_list)))
 
     # Make sure all sub-directories are lowercase.
     check_dirpath_lower(all_file_list, root_dir)
