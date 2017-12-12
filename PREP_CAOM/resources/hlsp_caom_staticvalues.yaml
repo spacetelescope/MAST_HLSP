@@ -2,7 +2,7 @@ hlsp:
     metadataList:
         collection: HLSP
         observationID: FILEROOT
-        proposal_id: FILEROOT
+        proposal_id: NaN
         intent: SCIENCE
 lightcurve:
     metadataList:
