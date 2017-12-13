@@ -14,7 +14,7 @@ import os
 
 #--------------------
 
-def add_product_caomxml(caomlist, filepath, extensions_table):
+def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
     """
     Walk filepath and create product entries for files by matching them with
     entries in extensions_table.
@@ -65,7 +65,6 @@ def add_product_caomxml(caomlist, filepath, extensions_table):
         quit()
 
     try:
-        dpt_index = ext_list.index("dataProductType")
         pt_index = ext_list.index("productType")
         fs_index = ext_list.index("fileStatus")
     except KeyError:
@@ -91,7 +90,7 @@ def add_product_caomxml(caomlist, filepath, extensions_table):
                 if name.lower().endswith(ext):
                     this_ext = extensions[ext]
                     product = CAOMproduct()
-                    product.dataProductType = this_ext[dpt_index]
+                    product.dataProductType = data_types.upper()
                     product.productType = this_ext[pt_index]
                     product.fileStatus = this_ext[fs_index]
                     found_extensions.append(ext)

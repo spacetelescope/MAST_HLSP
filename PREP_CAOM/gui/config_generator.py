@@ -227,11 +227,10 @@ class ConfigGenerator(QWidget):
         self.headergrid.addWidget(self.header, 0, 2)
 
         #Select all appropriate data types to apply to the config file.
-        dt = QLabel("Data Types: ", self)
+        dt = QLabel("Data Type: ", self)
         dt.setMinimumWidth(firstcol)
         dt.setToolTip("Add special CAOM parameters for various data types.")
-        """
-        self.datatypes = ["IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
+        self.datatypes = ["", "IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
                           "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
         self.dt_box = QComboBox()
         self.dt_box.setMinimumWidth(175)
@@ -242,14 +241,12 @@ class ConfigGenerator(QWidget):
         self.spectra = QCheckBox("Spectra", dt)
         self.catalog = QCheckBox("Catalogs", dt)
         self.simulation = QCheckBox("Models / Sims", dt)
+        """
 
         self.datatypesgrid = QGridLayout()
         self.datatypesgrid.addItem(space, 0, 0, -1, 1)
         self.datatypesgrid.addWidget(dt, 0, 1)
-        self.datatypesgrid.addWidget(self.lightcurve, 0, 2)
-        self.datatypesgrid.addWidget(self.spectra, 1, 2)
-        self.datatypesgrid.addWidget(self.catalog, 2, 2)
-        self.datatypesgrid.addWidget(self.simulation, 3, 2)
+        self.datatypesgrid.addWidget(self.dt_box, 0, 2)
 
         #Create custom unique parameters to write into the yaml file.  This
         #list is expandable.  Custom parents can be defined in addition to
@@ -394,9 +391,9 @@ class ConfigGenerator(QWidget):
         self.grid2.addLayout(self.overwritegrid, 4, 5, 1, 2)
         self.grid2.addLayout(self.uniquesgrid, 4, 0, 4, 5)
         self.grid2.addLayout(self.headergrid, 5, 5)
-        self.grid2.addLayout(self.datatypesgrid, 6, 5, 4, 1)
-        self.grid2.addWidget(status_label, 8, 0, 1, 5)
-        self.grid2.addWidget(self.status, 9, 0, 2, 5)
+        self.grid2.addLayout(self.datatypesgrid, 6, 5, 1, 1)
+        self.grid2.addWidget(status_label, 8, 0, 1, -1)
+        self.grid2.addWidget(self.status, 9, 0, 2, -1)
         self.grid2.addItem(space, 6, 5, -1, -1)
 
         #Set the window layout and show it.
@@ -555,7 +552,7 @@ class ConfigGenerator(QWidget):
         #Pull out the data and insert into the form.
         filepaths = yamlfile["filepaths"]
         header_type = yamlfile["header_type"]
-        data_types = yamlfile["data_types"]
+        data_type = yamlfile["data_types"]
         uniques = yamlfile["unique_parameters"]
         self.data_edit.insert(filepaths["hlsppath"])
         self.ext_edit.insert(filepaths["extensions"])
@@ -566,12 +563,10 @@ class ConfigGenerator(QWidget):
             self.ow_off.setChecked(True)
 
         header_index = self.header_types.index(header_type.capitalize())
+        dataType_index = self.datatypes.index(data_type.upper())
 
-        if "lightcurve" in data_types:
-            self.lightcurve.setChecked(True)
-        else:
-            self.lightcurve.setChecked(False)
         self.header.setCurrentIndex(header_index)
+        self.dt_box.setCurrentIndex(dataType_index)
 
         #Load the unique parameters dictionary into the unique parameters table
         self.loadDictionaries(uniques)
@@ -599,7 +594,8 @@ class ConfigGenerator(QWidget):
         self.out_edit.clear()
         self.ow_on.setChecked(True)
         self.header.setCurrentIndex(0)
-        self.lightcurve.setChecked(False)
+        self.dt_box.setCurrentIndex(0)
+        #self.lightcurve.setChecked(False)
         p_one = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
         p_one.setCurrentIndex(0)
         c_one = self.uniquesgrid.itemAtPosition(self.firstrow,1).widget()
@@ -671,11 +667,20 @@ class ConfigGenerator(QWidget):
         config["header_type"] = self.header.currentText().lower()
 
         #Collect all selected data type flags.
+        dt = self.dt_box.currentText().lower()
+        if dt == "":
+            self.status.setTextColor(Qt.red)
+            self.status.append("No Data Type selected!")
+            return None
+        else:
+            config["data_types"] = dt
+        """
         data_types = []
         lc = self.lightcurve.checkState()
         if lc > 0:
             data_types.append("lightcurve")
         config["data_types"] = data_types
+        """
 
         #Collect all the unique parameters the user has entered.  Start at row
         #self.firstrow and search through all rows the user may have added.

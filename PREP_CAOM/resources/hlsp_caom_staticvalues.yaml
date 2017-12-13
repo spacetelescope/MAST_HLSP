@@ -1,19 +1,19 @@
 hlsp:
     metadataList:
         collection: HLSP
+        intent: SCIENCE
         observationID: FILEROOT
         proposal_id: NaN
-        intent: SCIENCE
-lightcurve:
+timeseries:
     metadataList:
         algorithm: timeseries
 kepler:
     metadataList:
         #Some K2 headers use "Kepler Photometer", want to standardize for portal.
-        instrument_name: Kepler
         aperture_radius: '4'
+        instrument_name: Kepler
 product_properties:
     calibrationLevel: HLSP
-    releaseType: DATA
     fileNameDescriptor: FILEROOT
     planeNumber: 1
+    releaseType: DATA

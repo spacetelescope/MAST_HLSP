@@ -149,7 +149,7 @@ def hlsp_to_xml(config):
     print("...done!")
 
     #Add product entries to the list of CAOMxml objects
-    caomlist = add_product_caomxml(caomlist, hlsppath, extensions)
+    caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_types)
 
     #Create the head string to write to doctype
     head_strings = []

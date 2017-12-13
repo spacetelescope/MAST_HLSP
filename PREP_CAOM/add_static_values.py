@@ -20,8 +20,8 @@ def add_static_values(caomlist, statics, data_types, header_type):
     """
 
     caomlist = add_value_caomxml(caomlist, statics["hlsp"])
-    if "lightcurve" in data_types:
-        caomlist = add_value_caomxml(caomlist, statics["lightcurve"])
+    if data_types == "timeseries":
+        caomlist = add_value_caomxml(caomlist, statics["timeseries"])
     if header_type == "kepler":
         caomlist = add_value_caomxml(caomlist, statics["kepler"])
     return caomlist
