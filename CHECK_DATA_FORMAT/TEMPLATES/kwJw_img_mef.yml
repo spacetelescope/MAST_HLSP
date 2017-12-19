@@ -1,0 +1,64 @@
+# HDUs and names for required and recommended HLSP FITS keyword records.
+#   Applies to JWST MEF files with IMAGE extensions.
+# Last update: 2017-Sep-28, shaw@stsci.edu
+#
+# File contents:
+#   type: type of content: 
+#         'image' 'spectrum' 'catalog'
+#   extname: HDUs with matching EXTNAME will be checked
+#         ex: 'SCI' 'None' 'All'
+#
+# Keyword dictionaries:
+#   required:  KW record must be present in the named HDU
+#   recommended: KW record should be present in the named HDU
+#   suggested: KW record may be present in the named HDU
+
+PHDU:
+    required:
+        - HLSPID
+        - HLSPLEAD
+        - HLSPNAME
+        - HLSPTARG
+        - HLSPVER
+        - INSTRUME
+        - OBSERVAT
+        - TELESCOP
+        
+    recommended:     
+        - DATE-OBS
+        
+    suggested:
+        - PROPOSID
+        - REFERENC
+        
+HDU:
+    required:
+        - BUNIT
+        - CRPIX*
+        - CRVAL*
+        - CTYPE*
+        - DATE-BEG
+        - FILTER
+        - MJD-BEG
+        - MJD-END
+        - MJD-MID
+        - PC*_*
+        - RADESYS
+        - TIMESYS
+        - XPOSURE
+
+    recommended:     
+        - DEC_TARG
+        - EQUINOX
+        - LONPOLE
+        - LATPOLE
+        - PSFSIZE
+        - RA_TARG
+        - TELAPSE
+        - WCSAXES
+
+    suggested:     
+        - APERTURE
+        - DETECTOR
+        
+...

@@ -1,0 +1,83 @@
+# HDUs and names for required and recommended HLSP FITS keyword records.
+#   Applies to HST spectra in BINTABLE extensions.
+# Last update: 2017-Oct-10, shaw@stsci.edu
+#
+# File contents:
+#   extname: HDU with matching EXTNAME will be checked
+#         ex: 'SCI' 'None' 'All'
+#
+# Keyword dictionaries:
+#   required:  KW record must be present in the named HDU
+#   recommended: KW record should be present in the named HDU
+#   suggested: KW record may be present in the named HDU
+
+PHDU:
+    required:
+        - DATE-OBS
+        - DEC_TARG
+        - EXPEND
+        - EXPSTART
+        - EXPTIME
+        - INSTRUME
+        - RADESYS
+        - RA_TARG
+        - TARGNAME
+        - TELESCOP
+        - TIME-OBS
+      
+    recommended:     
+        - APERTURE
+        - AIRORVAC
+        - BC
+        - EQUINOX
+        - FLUXMAX
+        - FLUXMIN
+        - HLSPLEAD
+        - PR_INV_L
+        - PR_INV_F
+        - PR_INV_M
+        - PROPOSID
+        - SPECRES
+        - WAVECENT
+        - WAVEMAX
+        - WAVEMIN
+        - WAVERES
+        - WAVEUNIT
+        
+    suggested:
+        - CITATION
+        - DATAMIN
+        - DATAMAX
+        - DETECTOR
+        - EXPDEFN
+        - EXPMIN
+        - EXPMAX
+        - EXPMED
+        - EXPMEAN
+        - EXPMODE
+        - EXPSUM
+        - FILTER
+        - GRATING
+        - HLSPACRN
+        - HLSPNAME
+        - POSANGL
+        - RADVEL
+        - REDSHIFT
+        - RESOLUTI
+        - RESUNIT
+        - RVERR
+        - RVUNIT
+        - VHELIO
+        - VLSR
+        - VGSR
+        - WAVECENT
+        - WAVEUNIT
+
+HDU:
+    required:
+        - EXTNAME
+
+    recommended:
+        - EXTVER     
+
+...

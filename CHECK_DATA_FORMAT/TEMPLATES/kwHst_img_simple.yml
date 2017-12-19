@@ -1,0 +1,65 @@
+# HDUs and names for required and recommended HLSP FITS keyword records.
+#   Applies to HST simple imge files with no extensions.
+# Last update: 2017-Oct-09, shaw@stsci.edu
+#
+# File contents:
+#   type: type of content: 
+#         'image' 'spectrum' 'catalog'
+#   extname: HDU with matching EXTNAME will be checked
+#         ex: 'SCI' 'None' 'All'
+#
+# Keyword dictionaries:
+#   required:  KW record must be present in the named HDU
+#   recommended: KW record should be present in the named HDU
+#   suggested: KW record may be present in the named HDU
+
+PHDU:
+    required:
+        - CD*_*
+        - CRPIX*
+        - CRVAL*
+        - CTYPE*
+        - DATE-OBS
+        - EXPEND
+        - EXPSTART
+        - EXPTIME
+        - FILTER
+        - INSTRUME
+        - RADESYS
+        - TELESCOP
+        - TIME-OBS
+      
+    recommended:     
+        - DEC_TARG
+        - EQUINOX
+        - HLSPLEAD
+        - PR_INV_L
+        - PR_INV_F
+        - PR_INV_M
+        - PROPOSID
+        - RA_TARG
+        - TARGNAME
+        - WCSAXES
+        
+    suggested:
+        - APERTURE
+        - BUNIT
+        - CITATION
+        - DATAMIN
+        - DATAMAX
+        - DETECTOR
+        - EXPDEFN
+        - EXPMIN
+        - EXPMAX
+        - EXPMED
+        - EXPMEAN
+        - EXPMODE
+        - EXPSUM
+        - HLSPACRN
+        - HLSPNAME
+        - RESOLUTI
+        - RESUNIT
+        - WAVECENT
+        - WAVEUNIT
+
+...
