@@ -35,7 +35,8 @@ def precheck_data_format(idir, hlsp_name):
 
     # Create the output file, based on the name of the HLSP.
     make_parameter_file("check_data_format_" + hlsp_name.strip().lower() +
-                        "_extensions.param", file_endings, all_file_endings)
+                        "_extensions.param", file_endings, all_file_endings,
+                        idir)
 
 #--------------------
 
