@@ -14,7 +14,7 @@ import os
 
 #--------------------
 
-def add_product_caomxml(xmllist, filepath, extensions_table):
+def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
     """
     Walk filepath and create product entries for files by matching them with
     entries in extensions_table.
@@ -65,7 +65,6 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
         quit()
 
     try:
-        dpt_index = ext_list.index("dataProductType")
         pt_index = ext_list.index("productType")
         fs_index = ext_list.index("fileStatus")
     except KeyError:
@@ -79,6 +78,7 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
     #matching parameters.
     print("...scanning files from {0}...".format(filepath))
     found_extensions = []
+    projects = []
     for path, subdirs, files in os.walk(filepath):
         #print("...adding files from {0}...".format(path))
         for name in files:
@@ -90,11 +90,14 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
                 if name.lower().endswith(ext):
                     this_ext = extensions[ext]
                     product = CAOMproduct()
-                    product.dataProductType = this_ext[dpt_index]
+                    product.dataProductType = data_types.upper()
                     product.productType = this_ext[pt_index]
                     product.fileStatus = this_ext[fs_index]
                     found_extensions.append(ext)
                     del extensions[ext]
+                    spl = str.split(name, "_")
+                    if spl[0] == "hlsp" and spl[1] not in projects:
+                        projects.append(spl[1])
                     break
             if product is None:
                 found = False
@@ -125,10 +128,16 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
             product.fileType = fileType.upper()
             product.contentType = contentType.upper()
             print("...adding {0}...".format(product))
-            xmllist.append(product)
+            caomlist.add(product)
 
             if len(extensions.keys()) == 0:
                 print("...all defined extensions entered, still scanning...")
+
+    if len(projects) == 1:
+        name = CAOMvalue("name")
+        name.parent = "provenance"
+        name.value = projects[0].upper()
+        caomlist.add(name)
 
     #Check for any remaining unused file extensions.  Dictionary will still
     #contain one 'extension' entry.
@@ -141,4 +150,4 @@ def add_product_caomxml(xmllist, filepath, extensions_table):
                                 .format(ext, extensions_table, filepath))
 
     print("...done!")
-    return xmllist
+    return caomlist

@@ -54,7 +54,7 @@ LOG = "hlsp_to_xml.log"
 global STATICS
 STATICS = "resources/hlsp_caom_staticvalues.yaml"
 global KEYWORD_TABLE
-KEYWORD_TABLE = "resources/hlsp_keywords_test.csv"
+KEYWORD_TABLE = "resources/hlsp_keywords.csv"
 
 #--------------------
 
@@ -128,28 +128,28 @@ def hlsp_to_xml(config):
     statics = cp.check_existing_file(STATICS)
     static_values = read_yaml(statics)
     print("Creating standard HLSP entries...")
-    xmllist = []
-    xmllist = add_static_values(xmllist,
-                                static_values,
-                                data_types,
-                                header_type)
+    caomlist = CAOMxmlList()
+    caomlist = add_static_values(caomlist,
+                                 static_values,
+                                 data_types,
+                                 header_type)
     print("...done!")
 
     #Add information from the header keywords table.
     print("Adding entries from fits headers...")
-    xmllist = add_header_entries(xmllist, KEYWORD_TABLE, header_type)
+    caomlist = add_header_entries(caomlist, KEYWORD_TABLE, header_type)
     print("...done!")
 
     #Add CAOMxml entries for HLSP-specifiic CAOM parameters.
     print("Adding unique entries for this HLSP...")
     if uniques is not None:
-        xmllist = add_value_caomxml(xmllist, uniques)
+        caomlist = add_value_caomxml(caomlist, uniques)
     else:
         logging.warning("No unique parameters provided in the yaml config.")
     print("...done!")
 
     #Add product entries to the list of CAOMxml objects
-    xmllist = add_product_caomxml(xmllist, hlsppath, extensions)
+    caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_types)
 
     #Create the head string to write to doctype
     head_strings = []
@@ -158,7 +158,8 @@ def hlsp_to_xml(config):
     head = "\n".join(head_strings)
 
     #Add CAOMxml elements to xmltree with some final tweaks
-    for entry in xmllist:
+    caomlist = caomlist.sort()
+    for entry in caomlist:
         #Skip extra top-level entries caused by recursion in add_value_caomxml
         if xmltree.find(entry.label) is None:
             entry.send_to_lxml(xmltree)

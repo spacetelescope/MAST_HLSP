@@ -14,7 +14,7 @@ import logging
 
 #--------------------
 
-def add_header_entries(xmllist, tablepath, header_type):
+def add_header_entries(caomlist, tablepath, header_type):
 
     #Open the csv file and parse into a list
     tablepath = cp.check_existing_file(tablepath)
@@ -40,7 +40,7 @@ def add_header_entries(xmllist, tablepath, header_type):
         quit()
 
     #Create a CAOMxml object for each entry in the table (skipping the head
-    #row and 'null' entries).  Add each CAOMxml object to xmllist.
+    #row and 'null' entries).  Add each CAOMxml object to caomlist.
     for row in keywords[1:]:
         if row[key_index] == "null":
             continue
@@ -50,13 +50,19 @@ def add_header_entries(xmllist, tablepath, header_type):
             new_entry.parent = row[section_index]
             new_entry.headerName = row[header_index]
             new_entry.headerKeyword = row[key_index]
+
+            #Adjust default values as needed.  CAOMheader defaults to 'None'.
             if caom_parameter == "targetPosition_equinox":
                 new_entry.headerDefaultValue = "2000.0"
             elif caom_parameter == "targetPosition_coordsys":
                 new_entry.headerDefaultValue = "ICRS"
-            elif (header_type == "kepler" and
-                  new_entry.headerKeyword == "FILTER"):
-                new_entry.headerDefaultValue = "Kepler"
-            xmllist.append(new_entry)
 
-    return xmllist
+            if header_type == "kepler":
+                if new_entry.headerKeyword == "FILTER":
+                    new_entry.headerDefaultValue = "Kepler"
+                elif new_entry.headerKeyword == "EXPTIME":
+                    new_entry.headerDefaultValue = "1800"
+
+            caomlist.add(new_entry)
+
+    return caomlist
