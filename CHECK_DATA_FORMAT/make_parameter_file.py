@@ -47,7 +47,9 @@ def make_parameter_file(ofile, file_endings, all_file_endings, idir):
             ending_list = []
             for ending in all_file_endings:
                 if fend in ending:
-                    ending_list.append(ending)
+                    ending_list.append({'FileEnding' : ending,
+                                        'TemplateType' : None,
+                                        'ProductType' : None, 'FileType' : None})
 
             yaml_data.update({str(fend) : ending_list})
 
