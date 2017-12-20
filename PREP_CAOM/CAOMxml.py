@@ -216,4 +216,3 @@ if __name__ == "__main__":
     x = CAOMproduct()
     print(x.label)
     print(x.parent)
-    x.properties()

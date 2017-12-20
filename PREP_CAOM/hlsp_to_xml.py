@@ -42,7 +42,6 @@ import yaml
 global EXPECTED_CONFIGS
 EXPECTED_CONFIGS = ["filepaths",
                     "header_type",
-                    "data_types",
                     "unique_parameters"]
 global EXPECTED_PATHS
 EXPECTED_PATHS = ["extensions",

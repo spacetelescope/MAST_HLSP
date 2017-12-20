@@ -31,29 +31,6 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
-global FIRST_ENTRY
-FIRST_ENTRY = 3
-global NEXT_ENTRY
-NEXT_ENTRY = FIRST_ENTRY + 1
-
-#--------------------
-
-class DataTypeBox(QComboBox):
-    """
-    Create a subclass of QComboBox to contain Data Type options.
-    """
-    def __init__(self):
-        super().__init__()
-        self.entries = ["IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
-                        "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
-        for item in self.entries:
-            self.addItem(item)
-
-    def setCurrentType(self, ctype):
-        if ctype in self.entries:
-            index = self.entries.index(ctype)
-        return QComboBox.setCurrentIndex(self, index)
-
 #--------------------
 
 class ProductTypeBox(QComboBox):
@@ -201,18 +178,15 @@ class ExtGenerator(QWidget):
         pt_label = QLabel("Product Type:")
         req_label = QLabel("Required:")
         self.ext_edit = QLineEdit()
-        self.dt_box = DataTypeBox()
         self.pt_box = ProductTypeBox()
         self.req_box = QCheckBox()
         self.firstrow = 1
         self.nextrow = 2
         self.filetypegrid = QGridLayout()
         self.filetypegrid.addWidget(ext_label, 0, 0)
-        #self.filetypegrid.addWidget(dt_label, 0, 1)
         self.filetypegrid.addWidget(pt_label, 0, 1)
         self.filetypegrid.addWidget(req_label, 0, 2)
         self.filetypegrid.addWidget(self.ext_edit, 1, 0)
-        #self.filetypegrid.addWidget(self.dt_box, 1, 1)
         self.filetypegrid.addWidget(self.pt_box, 1, 1)
         self.filetypegrid.addWidget(self.req_box, 1, 2)
 
@@ -247,11 +221,9 @@ class ExtGenerator(QWidget):
         """
 
         new_ext = QLineEdit()
-        new_dt = DataTypeBox()
         new_pt = ProductTypeBox()
         new_req = QCheckBox()
         self.filetypegrid.addWidget(new_ext, self.nextrow, 0)
-        #self.filetypegrid.addWidget(new_dt, self.nextrow, 1)
         self.filetypegrid.addWidget(new_pt, self.nextrow, 1)
         self.filetypegrid.addWidget(new_req, self.nextrow, 2)
         self.filetypegrid.setRowStretch(self.nextrow, 0)
@@ -275,8 +247,6 @@ class ExtGenerator(QWidget):
         #Empty the items in the first row but don't delete them.
         p_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
         p_one.clear()
-        #dt_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
-        #dt_one.setCurrentIndex(0)
         pt_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
         pt_one.setCurrentIndex(0)
         req_one = self.filetypegrid.itemAtPosition(self.firstrow,2).widget()
@@ -293,7 +263,6 @@ class ExtGenerator(QWidget):
                 self.filetypegrid.itemAtPosition(n,0).widget().setParent(None)
                 self.filetypegrid.itemAtPosition(n,1).widget().setParent(None)
                 self.filetypegrid.itemAtPosition(n,2).widget().setParent(None)
-                #self.filetypegrid.itemAtPosition(n,3).widget().setParent(None)
         self.nextrow = self.firstrow + 1
 
         if not source == "load":
@@ -335,7 +304,6 @@ class ExtGenerator(QWidget):
         header = files[0]
         try:
             ext_index = header.index("extension")
-            #dt_index = header.index("dataProductType")
             pt_index = header.index("productType")
             req_index = header.index("fileStatus")
         except ValueError:
@@ -354,11 +322,9 @@ class ExtGenerator(QWidget):
             if ext_box is None:
                 self.newFileClicked()
             ext_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
-            #dt_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
             pt_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
             req_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
             ext_box.setText(entry[ext_index])
-            #dt_box.setCurrentType(entry[dt_index])
             pt_box.setCurrentType(entry[pt_index])
             if entry[req_index] == "REQUIRED":
                 req_box.setChecked(True)
@@ -380,13 +346,12 @@ class ExtGenerator(QWidget):
         #Loop over all rows the user might have created in the form.
         for row in range(self.firstrow, self.filetypegrid.rowCount()):
             add_ext = self.filetypegrid.itemAtPosition(row, 0)
-            #add_dt = self.filetypegrid.itemAtPosition(row, 1)
             add_pt = self.filetypegrid.itemAtPosition(row, 1)
             add_req = self.filetypegrid.itemAtPosition(row, 2)
             read_ext = None
-            #read_dt = None
             read_pt = None
             read_req = None
+
             #Skip any empty rows (might not be possible/necessary)
             if add_ext is None:
                 continue
@@ -397,8 +362,6 @@ class ExtGenerator(QWidget):
             read_ext = str(ext_widget.text())
             if read_ext == "":
                 continue
-            #dt_widget = add_dt.widget()
-            #read_dt = dt_widget.currentText().upper()
             pt_widget = add_pt.widget()
             read_pt = pt_widget.currentText().upper()
             req_widget = add_req.widget()
