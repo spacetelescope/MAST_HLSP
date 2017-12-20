@@ -20,6 +20,7 @@ CAOM Parameters already handled by hlsp_to_xml.py:
         targetPosition_equinox:  EQUINOX
         target_name:  TARGNAME
         telescope_name:  TELESCOP
+        type
     provenance Parameters:
         name
         project:  MISSION
@@ -66,7 +67,6 @@ Available CAOM Parameter that are not currently defined:
         telescope_keywords:
             REFFRAME
             SECTOR
-        type
     provenance Parameters:
         lastExecuted
         producer
