@@ -92,7 +92,7 @@ def hlsp_to_xml(config):
     output = paths["output"]
     overwrite = paths["overwrite"]
     header_type = parameters["header_type"]
-    data_types = parameters["data_types"]
+    data_type = parameters["data_type"]
     uniques = parameters["unique_parameters"]
 
     #Set up logging
@@ -130,7 +130,7 @@ def hlsp_to_xml(config):
     caomlist = CAOMxmlList()
     caomlist = add_static_values(caomlist,
                                  static_values,
-                                 data_types,
+                                 data_type,
                                  header_type)
     print("...done!")
 
@@ -148,7 +148,7 @@ def hlsp_to_xml(config):
     print("...done!")
 
     #Add product entries to the list of CAOMxml objects
-    caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_types)
+    caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_type)
 
     #Create the head string to write to doctype
     head_strings = []
