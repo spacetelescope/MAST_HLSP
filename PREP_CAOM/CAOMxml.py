@@ -1,9 +1,15 @@
 """
-..class:: CAOMxml
+..class::  CAOMxml
     :synopsis: The CAOMxml class allows for more reliable transport of multiple
     variables associated with a CAOM XML entry by reducing the number of
     complex dictionary operations and indexing assumptions needed in
     hlsp_to_xml.py and its children.
+
+..class::  CAOMxmlList
+    :synopsis:  This class maintains a list of CAOMxml objects, providing a
+    ready-made list of labels contained in the list, modules for returning list
+    members based on various search parameters, and a way to sort the list for
+    final writing to file.
 """
 
 from lxml import etree
@@ -11,10 +17,17 @@ from lxml import etree
 #--------------------
 
 class CAOMxml:
+    """
+    A CAOMxml object pairs a CAOM parameter with various information depending
+    on what type of parameter is being defined.
+    """
 
     def __init__(self, label):
         """
         Create a new CAOMxml object with a few default parameters.
+
+        :param label:  This is the actual CAOM parameter being defined.
+        :type label:  str
         """
         #Common properties
         self.label = label
@@ -26,6 +39,10 @@ class CAOMxml:
         Create a new subelement within xmltree for a given CAOMxml object.
         Multiple parameters read from the CAOMxml object are used to organize,
         label, and otherwise fill out the XML entry.
+
+        :param xmltree:  This is an lxml tree where CAOMxml objects are
+        described in order to ingest files into CAOM.
+        :type xmltree:  lxml etree.ElementTree
         """
         #Search every element of the xmltree.
         for element in xmltree.iter():
@@ -76,24 +93,16 @@ class CAOMxml:
         new_parent = etree.SubElement(xmltree.getroot(), self.parent)
         return self.send_to_lxml(xmltree)
 
-    def properties(self):
-        """
-        An easy way to print out all the current parameter values of a given CAOMxml object.
-        """
-        description = self.label + ":"
-        description += " parent=" + self.parent
-        if self.source:
-            description += " source=" + self.source
-        description += " headerName=" + self.headerName
-        if self.headerKeyword:
-            description += " headerKeyword=" + self.headerKeyword
-        description += " headerDefaultValue=" + self.headerDefaultValue
-        description += " value=" + self.value
-        print(description)
+    def __str__(self):
+        return "{0}: parent={1}".format(self.label,
+                                        self.parent)
 
 #--------------------
 
 class CAOMvalue(CAOMxml):
+    """
+    A CAOMvalue object sets source to VALUE and adds a value parameter.
+    """
 
     def __init__(self, label):
         CAOMxml.__init__(self, label)
@@ -108,7 +117,11 @@ class CAOMvalue(CAOMxml):
 #--------------------
 
 class CAOMheader(CAOMxml):
-    
+    """
+    A CAOMheader object sets source to HEADER, creates a few header parameters
+    and sets a few default values.
+    """
+
     def __init__(self, label):
         CAOMxml.__init__(self, label)
         self.source = "HEADER"
@@ -126,6 +139,10 @@ class CAOMheader(CAOMxml):
 #--------------------
 
 class CAOMproduct(CAOMxml):
+    """
+    A CAOMproduct adds a number of new parameters and default values, even
+    setting the label to default to "product".
+    """
 
     def __init__(self):
         CAOMxml.__init__(self, label="product")
@@ -147,6 +164,51 @@ class CAOMproduct(CAOMxml):
                         self.contentType,
                         self.fileType,
                         self.productType))
+
+#--------------------
+
+class CAOMxmlList(list):
+    """
+    A CAOMxmlList object maintains a list of CAOMxml (and subtypes) objects.
+    """
+
+    def __init__(self):
+        super().__init__
+        self.labels = []
+
+    def add(self, caom_obj):
+        if not isinstance(caom_obj, CAOMxml):
+            print("CAOMxmlList cannot accept members other than CAOMxml!")
+            return self
+        self.append(caom_obj)
+        self.labels.append(caom_obj.label)
+
+    def findlabel(self, target):
+        assert isinstance(target, str)
+        if target in self.labels:
+            for member in self:
+                if member.label == target:
+                    return member
+        else:
+            return None
+
+    def findheader(self, target):
+        assert isinstance(target, str)
+        for member in self:
+            if isinstance(member, CAOMheader):
+                if member.headerKeyword == target:
+                    return member
+        else:
+            return None
+
+    def sort(self):
+        sorted_labels = sorted(self.labels)
+        sorted_objs = CAOMxmlList()
+        for label in sorted_labels:
+            obj = self.findlabel(label)
+            sorted_objs.add(obj)
+            self.remove(obj)
+        return sorted_objs
 
 #--------------------
 

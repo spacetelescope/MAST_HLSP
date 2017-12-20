@@ -1,0 +1,77 @@
+CAOM Parameters already handled by hlsp_to_xml.py:
+    metadataList Parameters:
+        algorithm (header_type="kepler" only)
+        aperture_radius (header_type="kepler" only)
+        collection:  "HLSP"
+        instrument_keywords:
+            APERTURE
+            DATE-OBS
+            EXPEND
+            EXPSTART
+            FILTER
+            TELESCOP
+        instrument_name:  INSTRUME
+        intent:  "SCIENCE"
+        observationID:  FILEROOT
+        proposal_id:  FILEROOT
+        targetPosition_coordinates_cval1:  RA_TARG
+        targetPosition_coordinates_cval2:  DEC_TARG
+        targetPosition_coordsys:  RADESYS
+        targetPosition_equinox:  EQUINOX
+        target_name:  TARGNAME
+        telescope_name:  TELESCOP
+    provenance Parameters:
+        name
+        project:  MISSION
+        version:  DATA_REL
+    productList Parameters:
+        calibrationLevel:  "HLSP"
+        contentType
+        dataProductType
+        fineNameDescriptor:  FILEROOT
+        fileStatus
+        fileType
+        planeNumber
+        productType
+        releaseType:  "DATA"
+        statusAction
+        
+Available CAOM Parameter that are not currently defined:
+    metadataList Parameters:
+        dataRelease
+        instrument_keywords:
+            APERNAME
+            BAND
+            CAMERA
+            CHANNEL
+            CRMITEN
+            CRSPOC
+            DETECTOR
+            DURATION
+            PXTABLE
+            TEMPLATE
+        metaRelease
+        proposal_pi
+        proposal_project
+        proposal_title
+        proposal_keywords
+        sequenceNumber
+        target_keywords:
+            ORIENT
+        target_moving
+        target_redshift
+        target_standard
+        target_type
+        telescope_geolocationX(/Y/Z)
+        telescope_keywords:
+            REFFRAME
+            SECTOR
+        type
+    provenance Parameters:
+        lastExecuted
+        producer
+        reference
+        runID
+    productList Parameters:
+        provenanceProducer
+        provenanceProject
