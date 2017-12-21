@@ -36,6 +36,10 @@ def make_parameter_file(ofile, file_endings, all_file_endings, idir):
     # Convert the two sets to numpy arrays.  This allows for better indexing.
     file_endings_np = numpy.sort(numpy.asarray(list(file_endings)))
 
+    # Sort all_file_endings array.
+    all_file_endings_sorted = list(all_file_endings)
+    all_file_endings_sorted.sort()
+
     # Write parameter file sorted by extension.
     with open(ofile, 'w') as output_file:
         # Construct the YAML object.
@@ -45,11 +49,15 @@ def make_parameter_file(ofile, file_endings, all_file_endings, idir):
         for fend in file_endings_np:
             # Identify those endings that fall under this extension.
             ending_list = []
-            for ending in all_file_endings:
+            for ending in all_file_endings_sorted:
                 if fend in ending:
                     ending_list.append({'FileEnding' : ending,
-                                        'TemplateType' : None,
-                                        'ProductType' : None, 'FileType' : None})
+                                        'FileParams' : {
+                                            'TemplateType' : None,
+                                            'ProductType' : None,
+                                            'FileType' : None,
+                                            'RunCheck' : True}
+                                       })
 
             yaml_data.update({str(fend) : ending_list})
 
