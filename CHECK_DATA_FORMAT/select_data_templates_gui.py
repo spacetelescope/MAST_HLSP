@@ -142,7 +142,7 @@ class SelectDataTemplatesGUI(QtWidgets.QWidget):
             widget.setCurrentIndex(widget.findText("text"))
             self.update_yaml_value(exten, ending, "FileType", "text")
         else:
-            widget.setCurrentIndex(widget.findText(None))
+            widget.setCurrentIndex(widget.findText('none'))
             self.update_yaml_value(exten, ending, "FileType", None)
 
     def set_default_checkfile(self, widget, exten, ending):
@@ -176,13 +176,43 @@ class SelectDataTemplatesGUI(QtWidgets.QWidget):
         """
         Updates the parameter file using the values in the GUI.
         """
+        for this_ending in self.all_ending_widgets:
+            for key in this_ending.keys():
+                if key == 'template_widget':
+                    # Update the template type in the YAML structure.
+                    self.update_yaml_value(
+                        this_ending['extension'],
+                        this_ending['ending'],
+                        'TemplateType',
+                        this_ending['template_widget'].currentText())
+                elif key == 'product_widget':
+                    # Update the product type in the YAML structure.
+                    self.update_yaml_value(
+                        this_ending['extension'],
+                        this_ending['ending'],
+                        'ProductType',
+                        this_ending['product_widget'].currentText())
+                elif key == 'filetype_widget':
+                    # Update the file type in the YAML structure.
+                    self.update_yaml_value(
+                        this_ending['extension'],
+                        this_ending['ending'],
+                        'FileType',
+                        this_ending['filetype_widget'].currentText())
+                elif key == 'runcheck_widget':
+                    # Update the run check choice in the YAML structure.
+                    self.update_yaml_value(
+                        this_ending['extension'],
+                        this_ending['ending'],
+                        'RunCheck',
+                        this_ending['runcheck_widget'].isChecked())
+
         write_parameter_file(self.param_file, self.param_data)
 
     def init_ui(self):
         """
         Defines the GUI layout, text fields, buttons, etc.
         """
-
         # Read in the YAML parameter file.
         self.param_file = sys.argv[1]
         self.param_data = read_parameter_file(self.param_file)
@@ -239,6 +269,7 @@ class SelectDataTemplatesGUI(QtWidgets.QWidget):
 
         # Add in a grid for each file endings.
         row_entry = 2
+        self.all_ending_widgets = []
         for extension in self.param_data.keys():
             if extension != 'InputDir':
                 # Add a label for this extension.
@@ -254,32 +285,64 @@ class SelectDataTemplatesGUI(QtWidgets.QWidget):
                 # template type, a drop-down for product type, a drop-down for
                 # file type.
                 for ending in self.param_data[extension]:
-                    self.grid.addWidget(QtWidgets.QLabel(ending['FileEnding']),
+                    # This is the widget for the ending label.
+                    ending_widget = QtWidgets.QLabel(ending['FileEnding'])
+                    # Place this ending label widget in Column 0.
+                    self.grid.addWidget(ending_widget,
                                         row_entry, 0)
+
+                    # This is the template drop-down widget.
                     this_template_widget = QtWidgets.QComboBox()
+                    # Populate with choices.
                     this_template_widget.addItems(template_choices)
                     # Default to "none".
                     this_template_widget.setCurrentIndex(
                         this_template_widget.findText("none"))
+                    # Add this template widget to Column 1.
                     self.grid.addWidget(this_template_widget, row_entry, 1)
+
+                    # This is the product drop-down widget.
                     this_product_widget = QtWidgets.QComboBox()
+                    # Populate with choices.
                     this_product_widget.addItems(product_choices)
                     # Default to "none".
                     this_product_widget.setCurrentIndex(
                         this_product_widget.findText("none"))
+                    # Add this product widget to Column 2.
                     self.grid.addWidget(this_product_widget, row_entry, 2)
+
+                    # This is the filetype drop-down widget.
                     this_file_widget = QtWidgets.QComboBox()
+                    # Populate with choices.
                     this_file_widget.addItems(filetype_choices)
                     # Guess a good default based on the extension.
                     self.set_default_file_type(this_file_widget, extension,
                                                ending)
+                    # Add this filetype widget to Column 3.
                     self.grid.addWidget(this_file_widget, row_entry, 3)
+
+                    # This is the RunCheck checkbox widget.
                     this_run_checkbox = QtWidgets.QCheckBox()
                     # Guess whether this will be subject to review or not
                     # based on the file extension.
                     self.set_default_checkfile(this_run_checkbox, extension,
                                                ending)
+                    # Add this RunCheck checkbox widget to Column 4.
                     self.grid.addWidget(this_run_checkbox, row_entry, 4)
+
+                    # We add these widgets to the list of ending widgets
+                    # available so we can easily access their form values.
+                    self.all_ending_widgets.append({
+                        'extension' : extension,
+                        'ending' : ending,
+                        'ending_widget' : ending_widget,
+                        'template_widget' : this_template_widget,
+                        'product_widget' : this_product_widget,
+                        'filetype_widget' : this_file_widget,
+                        'runcheck_widget' : this_run_checkbox
+                    })
+
+                    # Increment the row entry count for the next line in the GUI.
                     row_entry = row_entry + 1
 
         # Set the window layout and show it.
