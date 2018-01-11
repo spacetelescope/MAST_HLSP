@@ -29,6 +29,7 @@ from lxml import etree
 from add_header_entries import add_header_entries
 from add_product_caomxml import add_product_caomxml
 from add_static_values import add_static_values
+from adjust_defaults import adjust_defaults
 from util.add_value_caomxml import add_value_caomxml
 from util.check_log import check_log
 from util.read_yaml import read_yaml
@@ -149,6 +150,9 @@ def hlsp_to_xml(config):
 
     #Add product entries to the list of CAOMxml objects
     caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_type)
+
+    #Make final tweaks to caomlist
+    caomlist = adjust_defaults(caomlist, header_type)
 
     #Create the head string to write to doctype
     head_strings = []

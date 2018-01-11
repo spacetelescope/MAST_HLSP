@@ -20,6 +20,7 @@ import os
 import sys
 from gui.config_generator import *
 from gui.ext_generator import *
+from gui.select_files import *
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -119,7 +120,7 @@ class HLSPIngest(QTabWidget):
 
     def initUI(self):
         self.tabs = QTabWidget()
-        self.tab1 = ExtGenerator()
+        self.tab1 = SelectFiles()
         self.tab2 = ConfigGenerator()
         self.tabs.addTab(self.tab1, "Enter File Descriptions")
         self.tabs.addTab(self.tab2, "Make Config File")

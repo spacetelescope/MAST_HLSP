@@ -482,10 +482,11 @@ class ConfigGenerator(QWidget):
 
             #Look at the first row to see if you're loading into FIRST_ENTRY
             #or NEXT_ENTRY.
-            first_parent = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
+            first_parent = self.uniquesgrid.itemAtPosition(self.firstrow,0)
+            first_widget = first_parent.widget()
             for param in sub_dictionary.keys():
                 value = sub_dictionary[param]
-                if first_parent.currentText() == "":
+                if first_widget.currentText() == "":
                     row = self.firstrow
                 else:
                     row = self.nextrow
@@ -589,7 +590,6 @@ class ConfigGenerator(QWidget):
         self.ow_on.setChecked(True)
         self.header.setCurrentIndex(0)
         self.dt_box.setCurrentIndex(0)
-        #self.lightcurve.setChecked(False)
         p_one = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
         p_one.setCurrentIndex(0)
         c_one = self.uniquesgrid.itemAtPosition(self.firstrow,1).widget()
