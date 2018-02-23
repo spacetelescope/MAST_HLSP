@@ -151,7 +151,7 @@ class CAOMproduct(CAOMxml):
         self.contentType = None
         self.dataProductType = None
         self.fileNameDescriptor = "FILEROOT"
-        self.fileStatus = None
+        self.fileStatus = "Optional"
         self.fileType = None
         self.planeNumber = "1"
         self.productType = None

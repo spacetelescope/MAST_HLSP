@@ -67,8 +67,8 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
 
     try:
         pt_index = ext_list.index("productType")
-        fs_index = ext_list.index("fileStatus")
-    except KeyError:
+        #fs_index = ext_list.index("fileStatus")
+    except (KeyError, ValueError):
         logging.error("{0} is missing a required parameter!"
                       .format(extensions_table))
         print("Aborting, see log!")
@@ -93,7 +93,7 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
                     product = CAOMproduct()
                     product.dataProductType = data_type.upper()
                     product.productType = this_ext[pt_index]
-                    product.fileStatus = this_ext[fs_index]
+                    #product.fileStatus = this_ext[fs_index]
                     found_extensions.append(ext)
                     del extensions[ext]
 
