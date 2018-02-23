@@ -177,11 +177,12 @@ class CAOMxmlList(list):
         self.labels = []
 
     def add(self, caom_obj):
-        if not isinstance(caom_obj, CAOMxml):
+        if isinstance(caom_obj, CAOMxml):
+            self.append(caom_obj)
+            self.labels.append(caom_obj.label)
+        else:
             print("CAOMxmlList cannot accept members other than CAOMxml!")
             return self
-        self.append(caom_obj)
-        self.labels.append(caom_obj.label)
 
     def findlabel(self, target):
         assert isinstance(target, str)

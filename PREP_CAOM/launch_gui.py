@@ -174,6 +174,20 @@ class HLSPIngest(QTabWidget):
         #Create a third column to stretch so the Help and Quit buttons
         #remain over to the left.
         self.space = QLabel("")
+        self.space.setMinimumWidth(500)
+
+        """
+        self.file_count = QTextEdit()
+        self.file_count.setReadOnly(True)
+        self.file_count.setLineWrapMode(QTextEdit.NoWrap)
+        self.file_count.setStyleSheet("border-style: solid; \
+                                  border-width: 0px; \
+                                  background: rgba(235,235,235,0%); \
+                                  text-align: right;")
+        self.file_count.setText("Hi")
+        """
+        self.file_count = QLabel(str(len(self.tab1.selected_files)))
+        self.file_count.setAlignment(Qt.AlignRight)
 
         self.box = QGridLayout()
         self.box.addWidget(self.tabs, 1, 0, -1, -1)
@@ -181,6 +195,7 @@ class HLSPIngest(QTabWidget):
         self.box.addWidget(self.caom, 0, 1)
         self.box.addWidget(self.quit, 0, 2)
         self.box.addWidget(self.space, 0, 3)
+        self.box.addWidget(self.file_count, 0, 4)
         self.setLayout(self.box)
         self.resize(1000,300)
         self.setWindowTitle("ConfigGenerator")
@@ -189,6 +204,7 @@ class HLSPIngest(QTabWidget):
         self.quit.clicked.connect(self.quitClicked)
         self.help.clicked.connect(self.helpClicked)
         self.caom.clicked.connect(self.caomClicked)
+        #self.tab1.save.clicked.connect(self.selectClicked)
 
     def quitClicked(self):
         self.close()
@@ -200,6 +216,10 @@ class HLSPIngest(QTabWidget):
     def caomClicked(self):
         self.caompop = CAOMPopup()
         self.caompop.exec_()
+
+    def selectClicked(self):
+        self.file_count = QLabel(str(len(self.tab1.selected_files)))
+        self.file_count.setAlignment(Qt.AlignRight)
 
 #--------------------
 

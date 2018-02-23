@@ -185,8 +185,7 @@ if __name__ == "__main__":
     #User must provide a path to the yaml config file in order to run.
     try:
         config = sys.argv[1]
+        hlsp_to_xml(config)
     except IndexError:
         print("hlsp_to_xml needs a filepath to yaml config file as well!")
         quit()
-
-    hlsp_to_xml(config)

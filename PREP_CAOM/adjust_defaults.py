@@ -1,23 +1,24 @@
 from CAOMxml import *
 
 def adjust_defaults(caomlist, header_type):
-    
-    #Adjust these defaults for all HSLPs
+
+    #Adjust these defaults for all HLSPs
 
     equinox = caomlist.findlabel("targetPosition_equinox")
-    if equinox is not None:
+    if isinstance(equinox, CAOMheader):
         equinox.headerDefaultValue = "2000.0"
     coordsys = caomlist.findlabel("targetPosition_coordsys")
-    if coordsys is not None:
+    if isinstance(coordsys, CAOMheader):
         coordsys.headerDefaultValue = "ICRS"
 
     #Adjust parameters for Kepler entries
+
     if header_type == "kepler":
         filt = caomlist.findheader("FILTER")
-        if filt is not None:
+        if isinstance(filt, CAOMheader):
             filt.headerDefaultValue = "Kepler"
         exptime = caomlist.findheader("EXPTIME")
-        if exptime is not None:
+        if isinstance(exptime, CAOMheader):
             exptime.headerDefaultValue = "1800"
 
     return caomlist

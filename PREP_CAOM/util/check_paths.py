@@ -18,13 +18,13 @@ import os
 #--------------------
 
 def check_existing_dir(path):
-    """
-    Check a user-provided directory that should already exist (such
+    """ Check a user-provided directory that should already exist (such
     as an HLSP directory).  Quit if the directory is not found.
 
     :param path: File path to be checked.
     :type path: string
     """
+
     try:
         fullpath = os.path.abspath(path)
     except TypeError:
@@ -41,13 +41,13 @@ def check_existing_dir(path):
 #--------------------
 
 def check_existing_file(path):
-    """
-    Check a file that should already exist (such as the header keyword
+    """ Check a file that should already exist (such as the header keyword
     translation table) and quit if it is not found.
 
     :param path: File path to be checked.
     :type path: string
     """
+    
     try:
         fullpath = os.path.abspath(path)
     except TypeError:
