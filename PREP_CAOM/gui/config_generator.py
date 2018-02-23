@@ -142,6 +142,7 @@ class ConfigGenerator(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.file_types = None
         self.initUI()
 
 
@@ -735,6 +736,7 @@ class ConfigGenerator(QWidget):
         When generate is clicked, collect all the user inputs and write the
         yaml file.
         """
+        print(self.file_types)
         self.collectInputs()
 
 

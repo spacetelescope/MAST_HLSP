@@ -144,8 +144,8 @@ class SelectFiles(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
-        save = QPushButton("Save To .csv File", self)
-        save.setStyleSheet("""
+        self.save = QPushButton("Save To .csv File", self)
+        self.save.setStyleSheet("""
                           QPushButton {
                             background-color: #7af442;
                             border: 2px solid #45a018;
@@ -166,7 +166,7 @@ class SelectFiles(QWidget):
         self.buttonsgrid.addWidget(clear, 1, 1)
         self.buttonsgrid.addItem(empty, 0, 2)
         self.buttonsgrid.addWidget(load, 0, 3, 2, 1)
-        self.buttonsgrid.addWidget(save, 0, 4, 2, 2)
+        self.buttonsgrid.addWidget(self.save, 0, 4, 2, 2)
 
         ext_label = QLabel("File ends with:")
         ext_label.setToolTip("Provide a distinctive filename ending to search for within this HLSP ('_img.fits')")
@@ -213,7 +213,7 @@ class SelectFiles(QWidget):
         add_file.clicked.connect(self.newFileClicked)
         clear.clicked.connect(self.clearClicked)
         load.clicked.connect(self.loadClicked)
-        save.clicked.connect(self.saveClicked)
+        self.save.clicked.connect(self.saveClicked)
 
 
     def sallClicked(self):
@@ -407,6 +407,7 @@ class SelectFiles(QWidget):
 
         #Create a header row, get a name to save the file, and write all
         #content to the CSV file.
+        """
         head = ("extension", "productType")
         saveit = QFileDialog.getSaveFileName(self, "Save CSV file", ".")
         if len(saveit[0]) > 0:
@@ -421,6 +422,7 @@ class SelectFiles(QWidget):
             self.status.setTextColor(Qt.darkGreen)
             self.status.append("Saved {0}".format(saveit))
             output.close()
+        """
         return self.selected_files
 
 #--------------------

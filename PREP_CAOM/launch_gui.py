@@ -186,7 +186,7 @@ class HLSPIngest(QTabWidget):
                                   text-align: right;")
         self.file_count.setText("Hi")
         """
-        self.file_count = QLabel(str(len(self.tab1.selected_files)))
+        self.file_count = QLabel("No file types selected")
         self.file_count.setAlignment(Qt.AlignRight)
 
         self.box = QGridLayout()
@@ -204,7 +204,7 @@ class HLSPIngest(QTabWidget):
         self.quit.clicked.connect(self.quitClicked)
         self.help.clicked.connect(self.helpClicked)
         self.caom.clicked.connect(self.caomClicked)
-        #self.tab1.save.clicked.connect(self.selectClicked)
+        self.tab1.save.clicked.connect(self.selectClicked)
 
     def quitClicked(self):
         self.close()
@@ -218,8 +218,10 @@ class HLSPIngest(QTabWidget):
         self.caompop.exec_()
 
     def selectClicked(self):
-        self.file_count = QLabel(str(len(self.tab1.selected_files)))
-        self.file_count.setAlignment(Qt.AlignRight)
+        self.tab2.file_types = self.tab1.selected_files
+        n_selected = str(len(self.tab1.selected_files))
+        self.file_count.setText("{0} file types selected".format(n_selected))
+
 
 #--------------------
 
