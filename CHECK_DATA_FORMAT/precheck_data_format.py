@@ -8,6 +8,8 @@
 """
 
 import argparse
+import datetime
+import logging
 
 from get_all_file_endings import get_all_file_endings
 from make_parameter_file import make_parameter_file
@@ -27,6 +29,12 @@ def precheck_data_format(idir, hlsp_name):
     :type hlsp_name: str
     """
 
+    # Start logging to an output file.
+    logging.basicConfig(filename="precheck_data_format.log",
+                        format='%(levelname)s from %(module)s: %(message)s',
+                        level=logging.DEBUG, filemode='w')
+    logging.info('Started at ' + datetime.datetime.now().isoformat())
+
     # Get unique set of file endings.
     all_file_endings = get_all_file_endings(idir)
 
@@ -37,6 +45,8 @@ def precheck_data_format(idir, hlsp_name):
     make_parameter_file("check_data_format_" + hlsp_name.strip().lower() +
                         "_extensions.param", file_endings, all_file_endings,
                         idir)
+
+    logging.info('Finished at ' + datetime.datetime.now().isoformat())
 
 #--------------------
 
