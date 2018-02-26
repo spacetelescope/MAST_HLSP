@@ -52,6 +52,26 @@ class ProductTypeBox(QComboBox):
 
 #--------------------
 
+class SmallGreyButton(QPushButton):
+    def __init__(self, label):
+        super().__init__(label)
+        self.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #f2f2f2;
+                                    border: 2px solid #afafaf;
+                                    border-radius: 8px;
+                                    height: 20px
+                                    }
+                                QPushButton:hover {
+                                    border: 4px solid #afafaf;
+                                    }
+                                QPushButton:pressed {
+                                    background-color: #afafaf;
+                                    }""")
+        self.setMaximumWidth(175)
+
+#--------------------
+
 class ClearConfirm(QDialog):
     """
     Pop up a confirmation dialog window before clearing all changes to the
@@ -91,7 +111,7 @@ class ClearConfirm(QDialog):
 
 #--------------------
 
-class ExtGenerator(QWidget):
+class SelectFiles(QWidget):
     """
     Create a GUI to create a CSV table describing files to search for within
     an HLSP directory and some CAOM parameters to apply to them.  This table
@@ -106,36 +126,10 @@ class ExtGenerator(QWidget):
         #Add buttons to create a new file entry row, clear all entries in the
         #table, load an existing .csv file, or write the current contents to a
         #new .csv file.
-        add_file = QPushButton("+ add another file type")
-        add_file.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        add_file.setMaximumWidth(175)
-        clear = QPushButton("- clear table")
-        clear.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        clear.setMaximumWidth(175)
+        select_all = SmallGreyButton("Select All")
+        de_all = SmallGreyButton("Deselect All")
+        add_file = SmallGreyButton("+ add another file type")
+        clear = SmallGreyButton("- clear table")
         load = QPushButton("Load File")
         load.setStyleSheet("""
                                 QPushButton {
@@ -150,8 +144,8 @@ class ExtGenerator(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
-        save = QPushButton("Save To .csv File", self)
-        save.setStyleSheet("""
+        self.save = QPushButton("Save To .csv File", self)
+        self.save.setStyleSheet("""
                           QPushButton {
                             background-color: #7af442;
                             border: 2px solid #45a018;
@@ -166,29 +160,32 @@ class ExtGenerator(QWidget):
                             }""")
         empty = QSpacerItem(200, 1)
         self.buttonsgrid = QGridLayout()
-        self.buttonsgrid.addWidget(add_file, 0, 0)
-        self.buttonsgrid.addWidget(clear, 1, 0)
-        self.buttonsgrid.addItem(empty, 0, 1)
-        self.buttonsgrid.addWidget(load, 0, 2, 2, 1)
-        self.buttonsgrid.addWidget(save, 0, 3, 2, 2)
+        self.buttonsgrid.addWidget(select_all, 0, 0)
+        self.buttonsgrid.addWidget(de_all, 1, 0)
+        self.buttonsgrid.addWidget(add_file, 0, 1)
+        self.buttonsgrid.addWidget(clear, 1, 1)
+        self.buttonsgrid.addItem(empty, 0, 2)
+        self.buttonsgrid.addWidget(load, 0, 3, 2, 1)
+        self.buttonsgrid.addWidget(self.save, 0, 4, 2, 2)
 
         ext_label = QLabel("File ends with:")
         ext_label.setToolTip("Provide a distinctive filename ending to search for within this HLSP ('_img.fits')")
         dt_label = QLabel("Data Type:")
         pt_label = QLabel("Product Type:")
-        req_label = QLabel("Required:")
+        sel_label = QLabel("Select:")
         self.ext_edit = QLineEdit()
         self.pt_box = ProductTypeBox()
-        self.req_box = QCheckBox()
+        self.sel_box = QCheckBox()
+        self.sel_box.setChecked(True)
         self.firstrow = 1
         self.nextrow = 2
         self.filetypegrid = QGridLayout()
-        self.filetypegrid.addWidget(ext_label, 0, 0)
-        self.filetypegrid.addWidget(pt_label, 0, 1)
-        self.filetypegrid.addWidget(req_label, 0, 2)
-        self.filetypegrid.addWidget(self.ext_edit, 1, 0)
-        self.filetypegrid.addWidget(self.pt_box, 1, 1)
-        self.filetypegrid.addWidget(self.req_box, 1, 2)
+        self.filetypegrid.addWidget(sel_label, 0, 0)
+        self.filetypegrid.addWidget(ext_label, 0, 1)
+        self.filetypegrid.addWidget(pt_label, 0, 2)
+        self.filetypegrid.addWidget(self.sel_box, 1, 0)
+        self.filetypegrid.addWidget(self.ext_edit, 1, 1)
+        self.filetypegrid.addWidget(self.pt_box, 1, 2)
 
         res_label = QLabel("Results:")
         res_label.setAlignment(Qt.AlignHCenter)
@@ -205,13 +202,45 @@ class ExtGenerator(QWidget):
         self.grid.addWidget(res_label, 2, 0)
         self.grid.addWidget(self.status)
 
+        self.selected_files = []
+
         self.setLayout(self.grid)
         self.show()
 
+        self.sel_box.stateChanged.connect(self.selectClicked)
+        select_all.clicked.connect(self.sallClicked)
+        de_all.clicked.connect(self.dallClicked)
         add_file.clicked.connect(self.newFileClicked)
         clear.clicked.connect(self.clearClicked)
         load.clicked.connect(self.loadClicked)
-        save.clicked.connect(self.saveClicked)
+        self.save.clicked.connect(self.saveClicked)
+
+
+    def sallClicked(self):
+        for n in range(self.firstrow, self.filetypegrid.rowCount()-1):
+            selected = self.filetypegrid.itemAtPosition(n, 0).widget()
+            selected.setChecked(True)
+
+
+    def dallClicked(self):
+        for n in range(self.firstrow, self.filetypegrid.rowCount()-1):
+            selected = self.filetypegrid.itemAtPosition(n, 0).widget()
+            selected.setChecked(False)
+
+
+    def selectClicked(self, state):
+        sender = self.sender()
+        ind = self.filetypegrid.indexOf(sender)
+        pos = self.filetypegrid.getItemPosition(ind)
+        row = pos[0]
+        f = self.filetypegrid.itemAtPosition(row, 1).widget()
+        pt = self.filetypegrid.itemAtPosition(row, 2).widget()
+        if state == Qt.Checked:
+            f.setStyleSheet("")
+            pt.setVisible(True)
+        else:
+            f.setStyleSheet("color: DarkGrey; background-color: WhiteSmoke")
+            pt.setVisible(False)
 
 
     def newFileClicked(self):
@@ -222,10 +251,12 @@ class ExtGenerator(QWidget):
 
         new_ext = QLineEdit()
         new_pt = ProductTypeBox()
-        new_req = QCheckBox()
-        self.filetypegrid.addWidget(new_ext, self.nextrow, 0)
-        self.filetypegrid.addWidget(new_pt, self.nextrow, 1)
-        self.filetypegrid.addWidget(new_req, self.nextrow, 2)
+        new_sel = QCheckBox()
+        new_sel.setChecked(True)
+        new_sel.stateChanged.connect(self.selectClicked)
+        self.filetypegrid.addWidget(new_sel, self.nextrow, 0)
+        self.filetypegrid.addWidget(new_ext, self.nextrow, 1)
+        self.filetypegrid.addWidget(new_pt, self.nextrow, 2)
         self.filetypegrid.setRowStretch(self.nextrow, 0)
         self.filetypegrid.setRowStretch(self.nextrow+1, 1)
         self.nextrow += 1
@@ -245,12 +276,12 @@ class ExtGenerator(QWidget):
                 return None
 
         #Empty the items in the first row but don't delete them.
-        p_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
+        sel_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
+        sel_one.setChecked(False)
+        p_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
         p_one.clear()
-        pt_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
+        pt_one = self.filetypegrid.itemAtPosition(self.firstrow,2).widget()
         pt_one.setCurrentIndex(0)
-        req_one = self.filetypegrid.itemAtPosition(self.firstrow,2).widget()
-        req_one.setChecked(False)
 
         #Remove all elements beyond the first row.
         delete_these = list(reversed(range(self.firstrow+1,
@@ -305,7 +336,6 @@ class ExtGenerator(QWidget):
         try:
             ext_index = header.index("extension")
             pt_index = header.index("productType")
-            req_index = header.index("fileStatus")
         except ValueError:
             self.status.setTextColor(Qt.red)
             self.status.append("Could not read {0}".format(filename))
@@ -318,18 +348,15 @@ class ExtGenerator(QWidget):
         #(skip the CSV header row)
         row_num = self.firstrow
         for entry in files[1:]:
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 0)
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
             if ext_box is None:
                 self.newFileClicked()
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
-            pt_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
-            req_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
+            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
+            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
+            sel_box.setChecked(True)
             ext_box.setText(entry[ext_index])
             pt_box.setCurrentType(entry[pt_index])
-            if entry[req_index] == "REQUIRED":
-                req_box.setChecked(True)
-            else:
-                req_box.setChecked(False)
             row_num += 1
         self.status.setTextColor(Qt.darkGreen)
         self.status.append("Loaded {0}".format(filename))
@@ -341,16 +368,16 @@ class ExtGenerator(QWidget):
         CSV file.
         """
 
-        all_files = []
+        self.selected_files = []
 
         #Loop over all rows the user might have created in the form.
         for row in range(self.firstrow, self.filetypegrid.rowCount()):
-            add_ext = self.filetypegrid.itemAtPosition(row, 0)
-            add_pt = self.filetypegrid.itemAtPosition(row, 1)
-            add_req = self.filetypegrid.itemAtPosition(row, 2)
+            add_sel = self.filetypegrid.itemAtPosition(row, 0)
+            add_ext = self.filetypegrid.itemAtPosition(row, 1)
+            add_pt = self.filetypegrid.itemAtPosition(row, 2)
             read_ext = None
             read_pt = None
-            read_req = None
+            read_sel = None
 
             #Skip any empty rows (might not be possible/necessary)
             if add_ext is None:
@@ -358,30 +385,30 @@ class ExtGenerator(QWidget):
 
             #Read the entries from the current row.  Skip if there is no text
             #in the file extension entry.
+            sel_widget = add_sel.widget()
+            read_sel = sel_widget.checkState()
+            if read_sel == 0:
+                continue
             ext_widget = add_ext.widget()
             read_ext = str(ext_widget.text())
             if read_ext == "":
                 continue
             pt_widget = add_pt.widget()
             read_pt = pt_widget.currentText().upper()
-            req_widget = add_req.widget()
-            read_req = req_widget.checkState()
-            if read_req > 0:
-                read_req = "REQUIRED"
-            else:
-                read_req = "OPTIONAL"
-            as_tuple = (read_ext, read_pt, read_req)
-            all_files.append(as_tuple)
+
+            as_tuple = (read_ext, read_pt)
+            self.selected_files.append(as_tuple)
 
         #If all file entry rows have empty name entries, button takes no action
-        if len(all_files) == 0:
+        if len(self.selected_files) == 0:
             self.status.setTextColor(Qt.red)
             self.status.append("No file types to save!")
             return None
 
         #Create a header row, get a name to save the file, and write all
         #content to the CSV file.
-        head = ("extension", "productType", "fileStatus")
+        """
+        head = ("extension", "productType")
         saveit = QFileDialog.getSaveFileName(self, "Save CSV file", ".")
         if len(saveit[0]) > 0:
             saveit = os.path.abspath(saveit[0])
@@ -390,9 +417,17 @@ class ExtGenerator(QWidget):
             with open(saveit, 'w') as output:
                 writer = csv.writer(output)
                 writer.writerow(head)
-                writer.writerows(all_files)
+                writer.writerows(self.selected_files)
             print("Saved {0}".format(saveit))
             self.status.setTextColor(Qt.darkGreen)
             self.status.append("Saved {0}".format(saveit))
             output.close()
-            return saveit
+        """
+        return self.selected_files
+
+#--------------------
+
+if __name__=="__main__":
+    app = QApplication(sys.argv)
+    w = SelectFiles()
+    sys.exit(app.exec_())

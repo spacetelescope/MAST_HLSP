@@ -3,7 +3,6 @@ hlsp:
         collection: HLSP
         intent: SCIENCE
         observationID: FILEROOT
-        proposal_id: NaN
 timeseries:
     metadataList:
         algorithm: timeseries

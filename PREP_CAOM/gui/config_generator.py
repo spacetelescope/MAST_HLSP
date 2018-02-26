@@ -142,6 +142,7 @@ class ConfigGenerator(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.file_types = None
         self.initUI()
 
 
@@ -236,12 +237,6 @@ class ConfigGenerator(QWidget):
         self.dt_box.setMinimumWidth(175)
         for typ in self.datatypes:
             self.dt_box.addItem(typ)
-        """
-        self.lightcurve = QCheckBox("Light Curves", dt)
-        self.spectra = QCheckBox("Spectra", dt)
-        self.catalog = QCheckBox("Catalogs", dt)
-        self.simulation = QCheckBox("Models / Sims", dt)
-        """
 
         self.datatypesgrid = QGridLayout()
         self.datatypesgrid.addItem(space, 0, 0, -1, 1)
@@ -488,10 +483,11 @@ class ConfigGenerator(QWidget):
 
             #Look at the first row to see if you're loading into FIRST_ENTRY
             #or NEXT_ENTRY.
-            first_parent = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
+            first_parent = self.uniquesgrid.itemAtPosition(self.firstrow,0)
+            first_widget = first_parent.widget()
             for param in sub_dictionary.keys():
                 value = sub_dictionary[param]
-                if first_parent.currentText() == "":
+                if first_widget.currentText() == "":
                     row = self.firstrow
                 else:
                     row = self.nextrow
@@ -552,7 +548,7 @@ class ConfigGenerator(QWidget):
         #Pull out the data and insert into the form.
         filepaths = yamlfile["filepaths"]
         header_type = yamlfile["header_type"]
-        data_type = yamlfile["data_types"]
+        data_type = yamlfile["data_type"]
         uniques = yamlfile["unique_parameters"]
         self.data_edit.insert(filepaths["hlsppath"])
         self.ext_edit.insert(filepaths["extensions"])
@@ -595,7 +591,6 @@ class ConfigGenerator(QWidget):
         self.ow_on.setChecked(True)
         self.header.setCurrentIndex(0)
         self.dt_box.setCurrentIndex(0)
-        #self.lightcurve.setChecked(False)
         p_one = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
         p_one.setCurrentIndex(0)
         c_one = self.uniquesgrid.itemAtPosition(self.firstrow,1).widget()
@@ -673,14 +668,7 @@ class ConfigGenerator(QWidget):
             self.status.append("No Data Type selected!")
             return None
         else:
-            config["data_types"] = dt
-        """
-        data_types = []
-        lc = self.lightcurve.checkState()
-        if lc > 0:
-            data_types.append("lightcurve")
-        config["data_types"] = data_types
-        """
+            config["data_type"] = dt
 
         #Collect all the unique parameters the user has entered.  Start at row
         #self.firstrow and search through all rows the user may have added.
@@ -748,6 +736,7 @@ class ConfigGenerator(QWidget):
         When generate is clicked, collect all the user inputs and write the
         yaml file.
         """
+        print(self.file_types)
         self.collectInputs()
 
 

@@ -29,6 +29,7 @@ from lxml import etree
 from add_header_entries import add_header_entries
 from add_product_caomxml import add_product_caomxml
 from add_static_values import add_static_values
+from adjust_defaults import adjust_defaults
 from util.add_value_caomxml import add_value_caomxml
 from util.check_log import check_log
 from util.read_yaml import read_yaml
@@ -42,7 +43,6 @@ import yaml
 global EXPECTED_CONFIGS
 EXPECTED_CONFIGS = ["filepaths",
                     "header_type",
-                    "data_types",
                     "unique_parameters"]
 global EXPECTED_PATHS
 EXPECTED_PATHS = ["extensions",
@@ -93,7 +93,7 @@ def hlsp_to_xml(config):
     output = paths["output"]
     overwrite = paths["overwrite"]
     header_type = parameters["header_type"]
-    data_types = parameters["data_types"]
+    data_type = parameters["data_type"]
     uniques = parameters["unique_parameters"]
 
     #Set up logging
@@ -131,7 +131,7 @@ def hlsp_to_xml(config):
     caomlist = CAOMxmlList()
     caomlist = add_static_values(caomlist,
                                  static_values,
-                                 data_types,
+                                 data_type,
                                  header_type)
     print("...done!")
 
@@ -149,7 +149,10 @@ def hlsp_to_xml(config):
     print("...done!")
 
     #Add product entries to the list of CAOMxml objects
-    caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_types)
+    caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_type)
+
+    #Make final tweaks to caomlist
+    caomlist = adjust_defaults(caomlist, header_type)
 
     #Create the head string to write to doctype
     head_strings = []
@@ -182,8 +185,7 @@ if __name__ == "__main__":
     #User must provide a path to the yaml config file in order to run.
     try:
         config = sys.argv[1]
+        hlsp_to_xml(config)
     except IndexError:
         print("hlsp_to_xml needs a filepath to yaml config file as well!")
         quit()
-
-    hlsp_to_xml(config)

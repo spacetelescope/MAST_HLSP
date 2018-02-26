@@ -151,7 +151,7 @@ class CAOMproduct(CAOMxml):
         self.contentType = None
         self.dataProductType = None
         self.fileNameDescriptor = "FILEROOT"
-        self.fileStatus = None
+        self.fileStatus = "Optional"
         self.fileType = None
         self.planeNumber = "1"
         self.productType = None
@@ -177,11 +177,12 @@ class CAOMxmlList(list):
         self.labels = []
 
     def add(self, caom_obj):
-        if not isinstance(caom_obj, CAOMxml):
+        if isinstance(caom_obj, CAOMxml):
+            self.append(caom_obj)
+            self.labels.append(caom_obj.label)
+        else:
             print("CAOMxmlList cannot accept members other than CAOMxml!")
             return self
-        self.append(caom_obj)
-        self.labels.append(caom_obj.label)
 
     def findlabel(self, target):
         assert isinstance(target, str)
@@ -216,4 +217,3 @@ if __name__ == "__main__":
     x = CAOMproduct()
     print(x.label)
     print(x.parent)
-    x.properties()

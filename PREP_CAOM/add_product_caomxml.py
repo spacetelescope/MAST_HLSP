@@ -1,5 +1,5 @@
 """
-..module:: add_productlist_xml
+..module:: add_product_caomxml
     :synopsis: Walk an HLSP directory (filepath) to identify all files.
     Compare the filenames found to a table of expected file extensions
     (extensions_table) and generate CAOM product entries with appropriate
@@ -14,7 +14,7 @@ import os
 
 #--------------------
 
-def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
+def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
     """
     Walk filepath and create product entries for files by matching them with
     entries in extensions_table.
@@ -58,6 +58,7 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
     #otherwise it is not formatted correctly.
     try:
         ext_list = extensions['extension']
+        del extensions['extension']
     except KeyError:
         logging.error("{0} needs 'extension' listed in column 0"
                       .format(extensions_table))
@@ -66,8 +67,8 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
 
     try:
         pt_index = ext_list.index("productType")
-        fs_index = ext_list.index("fileStatus")
-    except KeyError:
+        #fs_index = ext_list.index("fileStatus")
+    except (KeyError, ValueError):
         logging.error("{0} is missing a required parameter!"
                       .format(extensions_table))
         print("Aborting, see log!")
@@ -80,8 +81,8 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
     found_extensions = []
     projects = []
     for path, subdirs, files in os.walk(filepath):
-        #print("...adding files from {0}...".format(path))
         for name in files:
+
             #Look for a match with an entry in extensions and create a
             #CAOMproduct if found.  If the extension doesn't match one from
             #the .csv file, generate a warning in the log and skip the file.
@@ -90,15 +91,21 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
                 if name.lower().endswith(ext):
                     this_ext = extensions[ext]
                     product = CAOMproduct()
-                    product.dataProductType = data_types.upper()
+                    product.dataProductType = data_type.upper()
                     product.productType = this_ext[pt_index]
-                    product.fileStatus = this_ext[fs_index]
+                    #product.fileStatus = this_ext[fs_index]
                     found_extensions.append(ext)
                     del extensions[ext]
+
+                    #Expect that the filename follows standard HLSP formatting:
+                    #"hlsp_project_..."
                     spl = str.split(name, "_")
                     if spl[0] == "hlsp" and spl[1] not in projects:
                         projects.append(spl[1])
                     break
+
+            #If the product is not found, check if it's because it's already
+            #been found.  Otherwise, enter a warning in the log.
             if product is None:
                 found = False
                 for e in found_extensions:
@@ -112,7 +119,7 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
                 continue
 
             #Define statusAction depending on what fileStatus is assigned
-            if product.fileStatus == "REQUIRED":
+            if product.fileStatus.upper() == "REQUIRED":
                 product.statusAction = "ERROR"
             else:
                 product.statusAction = "WARNING"
@@ -130,24 +137,23 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_types):
             print("...adding {0}...".format(product))
             caomlist.add(product)
 
-            if len(extensions.keys()) == 0:
+            remaining = list(extensions.keys())
+            if len(remaining) == 0:
                 print("...all defined extensions entered, still scanning...")
 
+    #If only one project name is found, set the "name" CAOM parameter to this
+    #value.
     if len(projects) == 1:
         name = CAOMvalue("name")
         name.parent = "provenance"
         name.value = projects[0].upper()
         caomlist.add(name)
 
-    #Check for any remaining unused file extensions.  Dictionary will still
-    #contain one 'extension' entry.
-    if len(extensions) > 1:
+    #Check for any remaining unused file extensions.
+    if len(extensions) > 0:
         for ext in sorted(extensions):
-            if ext == 'extension':
-                continue
-            else:
-                logging.warning("{0} was defined in {1}, but none found in {2}"
-                                .format(ext, extensions_table, filepath))
+            logging.warning("{0} was defined in {1}, but none found in {2}"
+                            .format(ext, extensions_table, filepath))
 
     print("...done!")
     return caomlist

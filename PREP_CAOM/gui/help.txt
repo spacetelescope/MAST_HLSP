@@ -1,9 +1,10 @@
 File Descriptions Help:
     Here you will want to list each type of file you wish to add to CAOM that you expect to 
     find in the HLSP directory you will be scanning.  Include the last portion of the 
-    filename as well as the extension (i.e. _img.fits).  Then select appropriate Data Type 
-    and Product Type descriptions for each file listed.  The Required flag does something.
-    
+    filename as well as the extension (i.e. _img.fits).  Then select appropriate Product 
+    Type descriptions for each file listed.  The Required flag determines whether CAOM
+    processing issues an error or warning if an expected file is not found.
+        
 -----------------------   
  
 Config File Help:
@@ -29,9 +30,10 @@ Config File Help:
     Header Type:
         Indicate which type of FITS headers you expect to find with this HLSP.
         
-    Included Data Types:
-        Certain data types will define special parameters within CAOM.  Indicate which 
-        types you expect this HLSP to contain.
+    Data Type:
+        This setting will determine the dataProductType parameter within CAOM product
+        entries created for this HLSP, as well as other CAOM parameters, depending on
+        which type is selected.
         
     HLSP-Unique Parameters:
         Define any parameters you would like to insert in CAOM that are not available in 
