@@ -14,7 +14,7 @@ import os
 
 #--------------------
 
-def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
+def add_product_caomxml(caomlist, filepath, extensions, data_type):
     """
     Walk filepath and create product entries for files by matching them with
     entries in extensions_table.
@@ -36,8 +36,9 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
 
     #Make sure filepaths are full and valid
     filepath = cp.check_existing_dir(filepath)
-    extensions_table = cp.check_existing_file(extensions_table)
+    #extensions_table = cp.check_existing_file(extensions_table)
 
+    """
     #Read the extensions_table into a dictionary, ASSUMES extension name in
     #column 0.
     #[file extension : (n parameters...)]
@@ -73,6 +74,7 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
                       .format(extensions_table))
         print("Aborting, see log!")
         quit()
+    """
 
     #Walk filepath and check files found against the list of defined
     #extensions.  If the extension matches, create a product subelement with
@@ -89,10 +91,9 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
             product = None
             for ext in extensions.keys():
                 if name.lower().endswith(ext):
-                    this_ext = extensions[ext]
                     product = CAOMproduct()
                     product.dataProductType = data_type.upper()
-                    product.productType = this_ext[pt_index]
+                    product.productType = extensions[ext]
                     #product.fileStatus = this_ext[fs_index]
                     found_extensions.append(ext)
                     del extensions[ext]
@@ -113,9 +114,8 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
                         found = True
                         break
                 if not found:
-                    logging.warning("Skipped {0}, extension not defined in {1}"
-                                    .format(os.path.join(path, name),
-                                    os.path.basename(extensions_table)))
+                    logging.warning("Skipped {0}, extension not defined."
+                                    .format(os.path.join(path, name)))
                 continue
 
             #Define statusAction depending on what fileStatus is assigned
@@ -152,8 +152,8 @@ def add_product_caomxml(caomlist, filepath, extensions_table, data_type):
     #Check for any remaining unused file extensions.
     if len(extensions) > 0:
         for ext in sorted(extensions):
-            logging.warning("{0} was defined in {1}, but none found in {2}"
-                            .format(ext, extensions_table, filepath))
+            logging.warning("{0} was defined, but none found in {1}"
+                            .format(ext, filepath))
 
     print("...done!")
     return caomlist

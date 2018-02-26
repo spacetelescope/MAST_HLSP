@@ -42,11 +42,11 @@ import yaml
 #Set global variables
 global EXPECTED_CONFIGS
 EXPECTED_CONFIGS = ["filepaths",
+                    "file_types",
                     "header_type",
                     "unique_parameters"]
 global EXPECTED_PATHS
-EXPECTED_PATHS = ["extensions",
-                  "hlsppath",
+EXPECTED_PATHS = ["hlsppath",
                   "output",
                   "overwrite"]
 global LOG
@@ -88,10 +88,10 @@ def hlsp_to_xml(config):
 
     #Config parameters have been checked, now read into variables
     paths = parameters["filepaths"]
-    extensions = paths["extensions"]
     hlsppath = paths["hlsppath"]
     output = paths["output"]
     overwrite = paths["overwrite"]
+    extensions = parameters["file_types"]
     header_type = parameters["header_type"]
     data_type = parameters["data_type"]
     uniques = parameters["unique_parameters"]

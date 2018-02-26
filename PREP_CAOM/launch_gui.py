@@ -122,7 +122,7 @@ class HLSPIngest(QTabWidget):
         self.tabs = QTabWidget()
         self.tab1 = SelectFiles()
         self.tab2 = ConfigGenerator()
-        self.tabs.addTab(self.tab1, "Enter File Descriptions")
+        self.tabs.addTab(self.tab1, "Select File Types")
         self.tabs.addTab(self.tab2, "Make Config File")
 
         self.help = QPushButton("Help")
@@ -197,7 +197,7 @@ class HLSPIngest(QTabWidget):
         self.box.addWidget(self.space, 0, 3)
         self.box.addWidget(self.file_count, 0, 4)
         self.setLayout(self.box)
-        self.resize(1000,300)
+        self.resize(1200,300)
         self.setWindowTitle("ConfigGenerator")
         self.show()
 
@@ -205,6 +205,7 @@ class HLSPIngest(QTabWidget):
         self.help.clicked.connect(self.helpClicked)
         self.caom.clicked.connect(self.caomClicked)
         self.tab1.save.clicked.connect(self.selectClicked)
+        self.tab1.clear.clicked.connect(self.clearClicked)
 
     def quitClicked(self):
         self.close()
@@ -219,8 +220,20 @@ class HLSPIngest(QTabWidget):
 
     def selectClicked(self):
         self.tab2.file_types = self.tab1.selected_files
+        types_list = sorted(self.tab2.file_types.keys())
+        self.tab2.filetypes_display.clear()
+        self.tab2.filetypes_display.setTextColor(Qt.black)
+        for t in types_list:
+            self.tab2.filetypes_display.append("*"+t)
         n_selected = str(len(self.tab1.selected_files))
         self.file_count.setText("{0} file types selected".format(n_selected))
+
+    def clearClicked(self):
+        self.tab2.file_types = None
+        self.tab2.filetypes_display.clear()
+        self.tab2.filetypes_display.setTextColor(Qt.red)
+        self.tab2.filetypes_display.append("No file types selected")
+        self.file_count.setText("No file types selected")
 
 
 #--------------------

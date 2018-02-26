@@ -129,7 +129,7 @@ class SelectFiles(QWidget):
         select_all = SmallGreyButton("Select All")
         de_all = SmallGreyButton("Deselect All")
         add_file = SmallGreyButton("+ add another file type")
-        clear = SmallGreyButton("- clear table")
+        self.clear = SmallGreyButton("- clear table")
         load = QPushButton("Load File")
         load.setStyleSheet("""
                                 QPushButton {
@@ -144,7 +144,7 @@ class SelectFiles(QWidget):
                                 QPushButton:pressed {
                                     background-color: #afafaf;
                                     }""")
-        self.save = QPushButton("Save To .csv File", self)
+        self.save = QPushButton("Select these types", self)
         self.save.setStyleSheet("""
                           QPushButton {
                             background-color: #7af442;
@@ -163,7 +163,7 @@ class SelectFiles(QWidget):
         self.buttonsgrid.addWidget(select_all, 0, 0)
         self.buttonsgrid.addWidget(de_all, 1, 0)
         self.buttonsgrid.addWidget(add_file, 0, 1)
-        self.buttonsgrid.addWidget(clear, 1, 1)
+        self.buttonsgrid.addWidget(self.clear, 1, 1)
         self.buttonsgrid.addItem(empty, 0, 2)
         self.buttonsgrid.addWidget(load, 0, 3, 2, 1)
         self.buttonsgrid.addWidget(self.save, 0, 4, 2, 2)
@@ -211,7 +211,7 @@ class SelectFiles(QWidget):
         select_all.clicked.connect(self.sallClicked)
         de_all.clicked.connect(self.dallClicked)
         add_file.clicked.connect(self.newFileClicked)
-        clear.clicked.connect(self.clearClicked)
+        self.clear.clicked.connect(self.clearClicked)
         load.clicked.connect(self.loadClicked)
         self.save.clicked.connect(self.saveClicked)
 
@@ -368,7 +368,7 @@ class SelectFiles(QWidget):
         CSV file.
         """
 
-        self.selected_files = []
+        self.selected_files = {}
 
         #Loop over all rows the user might have created in the form.
         for row in range(self.firstrow, self.filetypegrid.rowCount()):
@@ -397,7 +397,7 @@ class SelectFiles(QWidget):
             read_pt = pt_widget.currentText().upper()
 
             as_tuple = (read_ext, read_pt)
-            self.selected_files.append(as_tuple)
+            self.selected_files[read_ext] = read_pt
 
         #If all file entry rows have empty name entries, button takes no action
         if len(self.selected_files) == 0:

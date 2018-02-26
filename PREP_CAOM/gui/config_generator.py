@@ -164,10 +164,6 @@ class ConfigGenerator(QWidget):
         data.setAlignment(Qt.AlignRight)
         data.setToolTip("Enter the location of the HLSP data files to scan.")
         self.data_edit = QLineEdit(data)
-        ext = QLabel("File Extensions Table: ", fp)
-        ext.setAlignment(Qt.AlignRight)
-        ext.setToolTip("Enter the location of the CSV file containing HLSP file information.")
-        self.ext_edit = QLineEdit(ext)
         out = QLabel("Output XML File: ", fp)
         out.setAlignment(Qt.AlignRight)
         out.setToolTip("Provide a file path and name for the XML result file.")
@@ -180,10 +176,6 @@ class ConfigGenerator(QWidget):
         browse_hlsp.setMaximumWidth(26)
         browse_hlsp.setMaximumHeight(22)
         browse_ext = QPushButton()
-        browse_ext.setIcon(icon)
-        browse_ext.setIconSize(QSize(14,14))
-        browse_ext.setMaximumWidth(26)
-        browse_ext.setMaximumHeight(22)
         browse_out = QPushButton()
         browse_out.setIcon(icon)
         browse_out.setIconSize(QSize(14,14))
@@ -193,12 +185,9 @@ class ConfigGenerator(QWidget):
         self.pathsgrid.addWidget(data, 0, 0)
         self.pathsgrid.addWidget(self.data_edit, 0, 1)
         self.pathsgrid.addWidget(browse_hlsp, 0, 2)
-        self.pathsgrid.addWidget(ext, 1, 0)
-        self.pathsgrid.addWidget(self.ext_edit, 1, 1)
-        self.pathsgrid.addWidget(browse_ext, 1, 2)
-        self.pathsgrid.addWidget(out, 2, 0)
-        self.pathsgrid.addWidget(self.out_edit, 2, 1)
-        self.pathsgrid.addWidget(browse_out, 2, 2)
+        self.pathsgrid.addWidget(out, 1, 0)
+        self.pathsgrid.addWidget(self.out_edit, 1, 1)
+        self.pathsgrid.addWidget(browse_out, 1, 2)
 
         #Set the boolean overwrite parameter with on/off radio button objects.
         ow = QLabel("Overwrite: ", self)
@@ -247,7 +236,8 @@ class ConfigGenerator(QWidget):
         #list is expandable.  Custom parents can be defined in addition to
         #metadataList and provenance.
         up = QLabel("HLSP-Unique Parameters: ", self)
-        up.setToolTip("Define additional CAOM parameters to insert that are not defined in the FITS headers.")
+        up.setToolTip("Define additional CAOM parameters to insert that are \
+        not defined in the FITS headers.")
         add_param = QPushButton("+ add a new parameter")
         add_param.setStyleSheet("""
                                 QPushButton {
@@ -300,6 +290,20 @@ class ConfigGenerator(QWidget):
         self.status.setStyleSheet("border-style: solid; \
                                   border-width: 1px; \
                                   background: rgba(235,235,235,0%);")
+
+        filetypes_label = QLabel("File types selected: ")
+        filetypes_label.setMaximumWidth(125)
+        self.filetypes_display = QTextEdit()
+        self.filetypes_display.setMaximumWidth(150)
+        self.filetypes_display.setReadOnly(True)
+        self.filetypes_display.setLineWrapMode(QTextEdit.NoWrap)
+        self.filetypes_display.setStyleSheet("background: \
+                                             rgba(235,235,235,0%);")
+        self.filetypes_display.setTextColor(Qt.red)
+        self.filetypes_display.append("No file types selected")
+        self.filetypes_grid = QGridLayout()
+        self.filetypes_grid.addWidget(filetypes_label, 0, 0)
+        self.filetypes_grid.addWidget(self.filetypes_display, 1, 0, 4, 1)
 
         #Create the four main buttons for the widget.
         load = QPushButton("Load YAML File")
@@ -381,15 +385,16 @@ class ConfigGenerator(QWidget):
         self.grid2.setRowStretch(9, 0)
         self.grid2.setRowStretch(10, 1)
         self.grid2.addWidget(fp, 0, 0)
-        self.grid2.addLayout(self.buttonsgrid, 0, 4, 4, 2)
-        self.grid2.addLayout(self.pathsgrid, 1, 0, 3, 4)
-        self.grid2.addLayout(self.overwritegrid, 4, 5, 1, 2)
-        self.grid2.addLayout(self.uniquesgrid, 4, 0, 4, 5)
-        self.grid2.addLayout(self.headergrid, 5, 5)
-        self.grid2.addLayout(self.datatypesgrid, 6, 5, 1, 1)
-        self.grid2.addWidget(status_label, 8, 0, 1, -1)
-        self.grid2.addWidget(self.status, 9, 0, 2, -1)
-        self.grid2.addItem(space, 6, 5, -1, -1)
+        self.grid2.addLayout(self.buttonsgrid, 0, 4, 3, 3)
+        self.grid2.addLayout(self.pathsgrid, 1, 0, 2, 4)
+        self.grid2.addLayout(self.overwritegrid, 3, 4, 1, 2)
+        self.grid2.addLayout(self.uniquesgrid, 3, 0, 4, 4)
+        self.grid2.addLayout(self.filetypes_grid, 3, 6, -1, 1)
+        self.grid2.addLayout(self.headergrid, 4, 4)
+        self.grid2.addLayout(self.datatypesgrid, 5, 4, 1, 1)
+        self.grid2.addWidget(status_label, 8, 0, 1, 5)
+        self.grid2.addWidget(self.status, 9, 0, 2, 5)
+        #self.grid2.addItem(space, 6, 5, -1, -1)
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)
@@ -397,7 +402,6 @@ class ConfigGenerator(QWidget):
 
         #Add button actions.
         browse_hlsp.clicked.connect(self.hlspClicked)
-        browse_ext.clicked.connect(self.extensionsClicked)
         browse_out.clicked.connect(self.outputClicked)
         add_param.clicked.connect(self.addClicked)
         load.clicked.connect(self.loadClicked)
@@ -407,8 +411,7 @@ class ConfigGenerator(QWidget):
 
 
     def hlspClicked(self):
-        """
-        Launch a file dialog to select a directory containing HLSP data.
+        """ Launch a file dialog to select a directory containing HLSP data.
         """
 
         navigate = QFileDialog.getExistingDirectory(self,
@@ -418,22 +421,8 @@ class ConfigGenerator(QWidget):
         self.data_edit.insert(navigate)
 
 
-    def extensionsClicked(self):
-        """
-        Launch a file dialog to select a .csv file containing data definitions.
-        """
-
-        navigate = QFileDialog.getOpenFileName(self,
-                                               "Select File Descriptions File",
-                                               ".")
-        path = navigate[0]
-        self.ext_edit.clear()
-        self.ext_edit.insert(path)
-
-
     def outputClicked(self):
-        """
-        Launch a file dialog to define the XML output file name & path.
+        """ Launch a file dialog to define the XML output file name & path.
         """
 
         navigate = QFileDialog.getSaveFileName(self,
@@ -445,27 +434,32 @@ class ConfigGenerator(QWidget):
 
 
     def addClicked(self):
-        """
-        Use the global NEXT_ENTRY variable to add a new unique parameter
-        entry row.
+        """ Add a new unique parameter entry row into the self.nextrow
+        position, then update self.nextrow.
         """
 
+        # Make a new 'Parent:' combo box and populate it with self.xml_parents.
         new_parent = QComboBox(editable=True)
         for p in self.xml_parents:
             new_parent.addItem(p)
+
+        # Make new line edits for 'CAOM Keyword:' and 'Value:'.
         new_caom = QLineEdit()
         new_value = QLineEdit()
+
+        # Add the new widgets to the uniquesgrid layout.
         self.uniquesgrid.addWidget(new_parent, self.nextrow, 0)
         self.uniquesgrid.addWidget(new_caom, self.nextrow, 1)
         self.uniquesgrid.addWidget(new_value, self.nextrow, 2)
         self.uniquesgrid.setRowStretch(self.nextrow, 0)
         self.uniquesgrid.setRowStretch(self.nextrow+1, 1)
+
+        # Update self.nextrow.
         self.nextrow += 1
 
 
     def loadDictionaries(self, uniques):
-        """
-        Recursively handles loading multi-level dictionaries to the unique
+        """ Recursively handles loading multi-level dictionaries to the unique
         parameters table.
 
         :param uniques:  A dictionary containing CAOM parameters.  May contain
@@ -474,32 +468,36 @@ class ConfigGenerator(QWidget):
         """
 
         if uniques is None:
-            return None
+            return
 
         parents = uniques.keys()
         for p in parents:
             sub_dictionary = uniques[p]
             copy_dictionary = copy.deepcopy(sub_dictionary)
 
-            #Look at the first row to see if you're loading into FIRST_ENTRY
-            #or NEXT_ENTRY.
+            # Look at the first row to see if you're loading into FIRST_ENTRY
+            # or NEXT_ENTRY.
             first_parent = self.uniquesgrid.itemAtPosition(self.firstrow,0)
             first_widget = first_parent.widget()
             for param in sub_dictionary.keys():
                 value = sub_dictionary[param]
+
+                # If the first widget text is empty, start loading there.
+                # Otherwise, load to the self.nextrow position and create a
+                # new set of widgets using addClicked().
                 if first_widget.currentText() == "":
                     row = self.firstrow
                 else:
                     row = self.nextrow
                     self.addClicked()
 
-                #Get the Parent combo box for the current row.
+                # Get the Parent combo box for the current row.
                 parent_box = self.uniquesgrid.itemAtPosition(row,0).widget()
                 caom_box = self.uniquesgrid.itemAtPosition(row,1).widget()
                 value_box = self.uniquesgrid.itemAtPosition(row,2).widget()
 
-                #If the desired parent is already an option, set to that.
-                #Otherwise add it as a new option in the combo box.
+                # If the desired parent is already an option, set to that.
+                # Otherwise add it as a new option in the combo box.
                 if p in self.xml_parents:
                     parent_index = self.xml_parents.index(p)
                     parent_box.setCurrentIndex(parent_index)
@@ -508,11 +506,11 @@ class ConfigGenerator(QWidget):
                     parent_box.setCurrentIndex(parent_box.findText(p))
                     self.xml_parents.append(p)
 
-                #Fill in the CAOM line edit box.
+                # Fill in the CAOM line edit box.
                 caom_box.insert(param)
 
-                #If the next level is still a dictionary, repeat this process.
-                #Otherwise, fill in the Value line edit box.
+                # If the next level is still a dictionary, repeat this process.
+                # Otherwise, fill in the Value line edit box.
                 if isinstance(sub_dictionary[param], dict):
                     self.loadDictionaries(copy_dictionary)
                 else:
@@ -522,8 +520,7 @@ class ConfigGenerator(QWidget):
 
 
     def loadClicked(self):
-        """
-        Open a user-selected YAML file and load the elements into the form.
+        """ Open a user-selected YAML file and load the elements into the form.
         """
 
         #Launch a file dialog for user file selection.
@@ -550,8 +547,12 @@ class ConfigGenerator(QWidget):
         header_type = yamlfile["header_type"]
         data_type = yamlfile["data_type"]
         uniques = yamlfile["unique_parameters"]
+        self.file_types = yamlfile["file_types"]
+        self.filetypes_display.clear()
+        self.filetypes_display.setTextColor(Qt.black)
+        for f in sorted(self.file_types.keys()):
+            self.filetypes_display.append(f)
         self.data_edit.insert(filepaths["hlsppath"])
-        self.ext_edit.insert(filepaths["extensions"])
         self.out_edit.insert(filepaths["output"])
         if filepaths["overwrite"]:
             self.ow_on.setChecked(True)
@@ -572,8 +573,7 @@ class ConfigGenerator(QWidget):
 
 
     def resetClicked(self, source="clicked"):
-        """
-        Clear any changes to the form.
+        """ Clear any changes to the form.
         """
 
         #Confirm the user wants to clear the form, except in the case of a
@@ -586,7 +586,6 @@ class ConfigGenerator(QWidget):
 
         #Empty the immediately-available elements.
         self.data_edit.clear()
-        self.ext_edit.clear()
         self.out_edit.clear()
         self.ow_on.setChecked(True)
         self.header.setCurrentIndex(0)
@@ -617,51 +616,53 @@ class ConfigGenerator(QWidget):
 
 
     def collectInputs(self):
-        """
-        Assemble everything the user has input to the form into a dictionary.
-        Then write that dictionary into a yaml file.
+        """ Assemble everything the user has input to the form into a
+        dictionary.  Then write that dictionary into a yaml file.
         """
 
         config = {}
-
-        #Create the filepaths section of the dictionary from the edit boxes
-        #and overwrite flag.
         filepaths = {}
 
+        # Get the HLSP data filepath.  Throw an error if it does not exist.
         hlsppath = self.data_edit.text()
         if hlsppath == "":
             self.status.setTextColor(Qt.red)
             self.status.append("HLSP Data file path is missing!")
-            return None
+            return
         else:
             filepaths["hlsppath"] = hlsppath
 
-        extensions = self.ext_edit.text()
-        if extensions == "":
+        # Check the self.file_types dictionary.  Throw an error if it does not
+        # exist or is empty.
+        if self.file_types is None:
             self.status.setTextColor(Qt.red)
-            self.status.append("Extensions file path is missing!")
-            return None
-        #extensions table must end with .csv
-        if not extensions.endswith(".csv"):
-            extensions += ".csv"
-        filepaths["extensions"] = extensions
+            self.status.append("No file types selected!")
+            return
+        elif len(self.file_types.keys()) == 0:
+            self.status.setTextColor(Qt.red)
+            self.status.append("No file types selected!")
+            return
+        extensions = self.file_types
+        config["file_types"] = extensions
 
+        # Get the output filepath from the line edit.  Throw an error if it is
+        # empty.  Append with a '.xml' if not already there.  Get the overwrite
+        # flag from the checkbox.
         out = self.out_edit.text()
         if out == "":
             self.status.setTextColor(Qt.red)
             self.status.append("Output file path is missing!")
-            return None
-        #output file must end with .xml
+            return
         if not out.endswith(".xml"):
             out += ".xml"
         filepaths["output"] = out
         filepaths["overwrite"] = self.ow_on.isChecked()
         config["filepaths"] = filepaths
 
-        #Grab the selected fits header type.
+        # Grab the selected fits header type.
         config["header_type"] = self.header.currentText().lower()
 
-        #Collect all selected data type flags.
+        # Get the data type.  Throw an error if none selected.
         dt = self.dt_box.currentText().lower()
         if dt == "":
             self.status.setTextColor(Qt.red)
@@ -670,8 +671,8 @@ class ConfigGenerator(QWidget):
         else:
             config["data_type"] = dt
 
-        #Collect all the unique parameters the user has entered.  Start at row
-        #self.firstrow and search through all rows the user may have added.
+        # Collect all the unique parameters the user has entered.  Start at row
+        # self.firstrow and search through all rows the user may have added.
         uniques = {}
         for row in range(self.firstrow, self.uniquesgrid.rowCount()):
             add_parent = self.uniquesgrid.itemAtPosition(row, 0)
@@ -681,8 +682,8 @@ class ConfigGenerator(QWidget):
             unique_caom = None
             unique_value = None
 
-            #Skip totally empty rows, empty values are okay for defining a new
-            #parent.
+            # Skip totally empty rows, empty values are okay for defining a new
+            # parent.
             if add_parent is None and add_caom is None and add_value is None:
                 continue
             if add_parent is not None:
@@ -694,7 +695,9 @@ class ConfigGenerator(QWidget):
             if add_value is not None:
                 value_widget = add_value.widget()
                 unique_value = str(value_widget.text())
-            if unique_parent =="" and unique_caom =="" and unique_value =="":
+            if unique_parent == ""
+                and unique_caom == ""
+                and unique_value == "":
                 continue
             elif unique_parent == "":
                 unique_parent = "CompositeObservation"
@@ -702,21 +705,21 @@ class ConfigGenerator(QWidget):
             parameter[unique_caom] = unique_value
             insert = crawl_dictionary(uniques, unique_parent, parameter)
 
-            #crawl_dictionary returns a tuple: (updated dictionary, inserted
-            #boolean flag)
+            # crawl_dictionary returns a tuple:
+            # (updated dictionary, inserted boolean flag)
             new_uniques = insert[0]
             inserted = insert[1]
 
-            #If crawl_dictionary did not insert the new parameter, the defined
-            #parent is not currently present in the dictionary, so create a
-            #new entry.
+            # If crawl_dictionary did not insert the new parameter, the defined
+            # parent is not currently present in the dictionary, so create a
+            # new entry.
             if not inserted:
                 uniques[unique_parent] = parameter
             else:
                 uniques = new_uniques
         config["unique_parameters"] = uniques
 
-        #Write the config dictionary into a yaml file using a dialog.
+        # Write the config dictionary into a yaml file using a dialog.
         saveit = QFileDialog.getSaveFileName(self, "Save YAML file", ".")
         if len(saveit[0]) > 0:
             saveit = os.path.abspath(saveit[0])
@@ -724,16 +727,15 @@ class ConfigGenerator(QWidget):
                 saveit += ".yaml"
             with open(saveit, 'w') as output:
                 yaml.dump(config, output, default_flow_style=False)
+                output.close()
             print("Saved {0}".format(saveit))
             self.status.setTextColor(Qt.darkGreen)
             self.status.append("Saved {0}".format(saveit))
-            output.close()
             return saveit
 
 
     def genClicked(self):
-        """
-        When generate is clicked, collect all the user inputs and write the
+        """ When generate is clicked, collect all the user inputs and write the
         yaml file.
         """
         print(self.file_types)
@@ -741,9 +743,8 @@ class ConfigGenerator(QWidget):
 
 
     def runClicked(self):
-        """
-        When run is clicked, collect all the user inputs, write the yaml file,
-        and send the file to hlsp_to_xml.
+        """ When run is clicked, collect all the user inputs, write the yaml
+        file, and send the file to hlsp_to_xml.
         """
         config = self.collectInputs()
         if config is not None:
