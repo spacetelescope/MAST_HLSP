@@ -94,8 +94,12 @@ def add_product_caomxml(caomlist, filepath, extensions, data_type):
                     product = CAOMproduct()
                     product.dataProductType = data_type.upper()
                     product.productType = extensions[ext]
-                    #product.fileStatus = this_ext[fs_index]
+                    ext_split = ext.split(".")
+                    product.fileType = ext_split[0].upper()
+                    product.contentType = ".".join(ext_split[1:]).upper()
+                    print("...adding {0}...".format(product))
                     found_extensions.append(ext)
+                    caomlist.add(product)
                     del extensions[ext]
 
                     #Expect that the filename follows standard HLSP formatting:
@@ -117,25 +121,6 @@ def add_product_caomxml(caomlist, filepath, extensions, data_type):
                     logging.warning("Skipped {0}, extension not defined."
                                     .format(os.path.join(path, name)))
                 continue
-
-            #Define statusAction depending on what fileStatus is assigned
-            if product.fileStatus.upper() == "REQUIRED":
-                product.statusAction = "ERROR"
-            else:
-                product.statusAction = "WARNING"
-
-            #Get fileType and contentType by operating on the filename.
-            #Assumes that the filename ends with '_abc' to denote file type.
-            #Concatenates everything after the first '.' to get content type.
-            full = name.split("_")
-            end = full[-1]
-            get_ext = end.split(".")
-            fileType = get_ext[0]
-            contentType = ".".join(get_ext[1:])
-            product.fileType = fileType.upper()
-            product.contentType = contentType.upper()
-            print("...adding {0}...".format(product))
-            caomlist.add(product)
 
             remaining = list(extensions.keys())
             if len(remaining) == 0:
