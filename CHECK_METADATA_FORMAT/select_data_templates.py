@@ -1,7 +1,7 @@
 """
 .. module:: select_data_templates
     :synopsis: GUI to allow the user to specify templates and data types for
-        HLSP files before running check_data_format on them.
+        HLSP files before running check_metadata_format on them.
 
 .. moduleauthor:: Scott W. Fleming <fleming@stsci.edu>
 """

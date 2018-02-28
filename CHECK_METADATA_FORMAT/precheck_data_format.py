@@ -1,7 +1,7 @@
 """
 .. module:: precheck_data_format
     :synopsis: Given a directory, will search for all files within it and start
-        a parameter file to use in check_data_format, based on the ending of
+        a parameter file to use in check_metadata_format, based on the ending of
         files recursively found inside the directory.
 
 .. moduleauthor:: Scott W. Fleming <fleming@stsci.edu>
@@ -18,7 +18,7 @@ from make_parameter_file import make_parameter_file
 
 def precheck_data_format(idir, hlsp_name):
     """
-    Generates parameter file for check_data_format based on file endings.
+    Generates parameter file for check_metadata_format based on file endings.
 
     :param idir: The directory containing HLSP files to check.
 
@@ -42,7 +42,7 @@ def precheck_data_format(idir, hlsp_name):
     file_endings = set([x.split('.')[-1] for x in all_file_endings])
 
     # Create the output file, based on the name of the HLSP.
-    make_parameter_file("check_data_format_" + hlsp_name.strip().lower() +
+    make_parameter_file("check_metadata_format_" + hlsp_name.strip().lower() +
                         "_extensions.param", file_endings, all_file_endings,
                         idir)
 
@@ -58,7 +58,7 @@ def setup_args():
     """
 
     parser = argparse.ArgumentParser(description="Create a parameter file to"
-                                     " use with check_data_format, based on"
+                                     " use with check_metadata_format, based on"
                                      " file endings.")
 
     parser.add_argument("idir", action="store", type=str, help="[Required]"
