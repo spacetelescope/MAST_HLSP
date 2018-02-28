@@ -1,4 +1,4 @@
-# Instructions To Run CHECK_DATA_FORMAT
+# Instructions To Run CHECK_METADATA_FORMAT
 
 ## Running The Pre-Check Program
 This step will look at every file underneath your input directory and create
@@ -20,4 +20,4 @@ This step will use the template selections to check every file for HLSP
 compliance.
 
 ### Example Usage
-python check_data_format.py *name_of_precheck_data_format_output_file*
+python check_metadata_format.py *name_of_precheck_data_format_output_file*

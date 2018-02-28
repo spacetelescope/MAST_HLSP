@@ -1,6 +1,6 @@
 """
 .. module:: make_parameter_file
-    :synopsis: Generates a parameter file for use with check_data_format.
+    :synopsis: Generates a parameter file for use with check_metadata_format.
 
 .. moduleauthor:: Scott W. Fleming <fleming@stsci.edu>
 """
@@ -12,7 +12,7 @@ import yaml
 
 def make_parameter_file(ofile, file_endings, all_file_endings, idir):
     """
-    Generates a parameter file for use with check_data_format based on the
+    Generates a parameter file for use with check_metadata_format based on the
         endings of files within the HLSP directory.
 
     :param ofile: The name of the output file to create.
@@ -53,10 +53,12 @@ def make_parameter_file(ofile, file_endings, all_file_endings, idir):
                 if fend in ending:
                     ending_list.append({'FileEnding' : ending,
                                         'FileParams' : {
-                                            'TemplateType' : None,
+                                            'Standard' : None,
                                             'ProductType' : None,
                                             'FileType' : None,
-                                            'RunCheck' : True}
+                                            'RunCheck' : None,
+                                            'MRPCheck' : None,
+                                            'CAOMProductType' : None}
                                        })
 
             yaml_data.update({str(fend) : ending_list})

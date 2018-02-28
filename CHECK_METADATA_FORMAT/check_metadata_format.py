@@ -1,5 +1,5 @@
 """
-.. module:: check_data_format
+.. module:: check_metadata_format
     :synopsis: Given a directory, will search for all files within it and check
         that files follow HLSP guidelines.
 
@@ -13,7 +13,7 @@ import os
 
 #--------------------
 
-def check_data_format(ifile):
+def check_metadata_format(ifile):
     """
     Checks HLSP files for compliance.
 
@@ -24,7 +24,7 @@ def check_data_format(ifile):
     """
 
     # Start logging to an output file.
-    logging.basicConfig(filename="check_data_format.log",
+    logging.basicConfig(filename="check_metadata_format.log",
                         format='%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
     logging.info('Started at ' + datetime.datetime.now().isoformat())
@@ -47,8 +47,8 @@ def setup_args():
     :returns: ArgumentParser -- Stores arguments and options.
     """
 
-    parser = argparse.ArgumentParser(description="Check that file formats follow"
-                                     " MAST HLSP convention.")
+    parser = argparse.ArgumentParser(description="Check that file formats "
+                                     "follow MAST HLSP convention.")
 
     parser.add_argument("idir", action="store", type=str, help="[Required]"
                         " Full path to the folder containing HLSP files to"
@@ -64,6 +64,6 @@ if __name__ == "__main__":
     INPUT_ARGS = setup_args().parse_args()
 
     # Call main function.
-    check_data_format(INPUT_ARGS.idir)
+    check_metadata_format(INPUT_ARGS.idir)
 
 #--------------------
