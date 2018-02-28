@@ -33,7 +33,9 @@ from adjust_defaults import adjust_defaults
 from util.add_value_caomxml import add_value_caomxml
 from util.check_log import check_log
 from util.read_yaml import read_yaml
+import argparse
 import util.check_paths as cp
+import datetime
 import logging
 import os
 import sys
@@ -103,6 +105,8 @@ def hlsp_to_xml(config):
     logging.basicConfig(filename=logfile,
                         format='***%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
+    logging.info("Logging started at {0}".format(
+                                        datetime.datetime.now().isoformat()))
 
     #Prepare the output file
     output = cp.check_new_file(output)
@@ -178,14 +182,18 @@ def hlsp_to_xml(config):
 
     #Print out log stats before finishing
     check_log(logfile)
+    logging.info("Logging finished at {0}".format(
+                                        datetime.datetime.now().isoformat()))
 
 #--------------------
 
 if __name__ == "__main__":
-    #User must provide a path to the yaml config file in order to run.
-    try:
-        config = sys.argv[1]
-        hlsp_to_xml(config)
-    except IndexError:
-        print("hlsp_to_xml needs a filepath to yaml config file as well!")
-        quit()
+    """ User must provide a path to the yaml config file in order to run.
+    """
+
+    parser = argparse.ArgumentParser(description="""Generate a template XML
+                                     file to prep for CAOM ingest.""")
+    parser.add_argument('config', help="""The user must provide a filepath to
+                        a .yaml config file.""")
+    line_input = parser.parse_args()
+    hlsp_to_xml(line_input.config)

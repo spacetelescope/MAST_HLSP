@@ -24,6 +24,7 @@
 import csv
 import os
 import sys
+from util.read_yaml import read_yaml
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -212,7 +213,7 @@ class SelectFiles(QWidget):
         de_all.clicked.connect(self.dallClicked)
         add_file.clicked.connect(self.newFileClicked)
         self.clear.clicked.connect(self.clearClicked)
-        load.clicked.connect(self.loadClicked)
+        load.clicked.connect(self.loadFromYAMLClicked)
         self.save.clicked.connect(self.saveClicked)
 
 
@@ -301,7 +302,7 @@ class SelectFiles(QWidget):
             self.status.append("Table cleared.")
 
 
-    def loadClicked(self):
+    def loadFromCSVClicked(self):
         """
         Open an existing CSV file and load the contents into the form.
         """
@@ -357,6 +358,77 @@ class SelectFiles(QWidget):
             sel_box.setChecked(True)
             ext_box.setText(entry[ext_index])
             pt_box.setCurrentType(entry[pt_index])
+            row_num += 1
+        self.status.setTextColor(Qt.darkGreen)
+        self.status.append("Loaded {0}".format(filename))
+
+
+    def loadFromYAMLClicked(self):
+        """
+        Open an existing YAML file and load the contents into the form.
+        """
+
+        loadit = QFileDialog.getOpenFileName(self, "Load a YAML file", ".")
+        filename = loadit[0]
+
+        """
+        #Check the filename, but from a dialog so we expect it to exist.
+        if filename == "":
+            return None
+        elif not filename.endswith(".csv"):
+            self.status.setTextColor(Qt.red)
+            self.status.append("{0} is not a .csv file!".format(filename))
+            return None
+        """
+
+        #Read the YAML contents into a list.
+        files = {}
+        file_config = read_yaml(filename)
+        for ext in sorted(file_config.keys()):
+            if isinstance(file_config[ext], list):
+                for product in file_config[ext]:
+                    ending = product['FileEnding']
+                    prod_type = product['FileParams']['ProductType']
+                    if prod_type == "null":
+                        files[ending] = ""
+                    else:
+                        files[ending] = prod_type
+
+        #Check that there are any data types to insert.
+        if len(files.keys()) == 0:
+            self.status.setTextColor(Qt.red)
+            self.status.append("No data rows in {0}".format(filename))
+            return None
+
+        """
+        #Check the CSV header row and make sure it has the right data.
+        header = files[0]
+        try:
+            ext_index = header.index("extension")
+            pt_index = header.index("productType")
+        except ValueError:
+            self.status.setTextColor(Qt.red)
+            self.status.append("Could not read {0}".format(filename))
+            return None
+        """
+
+        #Clear any changes already made to the form.
+        self.clearClicked(source="load")
+
+        #Begin at the first data row and insert values into the form elements.
+        #(skip the CSV header row)
+        row_num = self.firstrow
+        for entry in sorted(files.keys()):
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
+            if ext_box is None:
+                self.newFileClicked()
+            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
+            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
+            sel_box.setChecked(True)
+            ext_box.setText(entry)
+            if files[entry] is not None:
+                pt_box.setCurrentType(entry[pt_index])
             row_num += 1
         self.status.setTextColor(Qt.darkGreen)
         self.status.append("Loaded {0}".format(filename))

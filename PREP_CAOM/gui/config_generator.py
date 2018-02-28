@@ -695,9 +695,7 @@ class ConfigGenerator(QWidget):
             if add_value is not None:
                 value_widget = add_value.widget()
                 unique_value = str(value_widget.text())
-            if unique_parent == ""
-                and unique_caom == ""
-                and unique_value == "":
+            if unique_parent == "" and unique_caom == "" and unique_value == "":
                 continue
             elif unique_parent == "":
                 unique_parent = "CompositeObservation"
@@ -752,6 +750,9 @@ class ConfigGenerator(QWidget):
             self.status.append("Launching hlsp_to_xml.py!")
             self.status.append("See terminal for script output.")
             hlsp_to_xml(config)
+        else:
+            self.status.setTextColor(Qt.red)
+            self.status.append("No .yaml file generated!")
 
 #--------------------
 
