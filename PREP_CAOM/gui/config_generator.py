@@ -28,6 +28,7 @@ import copy
 import os
 import sys
 import yaml
+import gui.GUIbuttons as gb
 from hlsp_to_xml import hlsp_to_xml
 from util.read_yaml import read_yaml
 try:
@@ -84,6 +85,11 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
     return (dictionary, inserted)
 
 #--------------------
+
+class MyError(Exception):
+
+    def __init__(self, message):
+        self.message = message
 
 class ResetConfirm(QDialog):
     """
@@ -153,7 +159,7 @@ class ConfigGenerator(QWidget):
         """
 
         #Create some formatting items for use throughout.
-        firstcol = 140
+        firstcol = 100
         space = QSpacerItem(50, 1)
 
         #Create a section for input of filepath variables.  Includes lineedit
@@ -238,21 +244,8 @@ class ConfigGenerator(QWidget):
         up = QLabel("HLSP-Unique Parameters: ", self)
         up.setToolTip("Define additional CAOM parameters to insert that are \
         not defined in the FITS headers.")
-        add_param = QPushButton("+ add a new parameter")
-        add_param.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        add_param.setMinimumWidth(165)
+        add_param = gb.GreyButton("+ add a new parameter", 20)
+        add_param.setMinimumWidth(125)
         parent_param = QLabel("Parent:", up)
         parent_param.setAlignment(Qt.AlignHCenter)
         caom_param = QLabel("CAOM Keyword:", up)
@@ -281,6 +274,7 @@ class ConfigGenerator(QWidget):
         self.uniquesgrid.setColumnStretch(1, 1)
         self.uniquesgrid.setColumnStretch(2, 1)
 
+        """
         #Create an area for program output messages.
         status_label = QLabel("Results:")
         status_label.setAlignment(Qt.AlignHCenter)
@@ -290,6 +284,7 @@ class ConfigGenerator(QWidget):
         self.status.setStyleSheet("border-style: solid; \
                                   border-width: 1px; \
                                   background: rgba(235,235,235,0%);")
+        """
 
         filetypes_label = QLabel("File types selected: ")
         filetypes_label.setMaximumWidth(125)
@@ -305,65 +300,17 @@ class ConfigGenerator(QWidget):
         self.filetypes_grid.addWidget(filetypes_label, 0, 0)
         self.filetypes_grid.addWidget(self.filetypes_display, 1, 0, 4, 1)
 
+        reset = gb.GreyButton("Reset Form", 40, 175)
+        self.buttonsgrid = QGridLayout()
+        self.buttonsgrid.addItem(space, 0, 0)
+        self.buttonsgrid.addWidget(reset, 0, 1)
+
+        """
         #Create the four main buttons for the widget.
-        load = QPushButton("Load YAML File")
-        load.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 40px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        reset = QPushButton("Reset Form")
-        reset.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 40px;
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        reset.setMinimumWidth(125)
-        reset.setMaximumWidth(125)
-        gen = QPushButton("Generate YAML File", self)
-        gen.setStyleSheet("""
-                          QPushButton {
-                            background-color: #7af442;
-                            border: 2px solid #45a018;
-                            border-radius: 8px;
-                            height: 40px
-                            }
-                          QPushButton:hover {
-                            border: 4px solid #45a018;
-                            }
-                          QPushButton:pressed {
-                            background-color: #45a018;
-                            }""")
-        run = QPushButton("Generate YAML and Run Script", self)
-        run.setStyleSheet("""
-                          QPushButton {
-                            background-color: #42d4f4;
-                            border: 2px solid #005fa3;
-                            border-radius: 8px;
-                            height: 40px
-                            }
-                          QPushButton:hover {
-                            border: 4px solid #005fa3;
-                            }
-                          QPushButton:pressed {
-                            background-color: #005fa3;
-                            }""")
+        load = gb.GreyButton("Load YAML File", 40, 175)
+        reset = gb.GreyButton("Reset Form", 40, 175)
+        gen = gb.GreenButton("Generate YAML File", 40)
+        run = gb.BlueButton("Generate YAML and Run Script", 40)
         self.buttonsgrid = QGridLayout()
         empty = QSpacerItem(25, 1)
         self.buttonsgrid.setColumnStretch(0, 0)
@@ -373,6 +320,7 @@ class ConfigGenerator(QWidget):
         self.buttonsgrid.addWidget(gen, 0, 2)
         self.buttonsgrid.addWidget(reset, 1, 1)
         self.buttonsgrid.addWidget(run, 1, 2)
+        """
 
         #Create a grid layout and add all the layouts and remaining widgets.
         self.grid2 = QGridLayout()
@@ -380,20 +328,19 @@ class ConfigGenerator(QWidget):
         self.grid2.setColumnStretch(2, 1)
         self.grid2.setColumnStretch(3, 0)
         self.grid2.setColumnStretch(4, 0)
-        self.grid2.setColumnMinimumWidth(4, 100)
+        #self.grid2.setColumnMinimumWidth(4, 100)
         self.grid2.setColumnStretch(5, 0)
         self.grid2.setRowStretch(9, 0)
         self.grid2.setRowStretch(10, 1)
         self.grid2.addWidget(fp, 0, 0)
-        self.grid2.addLayout(self.buttonsgrid, 0, 4, 3, 3)
         self.grid2.addLayout(self.pathsgrid, 1, 0, 2, 4)
-        self.grid2.addLayout(self.overwritegrid, 3, 4, 1, 2)
-        self.grid2.addLayout(self.uniquesgrid, 3, 0, 4, 4)
-        self.grid2.addLayout(self.filetypes_grid, 3, 6, -1, 1)
-        self.grid2.addLayout(self.headergrid, 4, 4)
-        self.grid2.addLayout(self.datatypesgrid, 5, 4, 1, 1)
-        self.grid2.addWidget(status_label, 8, 0, 1, 5)
-        self.grid2.addWidget(self.status, 9, 0, 2, 5)
+        self.grid2.addLayout(self.overwritegrid, 0, 4, 1, 2)
+        self.grid2.addLayout(self.uniquesgrid, 3, 0, 4, -1)
+        #self.grid2.addLayout(self.filetypes_grid, 3, 6, -1, 1)
+        self.grid2.addLayout(self.headergrid, 1, 4)
+        self.grid2.addLayout(self.datatypesgrid, 2, 4, 1, 1)
+        #self.grid2.addWidget(status_label, 8, 0, 1, 5)
+        #self.grid2.addWidget(self.status, 9, 0, 2, 5)
         #self.grid2.addItem(space, 6, 5, -1, -1)
 
         #Set the window layout and show it.
@@ -404,10 +351,10 @@ class ConfigGenerator(QWidget):
         browse_hlsp.clicked.connect(self.hlspClicked)
         browse_out.clicked.connect(self.outputClicked)
         add_param.clicked.connect(self.addClicked)
-        load.clicked.connect(self.loadClicked)
+        #load.clicked.connect(self.loadClicked)
         reset.clicked.connect(self.resetClicked)
-        gen.clicked.connect(self.genClicked)
-        run.clicked.connect(self.runClicked)
+        #gen.clicked.connect(self.genClicked)
+        #run.clicked.connect(self.runClicked)
 
 
     def hlspClicked(self):
@@ -517,24 +464,7 @@ class ConfigGenerator(QWidget):
                     value_box.insert(sub_dictionary[param])
                     del copy_dictionary[param]
 
-
-
-    def loadClicked(self):
-        """ Open a user-selected YAML file and load the elements into the form.
-        """
-
-        #Launch a file dialog for user file selection.
-        loadit = QFileDialog.getOpenFileName(self, "Load a YAML file", ".")
-        filename = loadit[0]
-
-        #Check that the selected file is a valid choice.  Uses the QFileDialog
-        #so not worrying about picking a file that doesn't exist.
-        if filename == "":
-            return None
-        elif not filename.endswith(".yaml"):
-            self.status.setTextColor(Qt.red)
-            self.status.append("{0} is not a .yaml file!".format(filename))
-            return None
+    def loadFromYAML(self, filename):
 
         #Read the YAML entries into a dictionary.
         yamlfile = read_yaml(filename)
@@ -568,14 +498,14 @@ class ConfigGenerator(QWidget):
         #Load the unique parameters dictionary into the unique parameters table
         self.loadDictionaries(uniques)
 
-        self.status.setTextColor(Qt.darkGreen)
-        self.status.append("Loaded {0}.".format(filename))
+        return True
 
 
     def resetClicked(self, source="clicked"):
         """ Clear any changes to the form.
         """
 
+        """
         #Confirm the user wants to clear the form, except in the case of a
         #load operation.
         if not source == "load":
@@ -583,6 +513,7 @@ class ConfigGenerator(QWidget):
             self.reset.exec_()
             if not self.reset.confirm:
                 return None
+        """
 
         #Empty the immediately-available elements.
         self.data_edit.clear()
@@ -610,9 +541,11 @@ class ConfigGenerator(QWidget):
                 self.uniquesgrid.itemAtPosition(n,2).widget().setParent(None)
         self.nextrow = self.firstrow + 1
 
+        """
         if not source == "load":
             self.status.setTextColor(Qt.black)
             self.status.append("Form reset.")
+        """
 
 
     def collectInputs(self):
@@ -626,32 +559,25 @@ class ConfigGenerator(QWidget):
         # Get the HLSP data filepath.  Throw an error if it does not exist.
         hlsppath = self.data_edit.text()
         if hlsppath == "":
+            """
             self.status.setTextColor(Qt.red)
             self.status.append("HLSP Data file path is missing!")
+            """
+            raise(MyError("HLSP Data file path is missing!"))
             return
         else:
             filepaths["hlsppath"] = hlsppath
 
         # Check the self.file_types dictionary.  Throw an error if it does not
         # exist or is empty.
-        if self.file_types is None:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No file types selected!")
-            return
-        elif len(self.file_types.keys()) == 0:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No file types selected!")
-            return
-        extensions = self.file_types
-        config["file_types"] = extensions
+
 
         # Get the output filepath from the line edit.  Throw an error if it is
         # empty.  Append with a '.xml' if not already there.  Get the overwrite
         # flag from the checkbox.
         out = self.out_edit.text()
         if out == "":
-            self.status.setTextColor(Qt.red)
-            self.status.append("Output file path is missing!")
+            raise MyError("Output file path is missing!")
             return
         if not out.endswith(".xml"):
             out += ".xml"
@@ -665,9 +591,8 @@ class ConfigGenerator(QWidget):
         # Get the data type.  Throw an error if none selected.
         dt = self.dt_box.currentText().lower()
         if dt == "":
-            self.status.setTextColor(Qt.red)
-            self.status.append("No Data Type selected!")
-            return None
+            raise MyError("No data type selected!")
+            return
         else:
             config["data_type"] = dt
 
@@ -717,26 +642,16 @@ class ConfigGenerator(QWidget):
                 uniques = new_uniques
         config["unique_parameters"] = uniques
 
+        return config
+
         # Write the config dictionary into a yaml file using a dialog.
-        saveit = QFileDialog.getSaveFileName(self, "Save YAML file", ".")
-        if len(saveit[0]) > 0:
-            saveit = os.path.abspath(saveit[0])
-            if not saveit.endswith(".yaml"):
-                saveit += ".yaml"
-            with open(saveit, 'w') as output:
-                yaml.dump(config, output, default_flow_style=False)
-                output.close()
-            print("Saved {0}".format(saveit))
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Saved {0}".format(saveit))
-            return saveit
+
 
 
     def genClicked(self):
         """ When generate is clicked, collect all the user inputs and write the
         yaml file.
         """
-        print(self.file_types)
         self.collectInputs()
 
 

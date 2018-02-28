@@ -97,6 +97,9 @@ def add_product_caomxml(caomlist, filepath, extensions, data_type):
                     ext_split = ext.split(".")
                     product.fileType = ext_split[0].upper()
                     product.contentType = ".".join(ext_split[1:]).upper()
+                    if product.contentType == "FITS":
+                        product.fileStatus = "REQUIRED"
+                        product.statusAction = "ERROR"
                     print("...adding {0}...".format(product))
                     found_extensions.append(ext)
                     caomlist.add(product)

@@ -151,12 +151,12 @@ class CAOMproduct(CAOMxml):
         self.contentType = None
         self.dataProductType = None
         self.fileNameDescriptor = "FILEROOT"
-        self.fileStatus = "Optional"
+        self.fileStatus = "OPTIONAL"
         self.fileType = None
         self.planeNumber = "1"
         self.productType = None
         self.releaseType = "DATA"
-        self.statusAction = None
+        self.statusAction = "WARNING"
 
     def __str__(self):
         return ("{0}: contentType={1}, fileType={2}, productType={3}"

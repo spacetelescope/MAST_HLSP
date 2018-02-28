@@ -22,6 +22,7 @@
 """
 
 import csv
+import gui.GUIbuttons as gb
 import os
 import sys
 from util.read_yaml import read_yaml
@@ -50,26 +51,6 @@ class ProductTypeBox(QComboBox):
         if ctype in self.entries:
             index = self.entries.index(ctype)
         return QComboBox.setCurrentIndex(self, index)
-
-#--------------------
-
-class SmallGreyButton(QPushButton):
-    def __init__(self, label):
-        super().__init__(label)
-        self.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        self.setMaximumWidth(175)
 
 #--------------------
 
@@ -127,38 +108,12 @@ class SelectFiles(QWidget):
         #Add buttons to create a new file entry row, clear all entries in the
         #table, load an existing .csv file, or write the current contents to a
         #new .csv file.
-        select_all = SmallGreyButton("Select All")
-        de_all = SmallGreyButton("Deselect All")
-        add_file = SmallGreyButton("+ add another file type")
-        self.clear = SmallGreyButton("- clear table")
-        load = QPushButton("Load File")
-        load.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 40px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        self.save = QPushButton("Select these types", self)
-        self.save.setStyleSheet("""
-                          QPushButton {
-                            background-color: #7af442;
-                            border: 2px solid #45a018;
-                            border-radius: 8px;
-                            height: 40px
-                            }
-                          QPushButton:hover {
-                            border: 4px solid #45a018;
-                            }
-                          QPushButton:pressed {
-                            background-color: #45a018;
-                            }""")
+        select_all = gb.GreyButton("Select All", 20, 175)
+        de_all = gb.GreyButton("Deselect All", 20, 175)
+        add_file = gb.GreyButton("+ add another file type", 20, 175)
+        self.clear = gb.GreyButton("- clear table", 20, 175)
+        load = gb.GreyButton("Load File", 40)
+        self.save = gb.GreenButton("Select these types", 40)
         empty = QSpacerItem(200, 1)
         self.buttonsgrid = QGridLayout()
         self.buttonsgrid.addWidget(select_all, 0, 0)
@@ -166,7 +121,7 @@ class SelectFiles(QWidget):
         self.buttonsgrid.addWidget(add_file, 0, 1)
         self.buttonsgrid.addWidget(self.clear, 1, 1)
         self.buttonsgrid.addItem(empty, 0, 2)
-        self.buttonsgrid.addWidget(load, 0, 3, 2, 1)
+        #self.buttonsgrid.addWidget(load, 0, 3, 2, 1)
         self.buttonsgrid.addWidget(self.save, 0, 4, 2, 2)
 
         ext_label = QLabel("File ends with:")
@@ -187,8 +142,10 @@ class SelectFiles(QWidget):
         self.filetypegrid.addWidget(self.sel_box, 1, 0)
         self.filetypegrid.addWidget(self.ext_edit, 1, 1)
         self.filetypegrid.addWidget(self.pt_box, 1, 2)
+        self.filetypegrid.setRowStretch(self.nextrow, 0)
+        self.filetypegrid.setRowStretch(self.nextrow+1, 1)
 
-        res_label = QLabel("Results:")
+        res_label = QLabel("Output:")
         res_label.setAlignment(Qt.AlignHCenter)
         self.status = QTextEdit()
         self.status.setReadOnly(True)
@@ -196,12 +153,14 @@ class SelectFiles(QWidget):
         self.status.setStyleSheet("border-style: solid; \
                                   border-width: 1px; \
                                   background: rgba(235,235,235,0%);")
+        self.outputgrid = QGridLayout()
+        self.outputgrid.addWidget(res_label, 0, 0)
+        self.outputgrid.addWidget(self.status, 1, 0)
 
         self.grid = QGridLayout()
-        self.grid.addLayout(self.buttonsgrid, 0, 0)
+        self.grid.addLayout(self.buttonsgrid, 0, 0, 1, -1)
         self.grid.addLayout(self.filetypegrid, 1, 0)
-        self.grid.addWidget(res_label, 2, 0)
-        self.grid.addWidget(self.status)
+        #self.grid.addLayout(self.outputgrid, 1, 1)
 
         self.selected_files = []
 
@@ -213,18 +172,18 @@ class SelectFiles(QWidget):
         de_all.clicked.connect(self.dallClicked)
         add_file.clicked.connect(self.newFileClicked)
         self.clear.clicked.connect(self.clearClicked)
-        load.clicked.connect(self.loadFromYAMLClicked)
+        #load.clicked.connect(self.loadFromYAMLClicked)
         self.save.clicked.connect(self.saveClicked)
 
 
     def sallClicked(self):
-        for n in range(self.firstrow, self.filetypegrid.rowCount()-1):
+        for n in range(self.firstrow, self.nextrow):
             selected = self.filetypegrid.itemAtPosition(n, 0).widget()
             selected.setChecked(True)
 
 
     def dallClicked(self):
-        for n in range(self.firstrow, self.filetypegrid.rowCount()-1):
+        for n in range(self.firstrow, self.nextrow):
             selected = self.filetypegrid.itemAtPosition(n, 0).widget()
             selected.setChecked(False)
 
@@ -268,6 +227,7 @@ class SelectFiles(QWidget):
         Clear any changes made to the form and reset to original state.
         """
 
+        """
         #Pop up a confirmation dialog if this is not being called from the load
         #function.
         if not source == "load":
@@ -275,6 +235,7 @@ class SelectFiles(QWidget):
             self.cc.exec_()
             if not self.cc.confirm:
                 return None
+        """
 
         #Empty the items in the first row but don't delete them.
         sel_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
@@ -297,88 +258,16 @@ class SelectFiles(QWidget):
                 self.filetypegrid.itemAtPosition(n,2).widget().setParent(None)
         self.nextrow = self.firstrow + 1
 
+        """
         if not source == "load":
             self.status.setTextColor(Qt.black)
             self.status.append("Table cleared.")
-
-
-    def loadFromCSVClicked(self):
-        """
-        Open an existing CSV file and load the contents into the form.
         """
 
-        loadit = QFileDialog.getOpenFileName(self, "Load a CSV file", ".")
-        filename = loadit[0]
 
-        #Check the filename, but from a dialog so we expect it to exist.
-        if filename == "":
-            return None
-        elif not filename.endswith(".csv"):
-            self.status.setTextColor(Qt.red)
-            self.status.append("{0} is not a .csv file!".format(filename))
-            return None
-
-        #Read the CSV contents into a list.
-        files = []
-        with open(filename, 'r') as csvfile:
-            read = csv.reader(csvfile)
-            for row in read:
-                files.append(row)
-            csvfile.close()
-
-        #Check that there are any data types to insert.
-        if len(files) <= 1:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No data rows in {0}".format(filename))
-            return None
-
-        #Check the CSV header row and make sure it has the right data.
-        header = files[0]
-        try:
-            ext_index = header.index("extension")
-            pt_index = header.index("productType")
-        except ValueError:
-            self.status.setTextColor(Qt.red)
-            self.status.append("Could not read {0}".format(filename))
-            return None
-
-        #Clear any changes already made to the form.
-        self.clearClicked(source="load")
-
-        #Begin at the first data row and insert values into the form elements.
-        #(skip the CSV header row)
-        row_num = self.firstrow
-        for entry in files[1:]:
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
-            if ext_box is None:
-                self.newFileClicked()
-            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
-            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
-            sel_box.setChecked(True)
-            ext_box.setText(entry[ext_index])
-            pt_box.setCurrentType(entry[pt_index])
-            row_num += 1
-        self.status.setTextColor(Qt.darkGreen)
-        self.status.append("Loaded {0}".format(filename))
-
-
-    def loadFromYAMLClicked(self):
+    def loadExtensionsYAML(self, filename):
         """
         Open an existing YAML file and load the contents into the form.
-        """
-
-        loadit = QFileDialog.getOpenFileName(self, "Load a YAML file", ".")
-        filename = loadit[0]
-
-        """
-        #Check the filename, but from a dialog so we expect it to exist.
-        if filename == "":
-            return None
-        elif not filename.endswith(".csv"):
-            self.status.setTextColor(Qt.red)
-            self.status.append("{0} is not a .csv file!".format(filename))
-            return None
         """
 
         #Read the YAML contents into a list.
@@ -400,17 +289,42 @@ class SelectFiles(QWidget):
             self.status.append("No data rows in {0}".format(filename))
             return None
 
+        #Clear any changes already made to the form.
+        self.clearClicked(source="load")
+
+        #Begin at the first data row and insert values into the form elements.
+        #(skip the CSV header row)
+        row_num = self.firstrow
+        for entry in sorted(files.keys()):
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
+            if ext_box is None:
+                self.newFileClicked()
+            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
+            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
+            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
+            sel_box.setChecked(True)
+            ext_box.setText(entry)
+            if files[entry] is not None:
+                pt_box.setCurrentType(files[entry])
+            row_num += 1
+        self.status.setTextColor(Qt.darkGreen)
+        self.status.append("Loaded {0}".format(filename))
+
+    def loadConfigYAML(self, filename):
         """
-        #Check the CSV header row and make sure it has the right data.
-        header = files[0]
-        try:
-            ext_index = header.index("extension")
-            pt_index = header.index("productType")
-        except ValueError:
+        Open an existing YAML file and load the contents into the form.
+        """
+
+        #Read the YAML contents into a list.
+        files = {}
+        file_config = read_yaml(filename)
+        files = file_config["file_types"]
+
+        #Check that there are any data types to insert.
+        if len(files.keys()) == 0:
             self.status.setTextColor(Qt.red)
-            self.status.append("Could not read {0}".format(filename))
+            self.status.append("No data rows in {0}".format(filename))
             return None
-        """
 
         #Clear any changes already made to the form.
         self.clearClicked(source="load")
@@ -428,7 +342,7 @@ class SelectFiles(QWidget):
             sel_box.setChecked(True)
             ext_box.setText(entry)
             if files[entry] is not None:
-                pt_box.setCurrentType(entry[pt_index])
+                pt_box.setCurrentType(files[entry])
             row_num += 1
         self.status.setTextColor(Qt.darkGreen)
         self.status.append("Loaded {0}".format(filename))
@@ -477,24 +391,6 @@ class SelectFiles(QWidget):
             self.status.append("No file types to save!")
             return None
 
-        #Create a header row, get a name to save the file, and write all
-        #content to the CSV file.
-        """
-        head = ("extension", "productType")
-        saveit = QFileDialog.getSaveFileName(self, "Save CSV file", ".")
-        if len(saveit[0]) > 0:
-            saveit = os.path.abspath(saveit[0])
-            if not saveit.endswith(".csv"):
-                saveit += ".csv"
-            with open(saveit, 'w') as output:
-                writer = csv.writer(output)
-                writer.writerow(head)
-                writer.writerows(self.selected_files)
-            print("Saved {0}".format(saveit))
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Saved {0}".format(saveit))
-            output.close()
-        """
         return self.selected_files
 
 #--------------------
