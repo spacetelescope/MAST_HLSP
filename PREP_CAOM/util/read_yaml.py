@@ -11,7 +11,7 @@ import yaml
 
 def read_yaml(path):
     """ Open a provided file path and load the yaml-formatted contents
-    into a dictionary.
+    into a dictionary.  Return an error string if there is a failure.
 
     :param path: File path of a .yaml file to pull contents from.
     :type path: string
@@ -22,14 +22,18 @@ def read_yaml(path):
         stream = open(path, 'r')
         print("Opening {0}".format(path))
     except FileNotFoundError:
-        print("{0} does not exist!".format(path))
-        quit()
+        err = "{0} does not exist!".format(path)
+        return err
 
     # Use yaml.load to read the contents into a dictionary.
     try:
         contents = yaml.load(stream)
     except yaml.YAMLError:
-        print("{0} is not a yaml formatted file!".format(path))
-        quit()
+        err = "{0} is not a YAML formatted file!".format(path)
+        return err
 
-    return contents
+    if isinstance(contents, dict):
+        return contents
+    else:
+        err = "{0} did not produce a YAML dictionary!".format(path)
+        return err

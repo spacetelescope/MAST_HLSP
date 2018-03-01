@@ -30,6 +30,7 @@ import sys
 import yaml
 import gui.GUIbuttons as gb
 from hlsp_to_xml import hlsp_to_xml
+from gui.MyError import MyError
 from util.read_yaml import read_yaml
 try:
     from PyQt5.QtCore import *
@@ -85,11 +86,6 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
     return (dictionary, inserted)
 
 #--------------------
-
-class MyError(Exception):
-
-    def __init__(self, message):
-        self.message = message
 
 class ResetConfirm(QDialog):
     """
@@ -563,8 +559,10 @@ class ConfigGenerator(QWidget):
             self.status.setTextColor(Qt.red)
             self.status.append("HLSP Data file path is missing!")
             """
-            raise(MyError("HLSP Data file path is missing!"))
+            raise MyError("HLSP Data file path is missing!")
             return
+            #print("error c3")
+            #return
         else:
             filepaths["hlsppath"] = hlsppath
 
@@ -578,7 +576,8 @@ class ConfigGenerator(QWidget):
         out = self.out_edit.text()
         if out == "":
             raise MyError("Output file path is missing!")
-            return
+            #print("error c1")
+            #return
         if not out.endswith(".xml"):
             out += ".xml"
         filepaths["output"] = out
@@ -592,7 +591,8 @@ class ConfigGenerator(QWidget):
         dt = self.dt_box.currentText().lower()
         if dt == "":
             raise MyError("No data type selected!")
-            return
+            #print("error c2")
+            #return
         else:
             config["data_type"] = dt
 
@@ -648,14 +648,14 @@ class ConfigGenerator(QWidget):
 
 
 
-    def genClicked(self):
+    def nogenClicked(self):
         """ When generate is clicked, collect all the user inputs and write the
         yaml file.
         """
         self.collectInputs()
 
 
-    def runClicked(self):
+    def norunClicked(self):
         """ When run is clicked, collect all the user inputs, write the yaml
         file, and send the file to hlsp_to_xml.
         """
@@ -666,8 +666,7 @@ class ConfigGenerator(QWidget):
             self.status.append("See terminal for script output.")
             hlsp_to_xml(config)
         else:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No .yaml file generated!")
+            raise MyError("No .yaml file generated!")
 
 #--------------------
 

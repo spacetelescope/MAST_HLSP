@@ -18,9 +18,11 @@ inside a QTabWidget.  This GUI will contain any meta-level user functions
 
 import os
 import sys
+from gui.ClearConfirm import ClearConfirm
 from gui.config_generator import *
 from gui.ext_generator import *
 import gui.GUIbuttons as gb
+from gui.MyError import MyError
 from gui.select_files import *
 from hlsp_to_xml import hlsp_to_xml
 try:
@@ -43,47 +45,6 @@ def get_file_to_load(parent, prompt):
         return filename
 
 #--------------------
-class MyError(Exception):
-
-    def __init__(self, message):
-        self.message = message
-
-class ClearConfirm(QDialog):
-    """
-    Pop up a confirmation dialog window before clearing all changes to the
-    form.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.confirmUI()
-
-    def confirmUI(self):
-        self.confirm = False
-        label = QLabel("Reset all current changes to this form?")
-        label.setAlignment(Qt.AlignHCenter)
-        yes = QPushButton("Yes")
-        no = QPushButton("No")
-
-        g = QGridLayout()
-        g.addWidget(label, 0, 0, 1, -1)
-        g.addWidget(yes, 1, 0)
-        g.addWidget(no, 1, 1)
-        self.setLayout(g)
-        self.setWindowTitle("Confirm Clear")
-        self.resize(300, 50)
-        self.show()
-
-        yes.clicked.connect(self.yesClicked)
-        no.clicked.connect(self.noClicked)
-
-    def yesClicked(self):
-        self.confirm = True
-        self.close()
-
-    def noClicked(self):
-        self.confirm = False
-        self.close()
 
 class HelpPopup(QDialog):
     """
@@ -188,7 +149,6 @@ class HLSPIngest(QTabWidget):
         # Use the GUIbuttons classes to make all necessary buttons, then
         # create a space label to separate buttons on the right and left sides.
         # Make a Layout for the buttons along the top row.
-
         self.loadtypes = gb.GreyButton("Load File Types", 20, 175)
         self.loadyaml = gb.GreyButton("Load YAML Config", 20, 175)
         self.reset = gb.RedButton("Reset Forms", 20, 175)
@@ -196,7 +156,7 @@ class HLSPIngest(QTabWidget):
         self.caom = gb.GreyButton("CAOM", 20, 75)
         self.quit = gb.RedButton("Quit", 20, 75)
         self.space = QLabel("")
-        self.space.setMinimumWidth(400)
+        self.space.setMinimumWidth(300)
         self.buttonsgrid = QGridLayout()
         self.buttonsgrid.addWidget(self.loadtypes, 0, 0)
         self.buttonsgrid.addWidget(self.loadyaml, 0, 1)
@@ -223,7 +183,7 @@ class HLSPIngest(QTabWidget):
         self.filetypesgrid.addWidget(self.filetypes_display, 1, 0)
 
         # Make a read-only text box to display status messages
-        res_label = QLabel("Output:")
+        res_label = QLabel("Messages:")
         res_label.setAlignment(Qt.AlignHCenter)
         self.status = QTextEdit()
         self.status.setReadOnly(True)
@@ -252,7 +212,7 @@ class HLSPIngest(QTabWidget):
         self.box.addLayout(self.outputgrid, 2, 0)
         self.box.addLayout(self.gengrid, 2, 1)
         self.setLayout(self.box)
-        self.resize(1200,300)
+        self.resize(1100,300)
         self.setWindowTitle("ConfigGenerator")
         self.show()
 
@@ -323,12 +283,12 @@ class HLSPIngest(QTabWidget):
         """
 
         # Open a confirmation popup window
-        self.cc = ClearConfirm()
+        self.cc = ClearConfirm("Reset all entries on both forms?")
         self.cc.exec_()
 
         # Execute reset modules for both tabs if confirmed
         if self.cc.confirm:
-            self.tab1.clearClicked()
+            self.tab1.clearClicked(source="wrapper")
             self.tab2.resetClicked()
             self.status.setTextColor(Qt.black)
             self.status.append("Forms reset")
@@ -341,14 +301,23 @@ class HLSPIngest(QTabWidget):
         # Raise errors if file_types is empty or None.  Means user has not
         # loaded or selected any file types.
         if self.file_types is None:
-            raise MyError("No file types selected!")
+            self.status.setTextColor(Qt.red)
+            self.status.append("No file types selected!")
+            return None
         elif len(self.file_types.keys()) == 0:
-            raise MyError("No file types selected!")
+            self.status.setTextColor(Qt.red)
+            self.status.append("No file types selected!")
+            return None
 
         # Collect inputs from tab2 and add file_types to the resulting
         # dictionary
-        config = self.tab2.collectInputs()
-        config["file_types"] = self.file_types
+        try:
+            config = self.tab2.collectInputs()
+            config["file_types"] = self.file_types
+        except MyError as err:
+            self.status.setTextColor(Qt.red)
+            self.status.append(err.message)
+            return None
 
         # Get a file name using a save dialog and save the dictionary to a
         # YAML-formatted file with a .config extension
@@ -361,6 +330,8 @@ class HLSPIngest(QTabWidget):
                 yaml.dump(config, output, default_flow_style=False)
                 output.close()
             print("Saved {0}".format(saveit))
+        else:
+            return None
 
         return saveit
 
@@ -368,29 +339,27 @@ class HLSPIngest(QTabWidget):
         """ Try to generate a YAML .config file and catch any errors thrown.
         """
 
-        try:
-            inputs = self.collectAndSaveTabInputs()
+        inputs = self.collectAndSaveTabInputs()
+        if inputs is None:
+            return
+        else:
             self.status.setTextColor(Qt.darkGreen)
             self.status.append("Saved {0}".format(inputs))
-        except MyError as err:
-            self.status.setTextColor(Qt.red)
-            self.status.append(err.message)
 
     def genAndRunClicked(self):
         """ Try to generate a YAML .config file, then pass that along to
         hlsp_to_xml.
         """
 
-        try:
-            inputs = self.collectAndSaveTabInputs()
+        inputs = self.collectAndSaveTabInputs()
+        if inputs is None:
+            return
+        else:
             self.status.setTextColor(Qt.darkGreen)
             self.status.append("Saved {0}".format(inputs))
             self.status.append("Launching hlsp_to_xml...")
             self.status.append("...see terminal for output...")
             hlsp_to_xml(inputs)
-        except MyError as err:
-            self.status.setTextColor(Qt.red)
-            self.status.append(err.message)
 
     def quitClicked(self):
         self.close()
@@ -409,6 +378,11 @@ class HLSPIngest(QTabWidget):
         selected types for confirmation.
         """
 
+        if self.tab1.saveClicked() is None:
+            self.status.setTextColor(Qt.red)
+            self.status.append(self.tab1.error)
+            return
+
         self.file_types = self.tab1.selected_files
         self.types_list = sorted(self.file_types.keys())
         self.filetypes_display.clear()
@@ -419,15 +393,6 @@ class HLSPIngest(QTabWidget):
             self.filetypes_display.setTextColor(Qt.black)
             for t in self.types_list:
                 self.filetypes_display.append("*"+t)
-
-    """
-    def clearClicked(self):
-        self.tab2.file_types = None
-        self.tab2.filetypes_display.clear()
-        self.tab2.filetypes_display.setTextColor(Qt.red)
-        self.tab2.filetypes_display.append("No file types selected")
-        self.file_count.setText("No file types selected")
-    """
 
 #--------------------
 
