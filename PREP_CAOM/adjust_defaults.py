@@ -1,6 +1,6 @@
 from CAOMxml import *
 
-def adjust_defaults(caomlist, header_type):
+def adjust_defaults(caomlist, header_type, keyword_updates):
 
     #Adjust these defaults for all HLSPs
 
@@ -17,8 +17,25 @@ def adjust_defaults(caomlist, header_type):
         filt = caomlist.findheader("FILTER")
         if isinstance(filt, CAOMheader):
             filt.headerDefaultValue = "Kepler"
+        """
         exptime = caomlist.findheader("EXPTIME")
         if isinstance(exptime, CAOMheader):
             exptime.headerDefaultValue = "1800"
+        """
+
+    for key in sorted(keyword_updates.keys()):
+        values = keyword_updates[key]
+        entry = caomlist.findheader(key)
+        if isinstance(entry, CAOMheader):
+            entry.label = values["caom"]
+            entry.headerDefaultValue = values["headerDefaultValue"]
+            entry.headerName = values["headerName"]
+            entry.parent = values["section"]
+        else:
+            new_entry = CAOMheader(values["caom"])
+            new_entry.headerKeyword = key
+            new_entry.headerDefaultValue = values["headerDefaultValue"]
+            new_entry.headerName = values["headerName"]
+            new_entry.parent = values["section"]
 
     return caomlist

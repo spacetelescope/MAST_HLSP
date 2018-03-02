@@ -25,10 +25,12 @@
 """
 
 import copy
+import csv
 import os
 import sys
 import yaml
 import gui.GUIbuttons as gb
+import util.check_paths as cp
 from hlsp_to_xml import hlsp_to_xml
 from gui.MyError import MyError
 from util.read_yaml import read_yaml
@@ -40,7 +42,84 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
+HEADER_KEYWORDS = "resources/hlsp_keywords.csv"
+
 #--------------------
+class HeaderKeyword():
+    def __init__(self, keyword):
+        self.keyword = keyword
+        self.caom = None
+        self.headerName = None
+        self.section = "metadataList"
+        self.default = "None"
+
+class HeaderKeywordList(list):
+    def __init__(self, header_type):
+        super().__init__()
+        self.header_type = header_type
+        self.keywords = []
+
+    def add(self, hk):
+        if isinstance(hk, HeaderKeyword):
+            self.append(hk)
+            self.keywords.append(hk.keyword)
+
+    def find(self, target_keyword):
+        for member in self:
+            if member.keyword == target_keyword:
+                return member
+        return None
+
+    def sort(self):
+        sorted_list = HeaderKeywordList(self.header_type)
+        for k in sorted(self.keywords):
+            keyword_obj = self.find(k)
+            sorted_list.add(keyword_obj)
+        return sorted_list
+
+def read_header_keywords_table(filepath):
+    tablepath = cp.check_existing_file(filepath)
+    keywords = []
+    with open(tablepath) as csvfile:
+        hlsp_keys = csv.reader(csvfile, delimiter=",")
+        for row in hlsp_keys:
+            keywords.append(row)
+        csvfile.close()
+
+    cols = keywords[0]
+    full_table = {}
+    for column in cols:
+        n = cols.index(column)
+        values = []
+        for row in keywords[1:]:
+            values.append(row[n])
+        full_table[column] = values
+
+    all_caom = full_table["caom"]
+    all_headerName = full_table["headerName"]
+    all_section = full_table["section"]
+
+    cols.remove("caom")
+    cols.remove("section")
+    cols.remove("headerName")
+    header_types = cols
+
+    header_keywords = {}
+    for _type in header_types:
+        keywords = full_table[_type]
+        keyword_objects = HeaderKeywordList(header_type=_type)
+        for key in keywords:
+            if key == "" or key.lower() == "null":
+                continue
+            n = keywords.index(key)
+            hk = HeaderKeyword(key)
+            hk.caom = all_caom[n]
+            hk.headerName = all_headerName[n]
+            hk.section = all_section[n]
+            keyword_objects.add(hk)
+        header_keywords[_type] = keyword_objects.sort()
+
+    return header_keywords
 
 def crawl_dictionary(dictionary, parent, parameter, inserted=False):
     """
@@ -86,6 +165,7 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
     return (dictionary, inserted)
 
 #--------------------
+
 
 class ResetConfirm(QDialog):
     """
@@ -157,6 +237,7 @@ class ConfigGenerator(QWidget):
         #Create some formatting items for use throughout.
         firstcol = 100
         space = QSpacerItem(50, 1)
+        self.keywords = read_header_keywords_table(HEADER_KEYWORDS)
 
         #Create a section for input of filepath variables.  Includes lineedit
         #objects and buttons to launch file dialogs if the desired paths are
@@ -213,10 +294,10 @@ class ConfigGenerator(QWidget):
         self.header_types = ["Standard", "Kepler"]
         for typ in self.header_types:
             self.header.addItem(typ)
-        self.headergrid = QGridLayout()
-        self.headergrid.addItem(space, 0, 0)
-        self.headergrid.addWidget(ht, 0, 1)
-        self.headergrid.addWidget(self.header, 0, 2)
+        self.headertypesgrid = QGridLayout()
+        self.headertypesgrid.addItem(space, 0, 0)
+        self.headertypesgrid.addWidget(ht, 0, 1)
+        self.headertypesgrid.addWidget(self.header, 0, 2)
 
         #Select all appropriate data types to apply to the config file.
         dt = QLabel("Data Type: ", self)
@@ -242,6 +323,7 @@ class ConfigGenerator(QWidget):
         not defined in the FITS headers.")
         add_param = gb.GreyButton("+ add a new parameter", 20)
         add_param.setMinimumWidth(125)
+        add_param.setMaximumWidth(175)
         parent_param = QLabel("Parent:", up)
         parent_param.setAlignment(Qt.AlignHCenter)
         caom_param = QLabel("CAOM Keyword:", up)
@@ -263,60 +345,63 @@ class ConfigGenerator(QWidget):
         self.uniquesgrid.addWidget(parent_edit, 2, 0)
         self.uniquesgrid.addWidget(caom_edit, 2, 1)
         self.uniquesgrid.addWidget(value_edit, 2, 2)
-        self.firstrow = 2
-        self.nextrow = 3
-        self.uniquesgrid.setRowStretch(self.nextrow, 1)
+        self.firstrow_uniques = 2
+        self.nextrow_uniques = 3
+        self.uniquesgrid.setRowStretch(self.nextrow_uniques, 1)
         self.uniquesgrid.setColumnStretch(0, 0)
         self.uniquesgrid.setColumnStretch(1, 1)
         self.uniquesgrid.setColumnStretch(2, 1)
 
-        """
-        #Create an area for program output messages.
-        status_label = QLabel("Results:")
-        status_label.setAlignment(Qt.AlignHCenter)
-        self.status = QTextEdit()
-        self.status.setReadOnly(True)
-        self.status.setLineWrapMode(QTextEdit.NoWrap)
-        self.status.setStyleSheet("border-style: solid; \
-                                  border-width: 1px; \
-                                  background: rgba(235,235,235,0%);")
-        """
-
-        filetypes_label = QLabel("File types selected: ")
-        filetypes_label.setMaximumWidth(125)
-        self.filetypes_display = QTextEdit()
-        self.filetypes_display.setMaximumWidth(150)
-        self.filetypes_display.setReadOnly(True)
-        self.filetypes_display.setLineWrapMode(QTextEdit.NoWrap)
-        self.filetypes_display.setStyleSheet("background: \
-                                             rgba(235,235,235,0%);")
-        self.filetypes_display.setTextColor(Qt.red)
-        self.filetypes_display.append("No file types selected")
-        self.filetypes_grid = QGridLayout()
-        self.filetypes_grid.addWidget(filetypes_label, 0, 0)
-        self.filetypes_grid.addWidget(self.filetypes_display, 1, 0, 4, 1)
-
-        reset = gb.GreyButton("Reset Form", 40, 175)
-        self.buttonsgrid = QGridLayout()
-        self.buttonsgrid.addItem(space, 0, 0)
-        self.buttonsgrid.addWidget(reset, 0, 1)
-
-        """
-        #Create the four main buttons for the widget.
-        load = gb.GreyButton("Load YAML File", 40, 175)
-        reset = gb.GreyButton("Reset Form", 40, 175)
-        gen = gb.GreenButton("Generate YAML File", 40)
-        run = gb.BlueButton("Generate YAML and Run Script", 40)
-        self.buttonsgrid = QGridLayout()
-        empty = QSpacerItem(25, 1)
-        self.buttonsgrid.setColumnStretch(0, 0)
-        self.buttonsgrid.setColumnStretch(1, 0)
-        self.buttonsgrid.addItem(empty, 0, 0, -1, 1)
-        self.buttonsgrid.addWidget(load, 0, 1)
-        self.buttonsgrid.addWidget(gen, 0, 2)
-        self.buttonsgrid.addWidget(reset, 1, 1)
-        self.buttonsgrid.addWidget(run, 1, 2)
-        """
+        ###NEW HEADER UPDATE SECTION
+        #Create custom unique parameters to write into the yaml file.  This
+        #list is expandable.  Custom parents can be defined in addition to
+        #metadataList and provenance.
+        hd = QLabel("Update Header Defaults: ", self)
+        hd.setToolTip("Entries here will update default values for .fits \
+        headers if they exist or create new ones if they don't.")
+        add_header = gb.GreyButton("+ add a new keyword", 20)
+        add_header.setMinimumWidth(125)
+        add_header.setMaximumWidth(175)
+        keyword_label = QLabel("Keyword:", hd)
+        keyword_label.setAlignment(Qt.AlignHCenter)
+        headcaom_label = QLabel("CAOM Property:", hd)
+        headcaom_label.setAlignment(Qt.AlignHCenter)
+        xmlparent_label = QLabel("XML Parent:", hd)
+        xmlparent_label.setAlignment(Qt.AlignHCenter)
+        extension_label = QLabel("Extension:", hd)
+        extension_label.setAlignment(Qt.AlignHCenter)
+        default_label = QLabel("Default Value:", hd)
+        default_label.setAlignment(Qt.AlignHCenter)
+        self.keyword_edit = QComboBox(keyword_label, editable=True)
+        self.keyword_edit.addItem("")
+        self.header_keywords = self.keywords[self.header_types[0].lower()]
+        for k in self.header_keywords:
+            self.keyword_edit.addItem(k.keyword)
+        headcaom_edit = QLineEdit(headcaom_label)
+        xmlparent_edit = QComboBox(xmlparent_label, editable=True)
+        for p in self.xml_parents:
+            xmlparent_edit.addItem(p)
+        extension_edit = QLineEdit(extension_label)
+        default_edit = QLineEdit(default_label)
+        self.headerentrygrid = QGridLayout()
+        self.headerentrygrid.addWidget(hd, 0, 0)
+        self.headerentrygrid.addWidget(add_header, 0, 1, 1, 2)
+        self.headerentrygrid.addWidget(keyword_label, 1, 0)
+        self.headerentrygrid.addWidget(headcaom_label, 1, 1)
+        self.headerentrygrid.addWidget(xmlparent_label, 1, 2)
+        self.headerentrygrid.addWidget(extension_label, 1, 3)
+        self.headerentrygrid.addWidget(default_label, 1, 4)
+        self.headerentrygrid.addWidget(self.keyword_edit, 2, 0)
+        self.headerentrygrid.addWidget(headcaom_edit, 2, 1)
+        self.headerentrygrid.addWidget(xmlparent_edit, 2, 2)
+        self.headerentrygrid.addWidget(extension_edit, 2, 3)
+        self.headerentrygrid.addWidget(default_edit, 2, 4)
+        self.firstrow_headers = 2
+        self.nextrow_headers = 3
+        self.headerentrygrid.setRowStretch(self.nextrow_headers, 1)
+        self.headerentrygrid.setColumnStretch(0, 0)
+        self.headerentrygrid.setColumnStretch(1, 1)
+        self.headerentrygrid.setColumnStretch(2, 1)
 
         #Create a grid layout and add all the layouts and remaining widgets.
         self.grid2 = QGridLayout()
@@ -332,12 +417,9 @@ class ConfigGenerator(QWidget):
         self.grid2.addLayout(self.pathsgrid, 1, 0, 2, 4)
         self.grid2.addLayout(self.overwritegrid, 0, 4, 1, 2)
         self.grid2.addLayout(self.uniquesgrid, 3, 0, 4, -1)
-        #self.grid2.addLayout(self.filetypes_grid, 3, 6, -1, 1)
-        self.grid2.addLayout(self.headergrid, 1, 4)
+        self.grid2.addLayout(self.headertypesgrid, 1, 4)
         self.grid2.addLayout(self.datatypesgrid, 2, 4, 1, 1)
-        #self.grid2.addWidget(status_label, 8, 0, 1, 5)
-        #self.grid2.addWidget(self.status, 9, 0, 2, 5)
-        #self.grid2.addItem(space, 6, 5, -1, -1)
+        self.grid2.addLayout(self.headerentrygrid, 7, 0, 4, -1)
 
         #Set the window layout and show it.
         self.setLayout(self.grid2)
@@ -346,12 +428,10 @@ class ConfigGenerator(QWidget):
         #Add button actions.
         browse_hlsp.clicked.connect(self.hlspClicked)
         browse_out.clicked.connect(self.outputClicked)
-        add_param.clicked.connect(self.addClicked)
-        #load.clicked.connect(self.loadClicked)
-        reset.clicked.connect(self.resetClicked)
-        #gen.clicked.connect(self.genClicked)
-        #run.clicked.connect(self.runClicked)
-
+        add_param.clicked.connect(self.addParameterClicked)
+        add_header.clicked.connect(self.addKeywordClicked)
+        self.header.currentIndexChanged.connect(self.headerTypeChanged)
+        self.keyword_edit.currentIndexChanged.connect(self.keywordSelected)
 
     def hlspClicked(self):
         """ Launch a file dialog to select a directory containing HLSP data.
@@ -375,10 +455,31 @@ class ConfigGenerator(QWidget):
         self.out_edit.clear()
         self.out_edit.insert(path)
 
+    def headerTypeChanged(self):
+        new_type = self.header.currentText().lower()
+        self.header_keywords = self.keywords[new_type]
+        for row in range(self.firstrow_headers, self.nextrow_headers):
+            key_widg = self.headerentrygrid.itemAtPosition(row, 0).widget()
+            caom_widg = self.headerentrygrid.itemAtPosition(row, 1).widget()
+            xml_widg = self.headerentrygrid.itemAtPosition(row, 2).widget()
+            ext_widg = self.headerentrygrid.itemAtPosition(row, 3).widget()
+            def_widg = self.headerentrygrid.itemAtPosition(row, 4).widget()
+            caom_text = str(caom_widg.text())
+            xml_text = str(xml_widg.currentText())
+            ext_text = str(ext_widg.text())
+            def_text = str(def_widg.text())
+            if (caom_text == ""
+                and xml_text == ""
+                and ext_text == ""
+                and def_text == ""):
+                key_widg.clear()
+                key_widg.addItem("")
+                for key in self.header_keywords:
+                    key_widg.addItem(key.keyword)
 
-    def addClicked(self):
-        """ Add a new unique parameter entry row into the self.nextrow
-        position, then update self.nextrow.
+    def addParameterClicked(self):
+        """ Add a new unique parameter entry row into the self.nextrow_uniques
+        position, then update self.nextrow_uniques.
         """
 
         # Make a new 'Parent:' combo box and populate it with self.xml_parents.
@@ -391,14 +492,68 @@ class ConfigGenerator(QWidget):
         new_value = QLineEdit()
 
         # Add the new widgets to the uniquesgrid layout.
-        self.uniquesgrid.addWidget(new_parent, self.nextrow, 0)
-        self.uniquesgrid.addWidget(new_caom, self.nextrow, 1)
-        self.uniquesgrid.addWidget(new_value, self.nextrow, 2)
-        self.uniquesgrid.setRowStretch(self.nextrow, 0)
-        self.uniquesgrid.setRowStretch(self.nextrow+1, 1)
+        self.uniquesgrid.addWidget(new_parent, self.nextrow_uniques, 0)
+        self.uniquesgrid.addWidget(new_caom, self.nextrow_uniques, 1)
+        self.uniquesgrid.addWidget(new_value, self.nextrow_uniques, 2)
+        self.uniquesgrid.setRowStretch(self.nextrow_uniques, 0)
+        self.uniquesgrid.setRowStretch(self.nextrow_uniques+1, 1)
 
-        # Update self.nextrow.
-        self.nextrow += 1
+        # Update self.nextrow_uniques.
+        self.nextrow_uniques += 1
+
+    def keywordSelected(self):
+        sender = self.sender()
+        ind = self.headerentrygrid.indexOf(sender)
+        pos = self.headerentrygrid.getItemPosition(ind)
+        row = pos[0]
+        this_keyword = self.headerentrygrid.itemAtPosition(row, 0).widget()
+        new_keyword = this_keyword.currentText()
+        try:
+            new_obj = self.header_keywords.find(new_keyword)
+        except KeyError:
+            return
+
+        if new_obj is None:
+            return
+        this_caom = self.headerentrygrid.itemAtPosition(row, 1).widget()
+        this_caom.setText(new_obj.caom)
+        this_parent = self.headerentrygrid.itemAtPosition(row, 2).widget()
+        n = self.xml_parents.index(new_obj.section)
+        this_parent.setCurrentIndex(n)
+        this_ext = self.headerentrygrid.itemAtPosition(row, 3).widget()
+        this_ext.setText(new_obj.headerName)
+
+    def addKeywordClicked(self):
+        """ New Header Keyword action
+        """
+
+        # Make a new 'Parent:' combo box and populate it with self.xml_parents.
+        new_keyword = QComboBox(editable=True)
+        new_keyword.addItem("")
+        for hk in self.header_keywords:
+            new_keyword.addItem(hk.keyword)
+        new_keyword.currentIndexChanged.connect(self.keywordSelected)
+
+        new_xmlparent = QComboBox(editable=True)
+        for p in self.xml_parents:
+            new_xmlparent.addItem(p)
+
+        # Make new line edits for 'CAOM Keyword:' and 'Value:'.
+        new_headcaom = QLineEdit()
+        new_extension = QLineEdit()
+        new_default = QLineEdit()
+
+        # Add the new widgets to the uniquesgrid layout.
+        self.headerentrygrid.addWidget(new_keyword, self.nextrow_headers, 0)
+        self.headerentrygrid.addWidget(new_headcaom, self.nextrow_headers, 1)
+        self.headerentrygrid.addWidget(new_xmlparent, self.nextrow_headers, 2)
+        self.headerentrygrid.addWidget(new_extension, self.nextrow_headers, 3)
+        self.headerentrygrid.addWidget(new_default, self.nextrow_headers, 4)
+        self.headerentrygrid.setRowStretch(self.nextrow_headers, 0)
+        self.headerentrygrid.setRowStretch(self.nextrow_headers+1, 1)
+
+        # Update self.nextrow_uniques.
+        self.nextrow_headers += 1
 
 
     def loadDictionaries(self, uniques):
@@ -420,19 +575,20 @@ class ConfigGenerator(QWidget):
 
             # Look at the first row to see if you're loading into FIRST_ENTRY
             # or NEXT_ENTRY.
-            first_parent = self.uniquesgrid.itemAtPosition(self.firstrow,0)
+            first_parent = self.uniquesgrid.itemAtPosition(
+                                                    self.firstrow_uniques,0)
             first_widget = first_parent.widget()
             for param in sub_dictionary.keys():
                 value = sub_dictionary[param]
 
                 # If the first widget text is empty, start loading there.
-                # Otherwise, load to the self.nextrow position and create a
-                # new set of widgets using addClicked().
+                # Otherwise, load to the self.nextrow_uniques position and create a
+                # new set of widgets using addParameterClicked().
                 if first_widget.currentText() == "":
-                    row = self.firstrow
+                    row = self.firstrow_uniques
                 else:
-                    row = self.nextrow
-                    self.addClicked()
+                    row = self.nextrow_uniques
+                    self.addParameterClicked()
 
                 # Get the Parent combo box for the current row.
                 parent_box = self.uniquesgrid.itemAtPosition(row,0).widget()
@@ -471,13 +627,10 @@ class ConfigGenerator(QWidget):
         #Pull out the data and insert into the form.
         filepaths = yamlfile["filepaths"]
         header_type = yamlfile["header_type"]
+        keyword_updates = yamlfile["keyword_updates"]
         data_type = yamlfile["data_type"]
         uniques = yamlfile["unique_parameters"]
         self.file_types = yamlfile["file_types"]
-        self.filetypes_display.clear()
-        self.filetypes_display.setTextColor(Qt.black)
-        for f in sorted(self.file_types.keys()):
-            self.filetypes_display.append(f)
         self.data_edit.insert(filepaths["hlsppath"])
         self.out_edit.insert(filepaths["output"])
         if filepaths["overwrite"]:
@@ -494,21 +647,42 @@ class ConfigGenerator(QWidget):
         #Load the unique parameters dictionary into the unique parameters table
         self.loadDictionaries(uniques)
 
+        for key in sorted(keyword_updates.keys()):
+            values = keyword_updates[key]
+            if self.nextrow_headers == self.firstrow_headers + 1:
+                row = self.firstrow_headers
+            else:
+                row = self.nextrow_headers
+                self.addKeywordClicked()
+            load_key = self.headerentrygrid.itemAtPosition(row, 0).widget()
+            load_caom = self.headerentrygrid.itemAtPosition(row, 1).widget()
+            load_xml = self.headerentrygrid.itemAtPosition(row, 2).widget()
+            load_ext = self.headerentrygrid.itemAtPosition(row, 3).widget()
+            load_def = self.headerentrygrid.itemAtPosition(row, 4).widget()
+
+            available_keys = [load_key.itemText(x)
+                                            for x in range(load_key.count())]
+            available_xml = [load_xml.itemText(y)
+                                            for y in range(load_xml.count())]
+
+            if key in available_keys:
+                load_key.setCurrentIndex(available_keys.index(key))
+            else:
+                load_key.setCurrentText(key)
+            load_caom.setText(values["caom"])
+            if values["section"] in available_xml:
+                load_xml.setCurrentIndex(
+                                        available_xml.index(values["section"]))
+            else:
+                load_xml.setCurrentText(values["section"])
+            load_ext.setText(values["headerName"])
+            load_def.setText(values["headerDefaultValue"])
+
         return True
 
 
     def resetClicked(self, source="clicked"):
         """ Clear any changes to the form.
-        """
-
-        """
-        #Confirm the user wants to clear the form, except in the case of a
-        #load operation.
-        if not source == "load":
-            self.reset = ResetConfirm()
-            self.reset.exec_()
-            if not self.reset.confirm:
-                return None
         """
 
         #Empty the immediately-available elements.
@@ -517,15 +691,25 @@ class ConfigGenerator(QWidget):
         self.ow_on.setChecked(True)
         self.header.setCurrentIndex(0)
         self.dt_box.setCurrentIndex(0)
-        p_one = self.uniquesgrid.itemAtPosition(self.firstrow,0).widget()
-        p_one.setCurrentIndex(0)
-        c_one = self.uniquesgrid.itemAtPosition(self.firstrow,1).widget()
-        c_one.clear()
-        v_one = self.uniquesgrid.itemAtPosition(self.firstrow,2).widget()
-        v_one.clear()
+        p_one = self.uniquesgrid.itemAtPosition(self.firstrow_uniques,0)
+        p_one.widget().setCurrentIndex(0)
+        c_one = self.uniquesgrid.itemAtPosition(self.firstrow_uniques,1)
+        c_one.widget().clear()
+        v_one = self.uniquesgrid.itemAtPosition(self.firstrow_uniques,2)
+        v_one.widget().clear()
+        k_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,0)
+        k_one.widget().setCurrentIndex(0)
+        h_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,1)
+        h_one.widget().clear()
+        x_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,2)
+        x_one.widget().setCurrentIndex(0)
+        e_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,3)
+        e_one.widget().clear()
+        d_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,3)
+        d_one.widget().clear()
 
         #Delete any unique parameter entries beyond the first table row.
-        delete_these = list(reversed(range(self.firstrow+1,
+        delete_these = list(reversed(range(self.firstrow_uniques+1,
                                            self.uniquesgrid.rowCount())))
         if len(delete_these) > 0:
             for n in delete_these:
@@ -535,13 +719,26 @@ class ConfigGenerator(QWidget):
                 self.uniquesgrid.itemAtPosition(n,0).widget().setParent(None)
                 self.uniquesgrid.itemAtPosition(n,1).widget().setParent(None)
                 self.uniquesgrid.itemAtPosition(n,2).widget().setParent(None)
-        self.nextrow = self.firstrow + 1
+        self.nextrow_uniques = self.firstrow_uniques + 1
 
-        """
-        if not source == "load":
-            self.status.setTextColor(Qt.black)
-            self.status.append("Form reset.")
-        """
+        delete_these = list(reversed(range(self.firstrow_headers+1,
+                                           self.headerentrygrid.rowCount())))
+        if len(delete_these) > 0:
+            for n in delete_these:
+                test = self.headerentrygrid.itemAtPosition(n,0)
+                if test == None:
+                    continue
+                widg1 = self.headerentrygrid.itemAtPosition(n,0).widget()
+                widg1.setParent(None)
+                widg2 = self.headerentrygrid.itemAtPosition(n,1).widget()
+                widg2.setParent(None)
+                widg3 = self.headerentrygrid.itemAtPosition(n,2).widget()
+                widg3.setParent(None)
+                widg4 = self.headerentrygrid.itemAtPosition(n,3).widget()
+                widg4.setParent(None)
+                widg5 = self.headerentrygrid.itemAtPosition(n,4).widget()
+                widg5.setParent(None)
+        self.nextrow_headers = self.firstrow_headers + 1
 
 
     def collectInputs(self):
@@ -555,20 +752,10 @@ class ConfigGenerator(QWidget):
         # Get the HLSP data filepath.  Throw an error if it does not exist.
         hlsppath = self.data_edit.text()
         if hlsppath == "":
-            """
-            self.status.setTextColor(Qt.red)
-            self.status.append("HLSP Data file path is missing!")
-            """
             raise MyError("HLSP Data file path is missing!")
             return
-            #print("error c3")
-            #return
         else:
             filepaths["hlsppath"] = hlsppath
-
-        # Check the self.file_types dictionary.  Throw an error if it does not
-        # exist or is empty.
-
 
         # Get the output filepath from the line edit.  Throw an error if it is
         # empty.  Append with a '.xml' if not already there.  Get the overwrite
@@ -576,8 +763,6 @@ class ConfigGenerator(QWidget):
         out = self.out_edit.text()
         if out == "":
             raise MyError("Output file path is missing!")
-            #print("error c1")
-            #return
         if not out.endswith(".xml"):
             out += ".xml"
         filepaths["output"] = out
@@ -591,15 +776,13 @@ class ConfigGenerator(QWidget):
         dt = self.dt_box.currentText().lower()
         if dt == "":
             raise MyError("No data type selected!")
-            #print("error c2")
-            #return
         else:
             config["data_type"] = dt
 
         # Collect all the unique parameters the user has entered.  Start at row
-        # self.firstrow and search through all rows the user may have added.
+        # self.firstrow_uniques and search through all rows the user may have added.
         uniques = {}
-        for row in range(self.firstrow, self.uniquesgrid.rowCount()):
+        for row in range(self.firstrow_uniques, self.uniquesgrid.rowCount()):
             add_parent = self.uniquesgrid.itemAtPosition(row, 0)
             add_caom = self.uniquesgrid.itemAtPosition(row, 1)
             add_value = self.uniquesgrid.itemAtPosition(row, 2)
@@ -641,6 +824,50 @@ class ConfigGenerator(QWidget):
             else:
                 uniques = new_uniques
         config["unique_parameters"] = uniques
+
+        keywords = {}
+        for row in range(self.firstrow_headers, self.nextrow_headers):
+            add_key = self.headerentrygrid.itemAtPosition(row, 0)
+            add_caom = self.headerentrygrid.itemAtPosition(row, 1)
+            add_xml = self.headerentrygrid.itemAtPosition(row, 2)
+            add_ext = self.headerentrygrid.itemAtPosition(row, 3)
+            add_def = self.headerentrygrid.itemAtPosition(row, 4)
+            unique_keyword = None
+            unique_caom = None
+            unique_xmlparent = None
+            unique_extension = None
+            unique_default = None
+
+            # Skip totally empty rows, empty values are okay for defining a new
+            # parent.
+            if (add_key is None
+                or add_caom is None
+                or add_xml is None
+                or add_ext is None
+                or add_def is None):
+                continue
+            else:
+                unique_keyword = str(add_key.widget().currentText())
+                unique_caom = str(add_caom.widget().text())
+                unique_xmlparent = str(add_xml.widget().currentText())
+                unique_extension = str(add_ext.widget().text())
+                unique_default = str(add_def.widget().text())
+
+            if (unique_keyword == ""
+                or unique_caom == ""
+                or unique_xmlparent == ""
+                or unique_extension == ""
+                or unique_default == ""):
+                continue
+            else:
+                new_entries = {}
+                new_entries["caom"] = unique_caom
+                new_entries["section"] = unique_xmlparent
+                new_entries["headerName"] = unique_extension
+                new_entries["headerDefaultValue"] = unique_default
+                keywords[unique_keyword] = new_entries
+
+        config["keyword_updates"] = keywords
 
         return config
 

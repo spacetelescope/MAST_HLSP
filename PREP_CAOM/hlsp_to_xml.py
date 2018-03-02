@@ -96,6 +96,7 @@ def hlsp_to_xml(config):
     extensions = parameters["file_types"]
     header_type = parameters["header_type"]
     data_type = parameters["data_type"]
+    keyword_updates = parameters["keyword_updates"]
     uniques = parameters["unique_parameters"]
 
     #Set up logging
@@ -156,7 +157,7 @@ def hlsp_to_xml(config):
     caomlist = add_product_caomxml(caomlist, hlsppath, extensions, data_type)
 
     #Make final tweaks to caomlist
-    caomlist = adjust_defaults(caomlist, header_type)
+    caomlist = adjust_defaults(caomlist, header_type, keyword_updates)
 
     #Create the head string to write to doctype
     head_strings = []
