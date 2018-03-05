@@ -1,17 +1,9 @@
 """
-..class::  DataTypeBox
-    :synopsis:  A subclass of QComboBox to define a desired data type.  Allows
-    setting the QComboBox index via string.
-
 ..class::  ProductTypeBox
     :synopsis:  A subclass of QComboBox to define a desired product data type.
     Allows setting the QComboBox index via string.
 
-..class::  ClearConfirm
-    :synopsis:  Creates a PyQt popup window with a yes/no confirmation dialog.
-    Used before clearing changes made to the form.
-
-..class::  ExtGenerator
+..class::  SelectFiles
     :synopsis:  Creates a PyQt widget that allows a user to define data file
     types with various PyQt tools.  These data definitions tell
     ../hlsp_to_xml.py what HLSP data files to look for while browsing a given
@@ -21,14 +13,15 @@
     form to a new .csv file, or clear all changes made to the form.
 """
 
-from gui.ClearConfirm import ClearConfirm
-from gui.MyError import MyError
-from util.read_yaml import read_yaml
-
 import csv
-import gui.GUIbuttons as gb
 import os
 import sys
+
+import lib.GUIbuttons as gb
+from lib.ClearConfirm import ClearConfirm
+from lib.MyError import MyError
+
+from util.read_yaml import read_yaml
 
 try:
     from PyQt5.QtCore import *

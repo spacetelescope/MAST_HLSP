@@ -18,13 +18,16 @@ inside a QTabWidget.  This GUI will contain any meta-level user functions
 
 import os
 import sys
-from gui.ClearConfirm import ClearConfirm
+from hlsp_to_xml import hlsp_to_xml
+
+import lib.GUIbuttons as gb
+from lib.ClearConfirm import ClearConfirm
+from lib.MyError import MyError
+
 from gui.config_generator import *
 from gui.ext_generator import *
-import gui.GUIbuttons as gb
-from gui.MyError import MyError
 from gui.select_files import *
-from hlsp_to_xml import hlsp_to_xml
+
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *

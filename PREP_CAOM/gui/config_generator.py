@@ -7,12 +7,6 @@
     entire dictionary is returned, along with a boolean flag to indicate
     whether or not the insertion was successful.
 
-..class:: ResetConfirm
-    :synopsis:  This class defines a PyQt window to display a confirmation
-    popup dialog window.  The user can either choose 'yes' or 'no', which will
-    set the self.confirm boolean and close the popup window.  This is used when
-    the user chooses to reset the main ConfigGenerator form.
-
 ..class:: ConfigGenerator
     :synopsis:  This class defines a PyQt widget that uses multiple methods to
     collect user input in order to generate a .yaml config file needed by
@@ -29,11 +23,15 @@ import csv
 import os
 import sys
 import yaml
-import gui.GUIbuttons as gb
-import util.check_paths as cp
 from hlsp_to_xml import hlsp_to_xml
-from gui.MyError import MyError
+
+import lib.GUIbuttons as gb
+import lib.HeaderKeyword as hk
+from lib.MyError import MyError
+
+import util.check_paths as cp
 from util.read_yaml import read_yaml
+
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -45,81 +43,6 @@ except ImportError:
 HEADER_KEYWORDS = "resources/hlsp_keywords.csv"
 
 #--------------------
-class HeaderKeyword():
-    def __init__(self, keyword):
-        self.keyword = keyword
-        self.caom = None
-        self.headerName = None
-        self.section = "metadataList"
-        self.default = "None"
-
-class HeaderKeywordList(list):
-    def __init__(self, header_type):
-        super().__init__()
-        self.header_type = header_type
-        self.keywords = []
-
-    def add(self, hk):
-        if isinstance(hk, HeaderKeyword):
-            self.append(hk)
-            self.keywords.append(hk.keyword)
-
-    def find(self, target_keyword):
-        for member in self:
-            if member.keyword == target_keyword:
-                return member
-        return None
-
-    def sort(self):
-        sorted_list = HeaderKeywordList(self.header_type)
-        for k in sorted(self.keywords):
-            keyword_obj = self.find(k)
-            sorted_list.add(keyword_obj)
-        return sorted_list
-
-def read_header_keywords_table(filepath):
-    tablepath = cp.check_existing_file(filepath)
-    keywords = []
-    with open(tablepath) as csvfile:
-        hlsp_keys = csv.reader(csvfile, delimiter=",")
-        for row in hlsp_keys:
-            keywords.append(row)
-        csvfile.close()
-
-    cols = keywords[0]
-    full_table = {}
-    for column in cols:
-        n = cols.index(column)
-        values = []
-        for row in keywords[1:]:
-            values.append(row[n])
-        full_table[column] = values
-
-    all_caom = full_table["caom"]
-    all_headerName = full_table["headerName"]
-    all_section = full_table["section"]
-
-    cols.remove("caom")
-    cols.remove("section")
-    cols.remove("headerName")
-    header_types = cols
-
-    header_keywords = {}
-    for _type in header_types:
-        keywords = full_table[_type]
-        keyword_objects = HeaderKeywordList(header_type=_type)
-        for key in keywords:
-            if key == "" or key.lower() == "null":
-                continue
-            n = keywords.index(key)
-            hk = HeaderKeyword(key)
-            hk.caom = all_caom[n]
-            hk.headerName = all_headerName[n]
-            hk.section = all_section[n]
-            keyword_objects.add(hk)
-        header_keywords[_type] = keyword_objects.sort()
-
-    return header_keywords
 
 def crawl_dictionary(dictionary, parent, parameter, inserted=False):
     """
@@ -166,60 +89,26 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
 
 #--------------------
 
+class HeaderTypeBox(QComboBox):
 
-class ResetConfirm(QDialog):
-    """
-    Create a reset confirmation dialog window before clearing all changes.
-    """
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.header_types = ["Standard", "Kepler"]
+        for _type in self.header_types:
+            self.addItem(_type)
 
-    def __init__(self):
-        super().__init__()
-        self.confirmUI()
+class DataTypeBox(QComboBox):
 
-    def confirmUI(self):
-        """
-        Launch a confirmation dialog with yes/no button options.
-        """
-        self.confirm = False
-        label = QLabel("Reset all current changes to this form?")
-        label.setAlignment(Qt.AlignHCenter)
-        yes = QPushButton("Yes")
-        no = QPushButton("No")
-
-        g = QGridLayout()
-        g.addWidget(label, 0, 0, 1, -1)
-        g.addWidget(yes, 1, 0)
-        g.addWidget(no, 1, 1)
-        self.setLayout(g)
-        self.setWindowTitle("Confirm Reset")
-        self.resize(300, 50)
-        self.show()
-
-        yes.clicked.connect(self.yesClicked)
-        no.clicked.connect(self.noClicked)
-
-    def yesClicked(self):
-        """
-        Set the confirm boolean to True if 'Yes' is clicked.
-        """
-        self.confirm = True
-        self.close()
-
-    def noClicked(self):
-        """
-        Set the confirm boolean to False if 'No' is clicked.
-        """
-        self.confirm = False
-        self.close()
-
-#--------------------
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.data_types = ["", "IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
+                          "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
+        for _type in self.data_types:
+            self.addItem(_type)
 
 class ConfigGenerator(QWidget):
-    """
-    This class builds a pyqt GUI for generating a properly-formatted yaml
-    config file to feed into the template XML generator.  There is also the
-    option to save the yaml file and immediately launch hlsp_to_xml with the
-    new file.
+    """ This class builds a pyqt GUI for generating a properly-formatted YAML
+    config file to feed into the template XML generator.
     """
 
     def __init__(self):
@@ -227,17 +116,15 @@ class ConfigGenerator(QWidget):
         self.file_types = None
         self.initUI()
 
-
     def initUI(self):
-        """
-        Create a GUI with input fields for multiple parameters, which will be
-        aggregated into a .yaml config file.
+        """ Create a GUI with input fields for multiple parameters, which will
+        be aggregated into a .yaml config file.
         """
 
         #Create some formatting items for use throughout.
         firstcol = 100
         space = QSpacerItem(50, 1)
-        self.keywords = read_header_keywords_table(HEADER_KEYWORDS)
+        self.keywords = hk.read_header_keywords_table(HEADER_KEYWORDS)
 
         #Create a section for input of filepath variables.  Includes lineedit
         #objects and buttons to launch file dialogs if the desired paths are
@@ -285,31 +172,24 @@ class ConfigGenerator(QWidget):
         self.overwritegrid.addWidget(self.ow_on, 0, 2)
         self.overwritegrid.addWidget(self.ow_off, 0, 3)
 
-        #Set the type of .fits headers with a QComboBox object.
+        # Set the type of .fits headers with a modified QComboBox object.
         ht = QLabel("Header Type: ", self)
         ht.setMinimumWidth(firstcol)
         ht.setToolTip("Select the FITS header type this HLSP uses.")
-        self.header = QComboBox(ht)
+        self.header = HeaderTypeBox(ht)
         self.header.setMinimumWidth(175)
-        self.header_types = ["Standard", "Kepler"]
-        for typ in self.header_types:
-            self.header.addItem(typ)
         self.headertypesgrid = QGridLayout()
         self.headertypesgrid.addItem(space, 0, 0)
         self.headertypesgrid.addWidget(ht, 0, 1)
         self.headertypesgrid.addWidget(self.header, 0, 2)
 
-        #Select all appropriate data types to apply to the config file.
+        # Select the most appropriate data type to apply to the observation
+        # using a modified QComboBox.
         dt = QLabel("Data Type: ", self)
         dt.setMinimumWidth(firstcol)
         dt.setToolTip("Add special CAOM parameters for various data types.")
-        self.datatypes = ["", "IMAGE", "SPECTRUM", "TIMESERIES", "VISIBILITY",
-                          "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
-        self.dt_box = QComboBox()
+        self.dt_box = DataTypeBox(dt)
         self.dt_box.setMinimumWidth(175)
-        for typ in self.datatypes:
-            self.dt_box.addItem(typ)
-
         self.datatypesgrid = QGridLayout()
         self.datatypesgrid.addItem(space, 0, 0, -1, 1)
         self.datatypesgrid.addWidget(dt, 0, 1)
@@ -352,10 +232,10 @@ class ConfigGenerator(QWidget):
         self.uniquesgrid.setColumnStretch(1, 1)
         self.uniquesgrid.setColumnStretch(2, 1)
 
-        ###NEW HEADER UPDATE SECTION
-        #Create custom unique parameters to write into the yaml file.  This
-        #list is expandable.  Custom parents can be defined in addition to
-        #metadataList and provenance.
+        # Adjust .fits header keyword default values or add new header keywords
+        # along with the necessary parameters to add to the template file.
+        # This is an expandable list with fields that will automatically
+        # populate based on a user's keyword selection.
         hd = QLabel("Update Header Defaults: ", self)
         hd.setToolTip("Entries here will update default values for .fits \
         headers if they exist or create new ones if they don't.")
@@ -374,7 +254,8 @@ class ConfigGenerator(QWidget):
         default_label.setAlignment(Qt.AlignHCenter)
         self.keyword_edit = QComboBox(keyword_label, editable=True)
         self.keyword_edit.addItem("")
-        self.header_keywords = self.keywords[self.header_types[0].lower()]
+        initial_header_type = self.header.header_types[0].lower()
+        self.header_keywords = self.keywords[initial_header_type]
         for k in self.header_keywords:
             self.keyword_edit.addItem(k.keyword)
         headcaom_edit = QLineEdit(headcaom_label)
@@ -403,29 +284,28 @@ class ConfigGenerator(QWidget):
         self.headerentrygrid.setColumnStretch(1, 1)
         self.headerentrygrid.setColumnStretch(2, 1)
 
-        #Create a grid layout and add all the layouts and remaining widgets.
+        # Create a grid layout and add all the layouts and remaining widgets.
         self.grid2 = QGridLayout()
         self.grid2.setColumnStretch(1, 1)
         self.grid2.setColumnStretch(2, 1)
         self.grid2.setColumnStretch(3, 0)
         self.grid2.setColumnStretch(4, 0)
-        #self.grid2.setColumnMinimumWidth(4, 100)
         self.grid2.setColumnStretch(5, 0)
         self.grid2.setRowStretch(9, 0)
         self.grid2.setRowStretch(10, 1)
         self.grid2.addWidget(fp, 0, 0)
-        self.grid2.addLayout(self.pathsgrid, 1, 0, 2, 4)
         self.grid2.addLayout(self.overwritegrid, 0, 4, 1, 2)
-        self.grid2.addLayout(self.uniquesgrid, 3, 0, 4, -1)
+        self.grid2.addLayout(self.pathsgrid, 1, 0, 2, 4)
         self.grid2.addLayout(self.headertypesgrid, 1, 4)
         self.grid2.addLayout(self.datatypesgrid, 2, 4, 1, 1)
+        self.grid2.addLayout(self.uniquesgrid, 3, 0, 4, -1)
         self.grid2.addLayout(self.headerentrygrid, 7, 0, 4, -1)
 
-        #Set the window layout and show it.
+        # Set the window layout and show it.
         self.setLayout(self.grid2)
         self.show()
 
-        #Add button actions.
+        # Add button actions.
         browse_hlsp.clicked.connect(self.hlspClicked)
         browse_out.clicked.connect(self.outputClicked)
         add_param.clicked.connect(self.addParameterClicked)
@@ -456,8 +336,18 @@ class ConfigGenerator(QWidget):
         self.out_edit.insert(path)
 
     def headerTypeChanged(self):
+        """ When the header_type is changed, set the header_keywords to the
+        new list.  Re-populate any existing empty keyword menus.  Skip any
+        rows that have already been populated.
+        """
+
+        # Get the new header type and reset the header_keywords list
+        # accordingly.
         new_type = self.header.currentText().lower()
         self.header_keywords = self.keywords[new_type]
+
+        # Iterate through all rows in the headerentrygrid.  Only update the
+        # list choices for any rows that are totally empty.
         for row in range(self.firstrow_headers, self.nextrow_headers):
             key_widg = self.headerentrygrid.itemAtPosition(row, 0).widget()
             caom_widg = self.headerentrygrid.itemAtPosition(row, 1).widget()
@@ -502,19 +392,34 @@ class ConfigGenerator(QWidget):
         self.nextrow_uniques += 1
 
     def keywordSelected(self):
+        """ When a user chooses a header keyword in a headerentrygrid row,
+        populate the CAOM Property, XML Parent, Extension, and Default Value
+        (if applicaple) fields based on the chosen keyword.
+        """
+
+        # Get the position of the signal sender.
         sender = self.sender()
         ind = self.headerentrygrid.indexOf(sender)
         pos = self.headerentrygrid.getItemPosition(ind)
         row = pos[0]
+
+        # Get the sender widget and the new keyword chosen.
         this_keyword = self.headerentrygrid.itemAtPosition(row, 0).widget()
         new_keyword = this_keyword.currentText()
+
+        # The user may have entered a new header keyword, in which case we
+        # simply return without populating anything.
         try:
             new_obj = self.header_keywords.find(new_keyword)
         except KeyError:
             return
 
+        # Ignore any empty string entries.
         if new_obj is None:
             return
+
+        # If the header already exists, populate the remaining row fields with
+        # data from the HeaderKeyword object.
         this_caom = self.headerentrygrid.itemAtPosition(row, 1).widget()
         this_caom.setText(new_obj.caom)
         this_parent = self.headerentrygrid.itemAtPosition(row, 2).widget()
@@ -524,26 +429,32 @@ class ConfigGenerator(QWidget):
         this_ext.setText(new_obj.headerName)
 
     def addKeywordClicked(self):
-        """ New Header Keyword action
+        """ Create a new row in the headerentrygrid table for modifying .fits
+        header keyword properties.
         """
 
-        # Make a new 'Parent:' combo box and populate it with self.xml_parents.
+        # Make a new keyword combo box and populate it with the current
+        # header_keywords list.
         new_keyword = QComboBox(editable=True)
         new_keyword.addItem("")
-        for hk in self.header_keywords:
-            new_keyword.addItem(hk.keyword)
+        for header_key in self.header_keywords:
+            new_keyword.addItem(header_key.keyword)
+
+        # Connect the new keyword combo box to the keywordSelected action.
         new_keyword.currentIndexChanged.connect(self.keywordSelected)
 
+        # Make a new 'Parent:' combo box and populate it with self.xml_parents.
         new_xmlparent = QComboBox(editable=True)
         for p in self.xml_parents:
             new_xmlparent.addItem(p)
 
-        # Make new line edits for 'CAOM Keyword:' and 'Value:'.
+        # Make new line edits for 'CAOM Property:', 'Extension:', and "Default
+        # value".
         new_headcaom = QLineEdit()
         new_extension = QLineEdit()
         new_default = QLineEdit()
 
-        # Add the new widgets to the uniquesgrid layout.
+        # Add the new widgets to the headerentrygrid layout.
         self.headerentrygrid.addWidget(new_keyword, self.nextrow_headers, 0)
         self.headerentrygrid.addWidget(new_headcaom, self.nextrow_headers, 1)
         self.headerentrygrid.addWidget(new_xmlparent, self.nextrow_headers, 2)
@@ -552,9 +463,8 @@ class ConfigGenerator(QWidget):
         self.headerentrygrid.setRowStretch(self.nextrow_headers, 0)
         self.headerentrygrid.setRowStretch(self.nextrow_headers+1, 1)
 
-        # Update self.nextrow_uniques.
+        # Update self.nextrow_headers.
         self.nextrow_headers += 1
-
 
     def loadDictionaries(self, uniques):
         """ Recursively handles loading multi-level dictionaries to the unique
@@ -617,38 +527,86 @@ class ConfigGenerator(QWidget):
                     del copy_dictionary[param]
 
     def loadFromYAML(self, filename):
+        """ Load configuration parameters to our ConfigGenerator form using a
+        YAML-formatted file.
 
-        #Read the YAML entries into a dictionary.
+        :param filename:  The location of the YAML-formatted config file.
+        :type filename:  str
+        """
+
+        # Read the YAML entries into a dictionary.
         yamlfile = read_yaml(filename)
 
-        #Clear any existing form values before loading the new data.
+        # Clear any existing form values before loading the new data.
         self.resetClicked(source="load")
 
-        #Pull out the data and insert into the form.
-        filepaths = yamlfile["filepaths"]
-        header_type = yamlfile["header_type"]
-        keyword_updates = yamlfile["keyword_updates"]
-        data_type = yamlfile["data_type"]
-        uniques = yamlfile["unique_parameters"]
-        self.file_types = yamlfile["file_types"]
-        self.data_edit.insert(filepaths["hlsppath"])
-        self.out_edit.insert(filepaths["output"])
-        if filepaths["overwrite"]:
-            self.ow_on.setChecked(True)
-        else:
-            self.ow_off.setChecked(True)
+        # Get the 'filepaths' data out of the dictionary and write it into
+        # the appropriate lineedits
+        try:
+            filepaths = yamlfile["filepaths"]
+            self.data_edit.insert(filepaths["hlsppath"])
+            self.out_edit.insert(filepaths["output"])
+        except KeyError:
+            msg = "'filepaths' either missing or not formatted in config file"
+            raise MyError(msg)
 
-        header_index = self.header_types.index(header_type.capitalize())
-        dataType_index = self.datatypes.index(data_type.upper())
+        # Get the 'overwrite' information out of the dictionary and set the
+        # radio button
+        try:
+            if filepaths["overwrite"]:
+                self.ow_on.setChecked(True)
+            else:
+                self.ow_off.setChecked(True)
+        except KeyError:
+            msg = "'overwrite' not provided in config file"
+            raise MyError(msg)
 
-        self.header.setCurrentIndex(header_index)
-        self.dt_box.setCurrentIndex(dataType_index)
+        # Get the 'header_type' data out of the dictionary and set the
+        # QComboBox.
+        try:
+            header_type = yamlfile["header_type"].capitalize()
+            header_index = self.header.header_types.index(header_type)
+            self.header.setCurrentIndex(header_index)
+        except KeyError:
+            msg = "'header_type' not provided in config file"
+            raise MyError(msg)
 
-        #Load the unique parameters dictionary into the unique parameters table
-        self.loadDictionaries(uniques)
+        # Get the 'data_type' data out of the dictionary and set the
+        # QComboBox.
+        try:
+            data_type = yamlfile["data_type"].upper()
+            dataType_index = self.dt_box.data_types.index(data_type)
+            self.dt_box.setCurrentIndex(dataType_index)
+        except KeyError:
+            msg = "'data_type' not provided in config file"
+            raise MyError(msg)
 
+        # Get the 'unique_parameters' data out of the dictionary using the
+        # loadDictionaries module and create new rows as needed.  Error
+        # handling just does a pass since not all configs will have extra
+        # parameters.
+        try:
+            uniques = yamlfile["unique_parameters"]
+            self.loadDictionaries(uniques)
+        except KeyError:
+            pass
+
+        # Get the 'keyword_updates' data out of the dictionary. Error handling
+        # just returns since this is the last function and not all configs
+        # will set keyword values.
+        try:
+            keyword_updates = yamlfile["keyword_updates"]
+        except KeyError:
+            return
+
+        # Load the 'keyword_updates' data into the form and create new rows
+        # if necessary.
         for key in sorted(keyword_updates.keys()):
             values = keyword_updates[key]
+
+            # If nextrow_headers has not been moved, load into
+            # firstrow_headers.  Otherwise, trigger an addKeywordClicked event
+            # and load into nextrow_headers.
             if self.nextrow_headers == self.firstrow_headers + 1:
                 row = self.firstrow_headers
             else:
@@ -660,11 +618,16 @@ class ConfigGenerator(QWidget):
             load_ext = self.headerentrygrid.itemAtPosition(row, 3).widget()
             load_def = self.headerentrygrid.itemAtPosition(row, 4).widget()
 
+            # Get the lists of available keyword and XML parent values that
+            # currently populate the two QComboBox items.
             available_keys = [load_key.itemText(x)
                                             for x in range(load_key.count())]
             available_xml = [load_xml.itemText(y)
                                             for y in range(load_xml.count())]
 
+            # If the keyword and XML parent values are already available,
+            # select them in the appropriate box.  Otherwise, enter them as
+            # new values.
             if key in available_keys:
                 load_key.setCurrentIndex(available_keys.index(key))
             else:
@@ -675,11 +638,11 @@ class ConfigGenerator(QWidget):
                                         available_xml.index(values["section"]))
             else:
                 load_xml.setCurrentText(values["section"])
+
+            # Add the headerName and headerDefaultValue text to the lineedit
+            # objects.
             load_ext.setText(values["headerName"])
             load_def.setText(values["headerDefaultValue"])
-
-        return True
-
 
     def resetClicked(self, source="clicked"):
         """ Clear any changes to the form.
@@ -708,7 +671,7 @@ class ConfigGenerator(QWidget):
         d_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,3)
         d_one.widget().clear()
 
-        #Delete any unique parameter entries beyond the first table row.
+        # Delete any unique parameter entries beyond the first table row.
         delete_these = list(reversed(range(self.firstrow_uniques+1,
                                            self.uniquesgrid.rowCount())))
         if len(delete_these) > 0:
@@ -721,6 +684,7 @@ class ConfigGenerator(QWidget):
                 self.uniquesgrid.itemAtPosition(n,2).widget().setParent(None)
         self.nextrow_uniques = self.firstrow_uniques + 1
 
+        # Delete any header keyword entries beyond the first row.
         delete_these = list(reversed(range(self.firstrow_headers+1,
                                            self.headerentrygrid.rowCount())))
         if len(delete_these) > 0:
@@ -740,12 +704,12 @@ class ConfigGenerator(QWidget):
                 widg5.setParent(None)
         self.nextrow_headers = self.firstrow_headers + 1
 
-
     def collectInputs(self):
         """ Assemble everything the user has input to the form into a
-        dictionary.  Then write that dictionary into a yaml file.
+        dictionary.
         """
 
+        # Initialize dictionaries to populate.
         config = {}
         filepaths = {}
 
@@ -753,7 +717,6 @@ class ConfigGenerator(QWidget):
         hlsppath = self.data_edit.text()
         if hlsppath == "":
             raise MyError("HLSP Data file path is missing!")
-            return
         else:
             filepaths["hlsppath"] = hlsppath
 
@@ -825,6 +788,7 @@ class ConfigGenerator(QWidget):
                 uniques = new_uniques
         config["unique_parameters"] = uniques
 
+        # Collect all header keyword entries the user may have provided.
         keywords = {}
         for row in range(self.firstrow_headers, self.nextrow_headers):
             add_key = self.headerentrygrid.itemAtPosition(row, 0)
@@ -838,8 +802,8 @@ class ConfigGenerator(QWidget):
             unique_extension = None
             unique_default = None
 
-            # Skip totally empty rows, empty values are okay for defining a new
-            # parent.
+            # Skip rows with any missing properties, otherwise load the info
+            # into variables.
             if (add_key is None
                 or add_caom is None
                 or add_xml is None
@@ -853,6 +817,9 @@ class ConfigGenerator(QWidget):
                 unique_extension = str(add_ext.widget().text())
                 unique_default = str(add_def.widget().text())
 
+            # Skip the row if any of those variables are empty strings.
+            # Otherwise, add the information to a dictionary of properties
+            # stored under the given header keyword.
             if (unique_keyword == ""
                 or unique_caom == ""
                 or unique_xmlparent == ""
@@ -869,31 +836,8 @@ class ConfigGenerator(QWidget):
 
         config["keyword_updates"] = keywords
 
+        # Return the config dictionary
         return config
-
-        # Write the config dictionary into a yaml file using a dialog.
-
-
-
-    def nogenClicked(self):
-        """ When generate is clicked, collect all the user inputs and write the
-        yaml file.
-        """
-        self.collectInputs()
-
-
-    def norunClicked(self):
-        """ When run is clicked, collect all the user inputs, write the yaml
-        file, and send the file to hlsp_to_xml.
-        """
-        config = self.collectInputs()
-        if config is not None:
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Launching hlsp_to_xml.py!")
-            self.status.append("See terminal for script output.")
-            hlsp_to_xml(config)
-        else:
-            raise MyError("No .yaml file generated!")
 
 #--------------------
 

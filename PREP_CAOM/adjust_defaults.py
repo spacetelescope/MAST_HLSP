@@ -32,10 +32,12 @@ def adjust_defaults(caomlist, header_type, keyword_updates):
             entry.headerName = values["headerName"]
             entry.parent = values["section"]
         else:
+            print("making new entry for {0}".format(key))
             new_entry = CAOMheader(values["caom"])
             new_entry.headerKeyword = key
             new_entry.headerDefaultValue = values["headerDefaultValue"]
             new_entry.headerName = values["headerName"]
             new_entry.parent = values["section"]
+            caomlist.add(new_entry)
 
     return caomlist

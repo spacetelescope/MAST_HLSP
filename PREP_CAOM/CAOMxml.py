@@ -150,7 +150,7 @@ class CAOMproduct(CAOMxml):
         self.calibrationLevel = "HLSP"
         self.contentType = None
         self.dataProductType = None
-        self.fileNameDescriptor = "FILEROOT"
+        self.fileNameDescriptor = "FILEROOTSUFFIX"
         self.fileStatus = "OPTIONAL"
         self.fileType = None
         self.planeNumber = "1"
