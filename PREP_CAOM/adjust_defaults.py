@@ -1,4 +1,4 @@
-from CAOMxml import *
+from lib.CAOMxml import *
 
 def adjust_defaults(caomlist, header_type, keyword_updates):
 

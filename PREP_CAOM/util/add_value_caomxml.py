@@ -6,7 +6,7 @@
     objects are then added to caomlist and returned.
 """
 
-from CAOMxml import *
+from lib.CAOMxml import *
 from lxml import etree
 import logging
 

@@ -6,7 +6,7 @@
     parameters.
 """
 
-from CAOMxml import *
+from lib.CAOMxml import *
 import util.check_paths as cp
 import csv
 import logging

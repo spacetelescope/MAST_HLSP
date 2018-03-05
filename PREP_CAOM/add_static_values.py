@@ -6,7 +6,7 @@
     values does as well)
 """
 
-from CAOMxml import *
+from lib.CAOMxml import *
 from util.add_value_caomxml import add_value_caomxml
 import logging
 

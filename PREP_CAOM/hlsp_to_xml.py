@@ -24,7 +24,7 @@ A .yaml file with constant entries to insert for various kinds of HLSPs and
 file types.
 """
 
-from CAOMxml import *
+from lib.CAOMxml import *
 from lxml import etree
 from add_header_entries import add_header_entries
 from add_product_caomxml import add_product_caomxml
