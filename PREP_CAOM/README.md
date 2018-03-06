@@ -10,10 +10,10 @@ structure is described below:
 ___
 ## Instructions
 To begin a session using the GUI, simply enter:  
-+ python launch_gui.py
++ python launch_gui.py  
 If you already have a YAML .config file prepared, you can launch straight  
 into template file generating using the following:  
-+ python hlsp_to_xml.py <config file name>
++ python hlsp_to_xml.py {config file name}
 ___
 ## Contents
 ### /PREP_CAOM/  

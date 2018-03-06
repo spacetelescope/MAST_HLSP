@@ -50,9 +50,8 @@ def get_file_to_load(parent, prompt):
 #--------------------
 
 class HelpPopup(QDialog):
-    """
-    Define the help popup window that appears when the user clicks the 'Help'
-    button.
+    """ Define the help popup window that appears when the user clicks the
+    'Help' button.
     """
 
     def __init__(self):
@@ -60,7 +59,7 @@ class HelpPopup(QDialog):
         self.helpUI()
 
     def helpUI(self):
-        #Get the help text from a .txt file.
+        # Get the help text from a .txt file.
         path = "gui/help.txt"
         help_path = os.path.abspath(path)
         self.helpbox = QTextEdit()
@@ -89,9 +88,8 @@ class HelpPopup(QDialog):
 #--------------------
 
 class CAOMPopup(QDialog):
-    """
-    Define the help popup window that appears when the user clicks the 'Help'
-    button.
+    """ Define the help popup window that appears when the user clicks the
+    'Help' button.
     """
 
     def __init__(self):
@@ -99,7 +97,7 @@ class CAOMPopup(QDialog):
         self.caomUI()
 
     def caomUI(self):
-        #Get the help text from a .txt file.
+        # Get the help text from a .txt file.
         path = "gui/caom_parameters.txt"
         caom_path = os.path.abspath(path)
         self.caombox = QTextEdit()
@@ -128,8 +126,7 @@ class CAOMPopup(QDialog):
 #--------------------
 
 class HLSPIngest(QTabWidget):
-    """
-    Create a tab widget to contain widgets from /gui/ext_generator.py and
+    """ Create a tab widget to contain widgets from /gui/ext_generator.py and
     /gui/config_generator.py.  Provide options to quit or open a help dialog.
     """
 

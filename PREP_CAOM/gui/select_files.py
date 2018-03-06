@@ -112,20 +112,6 @@ class SelectFiles(QWidget):
         self.filetypegrid.setRowStretch(self.nextrow, 0)
         self.filetypegrid.setRowStretch(self.nextrow+1, 1)
 
-        """
-        res_label = QLabel("Output:")
-        res_label.setAlignment(Qt.AlignHCenter)
-        self.status = QTextEdit()
-        self.status.setReadOnly(True)
-        self.status.setLineWrapMode(QTextEdit.NoWrap)
-        self.status.setStyleSheet("border-style: solid; \
-                                  border-width: 1px; \
-                                  background: rgba(235,235,235,0%);")
-        self.outputgrid = QGridLayout()
-        self.outputgrid.addWidget(res_label, 0, 0)
-        self.outputgrid.addWidget(self.status, 1, 0)
-        """
-
         # Add the sub-layouts to the window layout
         self.grid = QGridLayout()
         self.grid.addLayout(self.buttonsgrid, 0, 0, 1, -1)
@@ -143,7 +129,6 @@ class SelectFiles(QWidget):
         self.clear.clicked.connect(self.clearClicked)
         self.save.clicked.connect(self.saveClicked)
 
-
     def selectAllClicked(self):
         """ Set all file entries from firstrow to nextrow as selected.
         """
@@ -152,7 +137,6 @@ class SelectFiles(QWidget):
             selected = self.filetypegrid.itemAtPosition(n, 0).widget()
             selected.setChecked(True)
 
-
     def deselectAllClicked(self):
         """ Set all file entries from firstrow to nextrow as unselected.
         """
@@ -160,7 +144,6 @@ class SelectFiles(QWidget):
         for n in range(self.firstrow, self.nextrow):
             selected = self.filetypegrid.itemAtPosition(n, 0).widget()
             selected.setChecked(False)
-
 
     def selectBoxClicked(self, state):
         """ Toggle visibility of file type rows when the select box is clicked.
@@ -182,7 +165,6 @@ class SelectFiles(QWidget):
         else:
             f.setStyleSheet("color: DarkGrey; background-color: WhiteSmoke")
             pt.setVisible(False)
-
 
     def newFileClicked(self):
         """ When 'add_file' is clicked, create a new row with the same file
@@ -212,20 +194,19 @@ class SelectFiles(QWidget):
         # Advance nextrow
         self.nextrow += 1
 
-
     def clearClicked(self, source):
         """ Clear any changes made to the form and reset to original state.
         """
 
-        #Pop up a confirmation dialog if this is not being called from the load
-        #function.
+        # Pop up a confirmation dialog if this is not being called from the
+        # load function.
         if not source:
             self.cc = ClearConfirm("Clear all file type entries?")
             self.cc.exec_()
             if not self.cc.confirm:
                 return None
 
-        #Empty the items in the first row but don't delete them.
+        # Empty the items in the first row but don't delete them.
         sel_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
         sel_one.setChecked(False)
         p_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
@@ -233,7 +214,7 @@ class SelectFiles(QWidget):
         pt_one = self.filetypegrid.itemAtPosition(self.firstrow,2).widget()
         pt_one.setCurrentIndex(0)
 
-        #Remove all elements beyond the first row.
+        # Remove all elements beyond the first row.
         delete_these = list(reversed(range(self.firstrow+1,
                                            self.nextrow)))
         if len(delete_these) > 1:
@@ -247,15 +228,21 @@ class SelectFiles(QWidget):
         self.nextrow = self.firstrow + 1
 
     def loadExtensionsYAML(self, filename):
-        """ Open an existing YAML file and load the contents into the form.
+        """ Open a YAML file sent from HLSP metadata checking and load the
+        contents into the form.
         """
 
-        #Read the YAML contents into a list.
+        # Read the YAML contents into a dictionary.
         files = {}
         file_config = read_yaml(filename)
+
+        # If read_yaml returns a string, it is error text.
         if isinstance(file_config, str):
             raise MyError(file_config)
+
         for ext in sorted(file_config.keys()):
+
+            # Not every file_config entry will be a list
             if isinstance(file_config[ext], list):
                 for product in file_config[ext]:
                     ending = product['FileEnding']
@@ -265,15 +252,15 @@ class SelectFiles(QWidget):
                     else:
                         files[ending] = prod_type
 
-        #Check that there are any data types to insert.
+        # Check that there are any data types to insert.
         if len(files.keys()) == 0:
             raise MyError("No 'FileEnding' rows in {0}".format(filename))
 
         #Clear any changes already made to the form.
         self.clearClicked(source="load")
 
-        #Begin at the first data row and insert values into the form elements.
-        #(skip the CSV header row)
+        # Begin at the first data row and insert values into the form elements.
+        # (skip the CSV header row)
         row_num = self.firstrow
         for entry in sorted(files.keys()):
             ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
@@ -290,11 +277,11 @@ class SelectFiles(QWidget):
         self.message = "Loaded {0}".format(filename)
 
     def loadConfigYAML(self, filename):
-        """
-        Open an existing YAML file and load the contents into the form.
+        """ Open an existing full YAML config file and load the contents into
+        the form.
         """
 
-        #Read the YAML contents into a list.
+        # Read the YAML contents into a dictionary.
         files = {}
         file_config = read_yaml(filename)
         if isinstance(file_config, str):
@@ -302,20 +289,19 @@ class SelectFiles(QWidget):
         try:
             files = file_config["file_types"]
         except KeyError:
-            #self.error = "'file_types' not defined in .config file!"
             raise MyError("'file_types' not defined in .config file!")
             return None
 
-        #Check that there are any data types to insert.
+        # Check that there are any data types to insert.
         if len(files.keys()) == 0:
             self.error = "No data rows in {0}".format(filename)
             return None
 
-        #Clear any changes already made to the form.
+        # Clear any changes already made to the form.
         self.clearClicked(source="load")
 
-        #Begin at the first data row and insert values into the form elements.
-        #(skip the CSV header row)
+        # Begin at the first data row and insert values into the form elements.
+        # (skip the CSV header row)
         row_num = self.firstrow
         for entry in sorted(files.keys()):
             ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
@@ -333,14 +319,13 @@ class SelectFiles(QWidget):
         return file_config
 
     def collectSelectedFiles(self):
-        """
-        When 'save' is clicked, collect all the user entries and write the
+        """ When 'save' is clicked, collect all the user entries and write the
         CSV file.
         """
 
         self.selected_files = {}
 
-        #Loop over all rows the user might have created in the form.
+        # Loop over all rows the user might have created in the form.
         for row in range(self.firstrow, self.filetypegrid.rowCount()):
             add_sel = self.filetypegrid.itemAtPosition(row, 0)
             add_ext = self.filetypegrid.itemAtPosition(row, 1)
@@ -349,12 +334,12 @@ class SelectFiles(QWidget):
             read_pt = None
             read_sel = None
 
-            #Skip any empty rows (might not be possible/necessary)
+            # Skip any empty rows (might not be possible/necessary)
             if add_ext is None:
                 continue
 
-            #Read the entries from the current row.  Skip if there is no text
-            #in the file extension entry.
+            # Read the entries from the current row.  Skip if there is no text
+            # in the file extension entry.
             sel_widget = add_sel.widget()
             read_sel = sel_widget.checkState()
             if read_sel == 0:
@@ -369,7 +354,8 @@ class SelectFiles(QWidget):
             as_tuple = (read_ext, read_pt)
             self.selected_files[read_ext] = read_pt
 
-        #If all file entry rows have empty name entries, button takes no action
+        # If all file entry rows have empty name entries, button takes no
+        # action
         if len(self.selected_files) == 0:
             self.error = "No file types to save!"
             return None

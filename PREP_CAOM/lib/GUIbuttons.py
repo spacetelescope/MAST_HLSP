@@ -1,3 +1,24 @@
+"""
+All classes contained here are PyQt QPushButton subclasses with specific
+formatting applied to maintain consistency throughout GUI forms.
+
+..class::  BlueButton
+    :synopsis: Light blue background, dark blue border, border thickness on
+    hover, and dark blue fill-in on click.
+
+..class:: GreenButton
+    :synopsis: Light green background, dark green border, border thickness on
+    hover, and dark green fill-in on click.
+
+..class:: GreyButton
+    :synopsis: Light grey background, dark grey border, border thickness on
+    hover, and dark grey fill-in on click.
+
+..class:: RedButton
+    :synopsis: Light red background, dark red border, border thickness on
+    hover, and dark red fill-in on click.
+"""
+
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -5,7 +26,13 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
+#--------------------
+
 class BlueButton(QPushButton):
+    """ Blue GUI button with user-provided height and optional width
+    parameters.
+    """
+
     def __init__(self, label, height, width=0):
         super().__init__(label)
         self.setStyleSheet("""
@@ -24,7 +51,13 @@ class BlueButton(QPushButton):
         if width > 0:
             self.setMaximumWidth(width)
 
+#--------------------
+
 class GreenButton(QPushButton):
+    """ Green GUI button with user-provided height and optional width
+    parameters.
+    """
+
     def __init__(self, label, height, width=0):
         super().__init__(label)
         self.setStyleSheet("""
@@ -43,7 +76,13 @@ class GreenButton(QPushButton):
         if width > 0:
             self.setMaximumWidth(width)
 
+#--------------------
+
 class GreyButton(QPushButton):
+    """ Grey GUI button with user-provided height and optional width
+    parameters.
+    """
+
     def __init__(self, label, height, width=0):
         super().__init__(label)
         self.setStyleSheet("""
@@ -62,7 +101,13 @@ class GreyButton(QPushButton):
         if width > 0:
             self.setMaximumWidth(width)
 
+#--------------------
+
 class RedButton(QPushButton):
+    """ Red GUI button with user-provided height and optional width
+    parameters.
+    """
+
     def __init__(self, label, height, width=0):
         super().__init__(label)
         self.setStyleSheet("""

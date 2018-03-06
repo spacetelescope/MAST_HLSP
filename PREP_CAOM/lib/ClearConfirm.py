@@ -1,3 +1,10 @@
+"""
+..class:: ClearConfirm
+    :synopsis: This is a subclass of the PyQt QDialog class designed as a
+    popup dialog to confirm a user's action before execution, specifically in
+    the case of resetting GUI forms.
+"""
+
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -5,9 +12,10 @@ except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
+#--------------------
+
 class ClearConfirm(QDialog):
-    """
-    Pop up a confirmation dialog window before clearing all changes to the
+    """ Pop up a confirmation dialog window before clearing all changes to the
     form.
     """
 
