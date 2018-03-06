@@ -47,7 +47,9 @@ class ProductTypeBox(QComboBox):
     def setCurrentType(self, ctype):
         if ctype in self.entries:
             index = self.entries.index(ctype)
-        return QComboBox.setCurrentIndex(self, index)
+            return QComboBox.setCurrentIndex(self, index)
+        else:
+            raise MyError("{0} is not a valid productType!".format(ctype))
 
 #--------------------
 
@@ -246,11 +248,11 @@ class SelectFiles(QWidget):
             if isinstance(file_config[ext], list):
                 for product in file_config[ext]:
                     ending = product['FileEnding']
-                    prod_type = product['FileParams']['ProductType']
+                    prod_type = product['FileParams']['CAOMProductType']
                     if prod_type == "null":
                         files[ending] = ""
                     else:
-                        files[ending] = prod_type
+                        files[ending] = prod_type.upper()
 
         # Check that there are any data types to insert.
         if len(files.keys()) == 0:
@@ -272,7 +274,10 @@ class SelectFiles(QWidget):
             sel_box.setChecked(True)
             ext_box.setText(entry)
             if files[entry] is not None:
-                pt_box.setCurrentType(files[entry])
+                try:
+                    pt_box.setCurrentType(files[entry])
+                except MyError as err:
+                    raise MyError(err.message)
             row_num += 1
         self.message = "Loaded {0}".format(filename)
 

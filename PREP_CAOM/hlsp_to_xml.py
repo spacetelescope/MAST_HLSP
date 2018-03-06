@@ -148,7 +148,6 @@ def hlsp_to_xml(config):
         caomlist = add_value_caomxml(caomlist, static_values["timeseries"])
     if header_type == "kepler":
         caomlist = add_value_caomxml(caomlist, static_values["kepler"])
-
     print("...done!")
 
     # Add information from the header keywords table.

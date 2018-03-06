@@ -25,7 +25,6 @@ from lib.ClearConfirm import ClearConfirm
 from lib.MyError import MyError
 
 from gui.config_generator import *
-from gui.ext_generator import *
 from gui.select_files import *
 
 try:

@@ -97,6 +97,8 @@ class HeaderTypeBox(QComboBox):
         for _type in self.header_types:
             self.addItem(_type)
 
+#--------------------
+
 class DataTypeBox(QComboBox):
 
     def __init__(self, parent):
@@ -105,6 +107,61 @@ class DataTypeBox(QComboBox):
                           "EVENTLIST", "CUBE", "CATALOG", "MEASUREMENTS"]
         for _type in self.data_types:
             self.addItem(_type)
+
+#--------------------
+
+class CAOMKeywordBox(QComboBox):
+
+    def __init__(self):
+        super().__init__()
+        self.setEditable(True)
+        self.inuse = ["algorithm", "aperture_radius", "collection",
+                      "instrument_keywords", "instrument_name", "intent",
+                      "name", "observationID", "project", "proposal_id",
+                      "targetPosition_coordinates_cval1",
+                      "targetPosition_coordinates_cval2",
+                      "targetPosition_coordsys", "targetPosition_equinox",
+                      "target_name", "telescope_name", "type", "version"
+                     ]
+        self.unused = ["dataRelease", "lastExecuted", "metaRelease",
+                       "producer", "proposal_pi", "proposal_title",
+                       "reference", "runID", "sequenceNumber",
+                       "target_keywords", "target_moving", "target_type"
+                      ]
+        self.allvalues = []
+        self.allvalues.extend(self.inuse)
+        self.allvalues.extend(self.unused)
+
+        font = QFont()
+        font.setBold(True)
+
+        self.addItem("")
+        self.addItem("Unused Keywords")
+        unused_parent = self.model().item(1)
+        unused_parent.setSelectable(False)
+        unused_parent.setFont(font)
+
+        for c in self.unused:
+            self.addItem(c)
+
+        self.addItem("---------------")
+        self.addItem("Keywords In Use")
+        divider = self.model().item(self.count() - 2)
+        divider.setSelectable(False)
+        inuse_parent = self.model().item(self.count() - 1)
+        inuse_parent.setSelectable(False)
+        inuse_parent.setFont(font)
+
+        for d in self.inuse:
+            self.addItem(d)
+
+    def setTo(self, target):
+        if target in self.allvalues:
+            n = self.findText(target)
+            self.setCurrentIndex(n)
+        else:
+            self.setCurrentIndex(0)
+#--------------------
 
 class ConfigGenerator(QWidget):
     """ This class builds a pyqt GUI for generating a properly-formatted YAML
@@ -204,7 +261,7 @@ class ConfigGenerator(QWidget):
         add_param = gb.GreyButton("+ add a new parameter", 20)
         add_param.setMinimumWidth(125)
         add_param.setMaximumWidth(175)
-        parent_param = QLabel("Parent:", up)
+        parent_param = QLabel("XML Parent:", up)
         parent_param.setAlignment(Qt.AlignHCenter)
         caom_param = QLabel("CAOM Keyword:", up)
         caom_param.setAlignment(Qt.AlignHCenter)
@@ -214,7 +271,10 @@ class ConfigGenerator(QWidget):
         self.xml_parents = ["", "metadataList", "provenance"]
         for p in self.xml_parents:
             parent_edit.addItem(p)
-        caom_edit = QLineEdit(caom_param)
+
+        #caom_edit = QLineEdit(caom_param)
+        caom_edit = CAOMKeywordBox()
+
         value_edit = QLineEdit(value_param)
         self.uniquesgrid = QGridLayout()
         self.uniquesgrid.addWidget(up, 0, 0)
@@ -242,9 +302,9 @@ class ConfigGenerator(QWidget):
         add_header = gb.GreyButton("+ add a new keyword", 20)
         add_header.setMinimumWidth(125)
         add_header.setMaximumWidth(175)
-        keyword_label = QLabel("Keyword:", hd)
+        keyword_label = QLabel("FITS Keyword:", hd)
         keyword_label.setAlignment(Qt.AlignHCenter)
-        headcaom_label = QLabel("CAOM Property:", hd)
+        headcaom_label = QLabel("CAOM Keyword:", hd)
         headcaom_label.setAlignment(Qt.AlignHCenter)
         xmlparent_label = QLabel("XML Parent:", hd)
         xmlparent_label.setAlignment(Qt.AlignHCenter)
@@ -516,7 +576,7 @@ class ConfigGenerator(QWidget):
                     self.xml_parents.append(p)
 
                 # Fill in the CAOM line edit box.
-                caom_box.insert(param)
+                caom_box.setTo(param)
 
                 # If the next level is still a dictionary, repeat this process.
                 # Otherwise, fill in the Value line edit box.
@@ -657,7 +717,7 @@ class ConfigGenerator(QWidget):
         p_one = self.uniquesgrid.itemAtPosition(self.firstrow_uniques,0)
         p_one.widget().setCurrentIndex(0)
         c_one = self.uniquesgrid.itemAtPosition(self.firstrow_uniques,1)
-        c_one.widget().clear()
+        c_one.widget().setCurrentIndex(0)
         v_one = self.uniquesgrid.itemAtPosition(self.firstrow_uniques,2)
         v_one.widget().clear()
         k_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,0)
@@ -762,7 +822,7 @@ class ConfigGenerator(QWidget):
                 unique_parent = str(parent_widget.currentText())
             if add_caom is not None:
                 caom_widget = add_caom.widget()
-                unique_caom = str(caom_widget.text())
+                unique_caom = str(caom_widget.currentText())
             if add_value is not None:
                 value_widget = add_value.widget()
                 unique_value = str(value_widget.text())
