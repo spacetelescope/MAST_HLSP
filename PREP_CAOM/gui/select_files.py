@@ -179,6 +179,8 @@ class SelectFiles(QWidget):
             else:
                 pass
 
+        # Emit a select_signal so launch_gui will update the list of selected
+        # files
         self.select_signal.emit()
 
 
@@ -243,6 +245,8 @@ class SelectFiles(QWidget):
                 self.filetypegrid.itemAtPosition(n,2).widget().setParent(None)
         self.nextrow = self.firstrow + 1
 
+        # Clear the selected_files dictionary and emit a signal to refresh
+        # the launch_gui list
         self.selected_files = {}
         self.select_signal.emit()
 

@@ -90,6 +90,8 @@ def crawl_dictionary(dictionary, parent, parameter, inserted=False):
 #--------------------
 
 class HeaderTypeBox(QComboBox):
+    """ Create a QComboBox populated with valid header type choices.
+    """
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -100,6 +102,8 @@ class HeaderTypeBox(QComboBox):
 #--------------------
 
 class DataTypeBox(QComboBox):
+    """ Create a QComboBox populated with valid CAOM dataProductType choices.
+    """
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -111,10 +115,16 @@ class DataTypeBox(QComboBox):
 #--------------------
 
 class CAOMKeywordBox(QComboBox):
+    """ Create a QComboBox populated with valid CAOM parameter choices.
+    Distinguish between keywords already modified by code and those not
+    currently in use.  Assign each to a default XML parent.
+    """
 
     def __init__(self):
         super().__init__()
         self.setEditable(True)
+
+        # Set up the dictionaries
         self.inuse = {"algorithm": "metadataList",
                       "aperture_radius": "metadataList",
                       "collection": "metadataList",
@@ -147,21 +157,25 @@ class CAOMKeywordBox(QComboBox):
                        "target_moving": "metadataList",
                        "target_type": "metadataList"
                       }
+
+        # Create a merged dictionary
         self.allvalues = self.inuse.copy()
         self.allvalues.update(self.unused)
 
+        # Use a QFont object to distinguish category seperators
         font = QFont()
         font.setBold(True)
 
+        # Put unused parameters at the top of the list
         self.addItem("")
         self.addItem("Unused Keywords")
         unused_parent = self.model().item(1)
         unused_parent.setSelectable(False)
         unused_parent.setFont(font)
-
         for c in sorted(self.unused.keys()):
             self.addItem(c)
 
+        # Add a separator, followed by parameters already in use
         self.addItem("---------------")
         self.addItem("Keywords In Use")
         divider = self.model().item(self.count() - 2)
@@ -169,11 +183,13 @@ class CAOMKeywordBox(QComboBox):
         inuse_parent = self.model().item(self.count() - 1)
         inuse_parent.setSelectable(False)
         inuse_parent.setFont(font)
-
         for d in sorted(self.inuse.keys()):
             self.addItem(d)
 
     def setTo(self, target):
+        """ Set the combo box to a certain index given a CAOM keyword.
+        """
+
         if target in self.allvalues:
             n = self.findText(target)
             self.setCurrentIndex(n)
@@ -181,10 +197,15 @@ class CAOMKeywordBox(QComboBox):
             self.setCurrentIndex(0)
 
     def getXMLParent(self, keyword):
+        """ Retrieve the XML parent value for a given CAOM keyword from the
+        dictionary.
+        """
+
         if keyword in self.allvalues.keys():
             return self.allvalues[keyword]
         else:
             return None
+
 #--------------------
 
 class ConfigGenerator(QWidget):
@@ -202,14 +223,14 @@ class ConfigGenerator(QWidget):
         be aggregated into a .yaml config file.
         """
 
-        #Create some formatting items for use throughout.
+        # Create some formatting items for use throughout.
         firstcol = 100
         space = QSpacerItem(50, 1)
         self.keywords = hk.read_header_keywords_table(HEADER_KEYWORDS)
 
-        #Create a section for input of filepath variables.  Includes lineedit
-        #objects and buttons to launch file dialogs if the desired paths are
-        #local.
+        # Create a section for input of filepath variables.  Includes lineedit
+        # objects and buttons to launch file dialogs if the desired paths are
+        # local.
         fp = QLabel("Filepaths:", self)
         data = QLabel("HLSP Data: ", fp)
         data.setAlignment(Qt.AlignRight)
@@ -240,7 +261,7 @@ class ConfigGenerator(QWidget):
         self.pathsgrid.addWidget(self.out_edit, 1, 1)
         self.pathsgrid.addWidget(browse_out, 1, 2)
 
-        #Set the boolean overwrite parameter with on/off radio button objects.
+        # Set the boolean overwrite parameter with on/off radio button objects.
         ow = QLabel("Overwrite: ", self)
         ow.setMinimumWidth(firstcol)
         ow.setToolTip("Allow hlsp_to_xml.py to overwrite an existing XML file.")
@@ -276,9 +297,9 @@ class ConfigGenerator(QWidget):
         self.datatypesgrid.addWidget(dt, 0, 1)
         self.datatypesgrid.addWidget(self.dt_box, 0, 2)
 
-        #Create custom unique parameters to write into the yaml file.  This
-        #list is expandable.  Custom parents can be defined in addition to
-        #metadataList and provenance.
+        # Create custom unique parameters to write into the yaml file.  This
+        # list is expandable.  Custom parents can be defined in addition to
+        # metadataList and provenance.
         up = QLabel("HLSP-Unique Parameters: ", self)
         up.setToolTip("Define additional CAOM parameters to insert that are \
         not defined in the FITS headers.")
@@ -295,10 +316,7 @@ class ConfigGenerator(QWidget):
         self.xml_parents = ["", "metadataList", "provenance"]
         for p in self.xml_parents:
             parent_edit.addItem(p)
-
-        #caom_edit = QLineEdit(caom_param)
         caom_edit = CAOMKeywordBox()
-
         value_edit = QLineEdit(value_param)
         self.uniquesgrid = QGridLayout()
         self.uniquesgrid.addWidget(up, 0, 0)
@@ -941,7 +959,7 @@ class ConfigGenerator(QWidget):
                 continue
             else:
                 unique_keyword = str(add_key.widget().currentText())
-                unique_caom = str(add_caom.widget().text())
+                unique_caom = str(add_caom.widget().currentText())
                 unique_xmlparent = str(add_xml.widget().currentText())
                 unique_extension = str(add_ext.widget().text())
                 unique_default = str(add_def.widget().text())

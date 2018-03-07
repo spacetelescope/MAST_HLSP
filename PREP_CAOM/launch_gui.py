@@ -228,6 +228,22 @@ class HLSPIngest(QTabWidget):
         self.gen.clicked.connect(self.genClicked)
         self.run.clicked.connect(self.genAndRunClicked)
         self.tab1.select_signal.connect(self.selectClicked)
+        self.tab2.err_signal.connect(self.bad_message)
+
+    def bad_message(self, msg):
+        self.status.setTextColor(Qt.red)
+        self.status.append(msg)
+
+    def good_message(self, msg):
+        self.status.setTextColor(Qt.darkGreen)
+        self.status.append(msg)
+
+    def neutral_message(self, msg):
+        self.status.setTextColor(Qt.black)
+        self.status.append(msg)
+
+    #def handleErrors(self, msg):
+
 
     def loadTypesClicked(self):
         """ Load a dictionary of file extensions into the tab1 Select File
@@ -246,13 +262,11 @@ class HLSPIngest(QTabWidget):
             self.tab1.loadExtensionsYAML(filename)
             self.tab1.saveClicked()
             self.selectClicked()
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Loaded {0}".format(filename))
+            self.good_message("Loaded {0}".format(filename))
 
         # Catch any MyError instances and write them to the status box.
         except MyError as err:
-            self.status.setTextColor(Qt.red)
-            self.status.append(err.message)
+            self.bad_message(err.message)
 
     def loadYAMLClicked(self):
         """ Get a YAML config file name and pass it to both tab1 and tab2
@@ -272,13 +286,11 @@ class HLSPIngest(QTabWidget):
             self.tab1.saveClicked()
             self.selectClicked()
             self.tab2.loadFromYAML(filename)
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Loaded {0}".format(filename))
+            self.good_message("Loaded {0}".format(filename))
 
         # Catch any MyError instances and write them to the status box.
         except MyError as err:
-            self.status.setTextColor(Qt.red)
-            self.status.append(err.message)
+            self.bad_message(err.message)
 
     def resetClicked(self):
         """ Open a confirmation popup before clearing both tabs.
@@ -292,8 +304,7 @@ class HLSPIngest(QTabWidget):
         if self.cc.confirm:
             self.tab1.clearClicked(source="wrapper")
             self.tab2.resetClicked()
-            self.status.setTextColor(Qt.black)
-            self.status.append("Forms reset")
+            self.neutral_message("Forms reset")
 
     def collectAndSaveTabInputs(self):
         """ Collect all the inputs from tab2 and add the file_types list to
@@ -303,12 +314,10 @@ class HLSPIngest(QTabWidget):
         # Raise errors if file_types is empty or None.  Means user has not
         # loaded or selected any file types.
         if self.file_types is None:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No file types selected!")
+            self.bad_message("No file types selected!")
             return None
         elif len(self.file_types.keys()) == 0:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No file types selected!")
+            self.bad_message("No file types selected!")
             return None
 
         # Collect inputs from tab2 and add file_types to the resulting
@@ -317,8 +326,7 @@ class HLSPIngest(QTabWidget):
             config = self.tab2.collectInputs()
             config["file_types"] = self.file_types
         except MyError as err:
-            self.status.setTextColor(Qt.red)
-            self.status.append(err.message)
+            self.bad_message(err.message)
             return None
 
         # Get a file name using a save dialog and save the dictionary to a
@@ -345,8 +353,7 @@ class HLSPIngest(QTabWidget):
         if inputs is None:
             return
         else:
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Saved {0}".format(inputs))
+            self.good_message("Saved {0}".format(inputs))
 
     def genAndRunClicked(self):
         """ Try to generate a YAML .config file, then pass that along to
@@ -357,10 +364,9 @@ class HLSPIngest(QTabWidget):
         if inputs is None:
             return
         else:
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Saved {0}".format(inputs))
-            self.status.append("Launching hlsp_to_xml...")
-            self.status.append("...see terminal for output...")
+            self.good_message("Saved {0}".format(inputs))
+            self.good_message("Launching hlsp_to_xml...")
+            self.good_message("...see terminal for output...")
             hlsp_to_xml(inputs)
 
     def quitClicked(self):
