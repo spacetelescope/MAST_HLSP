@@ -148,14 +148,17 @@ class HLSPIngest(QTabWidget):
         # Use the GUIbuttons classes to make all necessary buttons, then
         # create a space label to separate buttons on the right and left sides.
         # Make a Layout for the buttons along the top row.
-        self.loadtypes = gb.GreyButton("Load File Types", 20, 175)
-        self.loadyaml = gb.GreyButton("Load YAML Config", 20, 175)
-        self.reset = gb.RedButton("Reset Forms", 20, 175)
-        self.help = gb.GreyButton("Help", 20, 75)
-        self.caom = gb.GreyButton("CAOM", 20, 75)
-        self.quit = gb.RedButton("Quit", 20, 75)
+        height = 30
+        big_width = 200
+        small_width = 75
+        self.loadtypes = gb.GreyButton("Load File Types", height, big_width)
+        self.loadyaml = gb.GreyButton("Load YAML Config", height, big_width)
+        self.reset = gb.RedButton("Reset Forms", height, big_width)
+        self.help = gb.GreyButton("Help", height, small_width)
+        self.caom = gb.GreyButton("CAOM", height, small_width)
+        self.quit = gb.RedButton("Quit", height, small_width)
         self.space = QLabel("")
-        self.space.setMinimumWidth(300)
+        self.space.setMinimumWidth(200)
         self.buttonsgrid = QGridLayout()
         self.buttonsgrid.addWidget(self.loadtypes, 0, 0)
         self.buttonsgrid.addWidget(self.loadyaml, 0, 1)
@@ -224,7 +227,7 @@ class HLSPIngest(QTabWidget):
         self.reset.clicked.connect(self.resetClicked)
         self.gen.clicked.connect(self.genClicked)
         self.run.clicked.connect(self.genAndRunClicked)
-        self.tab1.save.clicked.connect(self.selectClicked)
+        self.tab1.select_signal.connect(self.selectClicked)
 
     def loadTypesClicked(self):
         """ Load a dictionary of file extensions into the tab1 Select File
@@ -376,11 +379,6 @@ class HLSPIngest(QTabWidget):
         to set the file_types variable and update the displayed list of
         selected types for confirmation.
         """
-
-        if self.tab1.saveClicked() is None:
-            self.status.setTextColor(Qt.red)
-            self.status.append(self.tab1.error)
-            return
 
         self.file_types = self.tab1.selected_files
         self.types_list = sorted(self.file_types.keys())

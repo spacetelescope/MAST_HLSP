@@ -115,22 +115,40 @@ class CAOMKeywordBox(QComboBox):
     def __init__(self):
         super().__init__()
         self.setEditable(True)
-        self.inuse = ["algorithm", "aperture_radius", "collection",
-                      "instrument_keywords", "instrument_name", "intent",
-                      "name", "observationID", "project", "proposal_id",
-                      "targetPosition_coordinates_cval1",
-                      "targetPosition_coordinates_cval2",
-                      "targetPosition_coordsys", "targetPosition_equinox",
-                      "target_name", "telescope_name", "type", "version"
-                     ]
-        self.unused = ["dataRelease", "lastExecuted", "metaRelease",
-                       "producer", "proposal_pi", "proposal_title",
-                       "reference", "runID", "sequenceNumber",
-                       "target_keywords", "target_moving", "target_type"
-                      ]
-        self.allvalues = []
-        self.allvalues.extend(self.inuse)
-        self.allvalues.extend(self.unused)
+        self.inuse = {"algorithm": "metadataList",
+                      "aperture_radius": "metadataList",
+                      "collection": "metadataList",
+                      "instrument_keywords": "metadataList",
+                      "instrument_name": "metadataList",
+                      "intent": "metadataList",
+                      "name": "provenance",
+                      "observationID": "metadataList",
+                      "project": "provenance",
+                      "targetPosition_coordinates_cval1": "metadataList",
+                      "targetPosition_coordinates_cval2": "metadataList",
+                      "targetPosition_coordsys": "metadataList",
+                      "targetPosition_equinox": "metadataList",
+                      "target_name": "metadataList",
+                      "telescope_name": "metadataList",
+                      "type": "metadataList",
+                      "version": "provenance"
+                     }
+        self.unused = {"dataRelease": "provenance",
+                       "lastExecuted": "provenance",
+                       "metaRelease": "metadataList",
+                       "producer": "provenance",
+                       "proposal_id": "provenance",
+                       "proposal_pi": "provenance",
+                       "proposal_title": "provenance",
+                       "reference": "provenance",
+                       "runID": "metadataList",
+                       "sequenceNumber": "metadataList",
+                       "target_keywords": "metadataList",
+                       "target_moving": "metadataList",
+                       "target_type": "metadataList"
+                      }
+        self.allvalues = self.inuse.copy()
+        self.allvalues.update(self.unused)
 
         font = QFont()
         font.setBold(True)
@@ -141,7 +159,7 @@ class CAOMKeywordBox(QComboBox):
         unused_parent.setSelectable(False)
         unused_parent.setFont(font)
 
-        for c in self.unused:
+        for c in sorted(self.unused.keys()):
             self.addItem(c)
 
         self.addItem("---------------")
@@ -152,7 +170,7 @@ class CAOMKeywordBox(QComboBox):
         inuse_parent.setSelectable(False)
         inuse_parent.setFont(font)
 
-        for d in self.inuse:
+        for d in sorted(self.inuse.keys()):
             self.addItem(d)
 
     def setTo(self, target):
@@ -161,6 +179,12 @@ class CAOMKeywordBox(QComboBox):
             self.setCurrentIndex(n)
         else:
             self.setCurrentIndex(0)
+
+    def getXMLParent(self, keyword):
+        if keyword in self.allvalues.keys():
+            return self.allvalues[keyword]
+        else:
+            return None
 #--------------------
 
 class ConfigGenerator(QWidget):
@@ -260,7 +284,7 @@ class ConfigGenerator(QWidget):
         not defined in the FITS headers.")
         add_param = gb.GreyButton("+ add a new parameter", 20)
         add_param.setMinimumWidth(125)
-        add_param.setMaximumWidth(175)
+        #add_param.setMaximumWidth(175)
         parent_param = QLabel("XML Parent:", up)
         parent_param.setAlignment(Qt.AlignHCenter)
         caom_param = QLabel("CAOM Keyword:", up)
@@ -278,12 +302,12 @@ class ConfigGenerator(QWidget):
         value_edit = QLineEdit(value_param)
         self.uniquesgrid = QGridLayout()
         self.uniquesgrid.addWidget(up, 0, 0)
-        self.uniquesgrid.addWidget(add_param, 0, 1)
-        self.uniquesgrid.addWidget(parent_param, 1, 0)
-        self.uniquesgrid.addWidget(caom_param, 1, 1)
+        self.uniquesgrid.addWidget(add_param, 0, 2)
+        self.uniquesgrid.addWidget(caom_param, 1, 0)
+        self.uniquesgrid.addWidget(parent_param, 1, 1)
         self.uniquesgrid.addWidget(value_param, 1, 2)
-        self.uniquesgrid.addWidget(parent_edit, 2, 0)
-        self.uniquesgrid.addWidget(caom_edit, 2, 1)
+        self.uniquesgrid.addWidget(caom_edit, 2, 0)
+        self.uniquesgrid.addWidget(parent_edit, 2, 1)
         self.uniquesgrid.addWidget(value_edit, 2, 2)
         self.firstrow_uniques = 2
         self.nextrow_uniques = 3
@@ -301,7 +325,7 @@ class ConfigGenerator(QWidget):
         headers if they exist or create new ones if they don't.")
         add_header = gb.GreyButton("+ add a new keyword", 20)
         add_header.setMinimumWidth(125)
-        add_header.setMaximumWidth(175)
+        #add_header.setMaximumWidth(175)
         keyword_label = QLabel("FITS Keyword:", hd)
         keyword_label.setAlignment(Qt.AlignHCenter)
         headcaom_label = QLabel("CAOM Keyword:", hd)
@@ -318,7 +342,7 @@ class ConfigGenerator(QWidget):
         self.header_keywords = self.keywords[initial_header_type]
         for k in self.header_keywords:
             self.keyword_edit.addItem(k.keyword)
-        headcaom_edit = QLineEdit(headcaom_label)
+        headcaom_edit = CAOMKeywordBox()
         xmlparent_edit = QComboBox(xmlparent_label, editable=True)
         for p in self.xml_parents:
             xmlparent_edit.addItem(p)
@@ -326,7 +350,7 @@ class ConfigGenerator(QWidget):
         default_edit = QLineEdit(default_label)
         self.headerentrygrid = QGridLayout()
         self.headerentrygrid.addWidget(hd, 0, 0)
-        self.headerentrygrid.addWidget(add_header, 0, 1, 1, 2)
+        self.headerentrygrid.addWidget(add_header, 0, 3, 1, 2)
         self.headerentrygrid.addWidget(keyword_label, 1, 0)
         self.headerentrygrid.addWidget(headcaom_label, 1, 1)
         self.headerentrygrid.addWidget(xmlparent_label, 1, 2)
@@ -341,8 +365,10 @@ class ConfigGenerator(QWidget):
         self.nextrow_headers = 3
         self.headerentrygrid.setRowStretch(self.nextrow_headers, 1)
         self.headerentrygrid.setColumnStretch(0, 0)
-        self.headerentrygrid.setColumnStretch(1, 1)
-        self.headerentrygrid.setColumnStretch(2, 1)
+        self.headerentrygrid.setColumnStretch(1, 0)
+        self.headerentrygrid.setColumnStretch(2, 0)
+        self.headerentrygrid.setColumnStretch(3, 1)
+        self.headerentrygrid.setColumnStretch(4, 1)
 
         # Create a grid layout and add all the layouts and remaining widgets.
         self.grid2 = QGridLayout()
@@ -370,8 +396,9 @@ class ConfigGenerator(QWidget):
         browse_out.clicked.connect(self.outputClicked)
         add_param.clicked.connect(self.addParameterClicked)
         add_header.clicked.connect(self.addKeywordClicked)
+        caom_edit.currentIndexChanged.connect(self.caomKeywordSelected)
         self.header.currentIndexChanged.connect(self.headerTypeChanged)
-        self.keyword_edit.currentIndexChanged.connect(self.keywordSelected)
+        self.keyword_edit.currentIndexChanged.connect(self.fitsKeywordSelected)
 
     def hlspClicked(self):
         """ Launch a file dialog to select a directory containing HLSP data.
@@ -414,7 +441,7 @@ class ConfigGenerator(QWidget):
             xml_widg = self.headerentrygrid.itemAtPosition(row, 2).widget()
             ext_widg = self.headerentrygrid.itemAtPosition(row, 3).widget()
             def_widg = self.headerentrygrid.itemAtPosition(row, 4).widget()
-            caom_text = str(caom_widg.text())
+            caom_text = str(caom_widg.currentText())
             xml_text = str(xml_widg.currentText())
             ext_text = str(ext_widg.text())
             def_text = str(def_widg.text())
@@ -427,6 +454,41 @@ class ConfigGenerator(QWidget):
                 for key in self.header_keywords:
                     key_widg.addItem(key.keyword)
 
+    def caomKeywordSelected(self):
+        """ In the HLSP-Unique Parameters section, we want to update the XML
+        Parent value when a CAOM Keyword is selected from the CAOMKeywordBox.
+        """
+
+        # Get the position of the signal sender.
+        sender = self.sender()
+        ind = self.uniquesgrid.indexOf(sender)
+        pos = self.uniquesgrid.getItemPosition(ind)
+        row = pos[0]
+
+        # Get the widgets at this position and the new keyword chosen.
+        caom_key_box = self.uniquesgrid.itemAtPosition(row, 0).widget()
+        xml_parent_box = self.uniquesgrid.itemAtPosition(row, 1).widget()
+        new_caom_selected = caom_key_box.currentText()
+
+        # Get the XML Parent value associated with the new CAOM keyword.
+        new_xml_parent = caom_key_box.getXMLParent(new_caom_selected)
+
+        # If getXMLParent finds a match, look for this value in the
+        # contents of xml_parent_box.
+        if new_xml_parent:
+            n = xml_parent_box.findText(new_xml_parent)
+
+            # If the chosen XML parent already exists, set the QComboBox to
+            # that index.  Otherwise, insert it as new text.
+            if n >= 0:
+                xml_parent_box.setCurrentIndex(n)
+            else:
+                xml_parent_box.setCurrentText(new_xml_parent)
+
+        # If no corresponding XML parent is found, set it to "".
+        else:
+            xml_parent_box.setCurrentIndex(0)
+
     def addParameterClicked(self):
         """ Add a new unique parameter entry row into the self.nextrow_uniques
         position, then update self.nextrow_uniques.
@@ -438,12 +500,12 @@ class ConfigGenerator(QWidget):
             new_parent.addItem(p)
 
         # Make new line edits for 'CAOM Keyword:' and 'Value:'.
-        new_caom = QLineEdit()
+        new_caom = CAOMKeywordBox()
         new_value = QLineEdit()
 
         # Add the new widgets to the uniquesgrid layout.
-        self.uniquesgrid.addWidget(new_parent, self.nextrow_uniques, 0)
-        self.uniquesgrid.addWidget(new_caom, self.nextrow_uniques, 1)
+        self.uniquesgrid.addWidget(new_caom, self.nextrow_uniques, 0)
+        self.uniquesgrid.addWidget(new_parent, self.nextrow_uniques, 1)
         self.uniquesgrid.addWidget(new_value, self.nextrow_uniques, 2)
         self.uniquesgrid.setRowStretch(self.nextrow_uniques, 0)
         self.uniquesgrid.setRowStretch(self.nextrow_uniques+1, 1)
@@ -451,7 +513,11 @@ class ConfigGenerator(QWidget):
         # Update self.nextrow_uniques.
         self.nextrow_uniques += 1
 
-    def keywordSelected(self):
+        # Connect the new CAOMKeywordBox object to the module that will
+        # update the XML Parent depending on the value selected.
+        new_caom.currentIndexChanged.connect(self.caomKeywordSelected)
+
+    def fitsKeywordSelected(self):
         """ When a user chooses a header keyword in a headerentrygrid row,
         populate the CAOM Property, XML Parent, Extension, and Default Value
         (if applicaple) fields based on the chosen keyword.
@@ -481,7 +547,7 @@ class ConfigGenerator(QWidget):
         # If the header already exists, populate the remaining row fields with
         # data from the HeaderKeyword object.
         this_caom = self.headerentrygrid.itemAtPosition(row, 1).widget()
-        this_caom.setText(new_obj.caom)
+        this_caom.setTo(new_obj.caom)
         this_parent = self.headerentrygrid.itemAtPosition(row, 2).widget()
         n = self.xml_parents.index(new_obj.section)
         this_parent.setCurrentIndex(n)
@@ -500,8 +566,8 @@ class ConfigGenerator(QWidget):
         for header_key in self.header_keywords:
             new_keyword.addItem(header_key.keyword)
 
-        # Connect the new keyword combo box to the keywordSelected action.
-        new_keyword.currentIndexChanged.connect(self.keywordSelected)
+        # Connect the new keyword combo box to the fitsKeywordSelected action.
+        new_keyword.currentIndexChanged.connect(self.fitsKeywordSelected)
 
         # Make a new 'Parent:' combo box and populate it with self.xml_parents.
         new_xmlparent = QComboBox(editable=True)
@@ -510,7 +576,7 @@ class ConfigGenerator(QWidget):
 
         # Make new line edits for 'CAOM Property:', 'Extension:', and "Default
         # value".
-        new_headcaom = QLineEdit()
+        new_headcaom = CAOMKeywordBox()
         new_extension = QLineEdit()
         new_default = QLineEdit()
 
@@ -552,8 +618,8 @@ class ConfigGenerator(QWidget):
                 value = sub_dictionary[param]
 
                 # If the first widget text is empty, start loading there.
-                # Otherwise, load to the self.nextrow_uniques position and create a
-                # new set of widgets using addParameterClicked().
+                # Otherwise, load to the self.nextrow_uniques position and
+                # create a new set of widgets using addParameterClicked().
                 if first_widget.currentText() == "":
                     row = self.firstrow_uniques
                 else:
@@ -561,8 +627,8 @@ class ConfigGenerator(QWidget):
                     self.addParameterClicked()
 
                 # Get the Parent combo box for the current row.
-                parent_box = self.uniquesgrid.itemAtPosition(row,0).widget()
-                caom_box = self.uniquesgrid.itemAtPosition(row,1).widget()
+                caom_box = self.uniquesgrid.itemAtPosition(row,0).widget()
+                parent_box = self.uniquesgrid.itemAtPosition(row,1).widget()
                 value_box = self.uniquesgrid.itemAtPosition(row,2).widget()
 
                 # If the desired parent is already an option, set to that.
@@ -692,7 +758,7 @@ class ConfigGenerator(QWidget):
                 load_key.setCurrentIndex(available_keys.index(key))
             else:
                 load_key.setCurrentText(key)
-            load_caom.setText(values["caom"])
+            load_caom.setTo(values["caom"])
             if values["section"] in available_xml:
                 load_xml.setCurrentIndex(
                                         available_xml.index(values["section"]))
@@ -723,7 +789,7 @@ class ConfigGenerator(QWidget):
         k_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,0)
         k_one.widget().setCurrentIndex(0)
         h_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,1)
-        h_one.widget().clear()
+        h_one.widget().setCurrentIndex(0)
         x_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,2)
         x_one.widget().setCurrentIndex(0)
         e_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,3)
@@ -803,11 +869,12 @@ class ConfigGenerator(QWidget):
             config["data_type"] = dt
 
         # Collect all the unique parameters the user has entered.  Start at row
-        # self.firstrow_uniques and search through all rows the user may have added.
+        # self.firstrow_uniques and search through all rows the user may have
+        # added.
         uniques = {}
         for row in range(self.firstrow_uniques, self.uniquesgrid.rowCount()):
-            add_parent = self.uniquesgrid.itemAtPosition(row, 0)
-            add_caom = self.uniquesgrid.itemAtPosition(row, 1)
+            add_caom = self.uniquesgrid.itemAtPosition(row, 0)
+            add_parent = self.uniquesgrid.itemAtPosition(row, 1)
             add_value = self.uniquesgrid.itemAtPosition(row, 2)
             unique_parent = None
             unique_caom = None
@@ -826,7 +893,9 @@ class ConfigGenerator(QWidget):
             if add_value is not None:
                 value_widget = add_value.widget()
                 unique_value = str(value_widget.text())
-            if unique_parent == "" and unique_caom == "" and unique_value == "":
+            if (unique_parent == ""
+                and unique_caom == ""
+                and unique_value == ""):
                 continue
             elif unique_parent == "":
                 unique_parent = "CompositeObservation"

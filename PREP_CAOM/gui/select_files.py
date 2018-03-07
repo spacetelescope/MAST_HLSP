@@ -59,6 +59,10 @@ class SelectFiles(QWidget):
     table is necessary to run hlsp_to_xml.py.
     """
 
+    # Make a signal for launch_gui to collect selected file types on any
+    # check box toggle.
+    select_signal = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -71,7 +75,7 @@ class SelectFiles(QWidget):
         self.nextrow = 2
 
         # Define a list variable to track selected files
-        self.selected_files = []
+        self.selected_files = {}
 
         self.error = None
         self.message = None
@@ -79,19 +83,16 @@ class SelectFiles(QWidget):
         # Add buttons to create a new file entry row, clear all entries in the
         # table, load an existing .csv file, or write the current contents to a
         # new .csv file.
-        select_all = gb.GreyButton("Select All", 20, 175)
-        de_all = gb.GreyButton("Deselect All", 20, 175)
-        add_file = gb.GreyButton("+ add another file type", 20, 175)
-        self.clear = gb.GreyButton("- clear table", 20, 175)
-        self.save = gb.GreenButton("Select these types", 40)
-        empty = QSpacerItem(100, 1)
+        button_width = 160
+        select_all = gb.GreyButton("Select All", 20, button_width)
+        de_all = gb.GreyButton("Deselect All", 20, button_width)
+        add_file = gb.GreyButton("+ add another file type", 20, button_width)
+        self.clear = gb.GreyButton("- clear table", 20, button_width)
         self.buttonsgrid = QGridLayout()
         self.buttonsgrid.addWidget(select_all, 0, 0)
-        self.buttonsgrid.addWidget(de_all, 1, 0)
-        self.buttonsgrid.addWidget(add_file, 0, 1)
-        self.buttonsgrid.addWidget(self.clear, 1, 1)
-        self.buttonsgrid.addItem(empty, 0, 2)
-        self.buttonsgrid.addWidget(self.save, 0, 3, 2, 2)
+        self.buttonsgrid.addWidget(de_all, 0, 1)
+        self.buttonsgrid.addWidget(add_file, 0, 2)
+        self.buttonsgrid.addWidget(self.clear, 0, 3)
 
         # Make the widgets and set the layout for the file extensions entry
         # portion of the window
@@ -118,7 +119,6 @@ class SelectFiles(QWidget):
         self.grid = QGridLayout()
         self.grid.addLayout(self.buttonsgrid, 0, 0, 1, -1)
         self.grid.addLayout(self.filetypegrid, 1, 0)
-        #self.grid.addLayout(self.outputgrid, 1, 1)
 
         self.setLayout(self.grid)
         self.show()
@@ -129,7 +129,6 @@ class SelectFiles(QWidget):
         de_all.clicked.connect(self.deselectAllClicked)
         add_file.clicked.connect(self.newFileClicked)
         self.clear.clicked.connect(self.clearClicked)
-        self.save.clicked.connect(self.saveClicked)
 
     def selectAllClicked(self):
         """ Set all file entries from firstrow to nextrow as selected.
@@ -158,15 +157,30 @@ class SelectFiles(QWidget):
         pos = self.filetypegrid.getItemPosition(ind)
         row = pos[0]
         f = self.filetypegrid.itemAtPosition(row, 1).widget()
+        file_extension = f.text()
         pt = self.filetypegrid.itemAtPosition(row, 2).widget()
+        product_type = pt.currentText()
 
         # Toggle visibility based on check box state
         if state == Qt.Checked:
             f.setStyleSheet("")
             pt.setVisible(True)
+            if (file_extension in self.selected_files.keys()
+                or file_extension == ""):
+                pass
+            else:
+                self.selected_files[file_extension] = product_type
         else:
             f.setStyleSheet("color: DarkGrey; background-color: WhiteSmoke")
             pt.setVisible(False)
+            if (file_extension in self.selected_files.keys()
+                and file_extension != ""):
+                del self.selected_files[file_extension]
+            else:
+                pass
+
+        self.select_signal.emit()
+
 
     def newFileClicked(self):
         """ When 'add_file' is clicked, create a new row with the same file
@@ -228,6 +242,9 @@ class SelectFiles(QWidget):
                 self.filetypegrid.itemAtPosition(n,1).widget().setParent(None)
                 self.filetypegrid.itemAtPosition(n,2).widget().setParent(None)
         self.nextrow = self.firstrow + 1
+
+        self.selected_files = {}
+        self.select_signal.emit()
 
     def loadExtensionsYAML(self, filename):
         """ Open a YAML file sent from HLSP metadata checking and load the
@@ -327,8 +344,6 @@ class SelectFiles(QWidget):
         """ When 'save' is clicked, collect all the user entries and write the
         CSV file.
         """
-
-        self.selected_files = {}
 
         # Loop over all rows the user might have created in the form.
         for row in range(self.firstrow, self.filetypegrid.rowCount()):
