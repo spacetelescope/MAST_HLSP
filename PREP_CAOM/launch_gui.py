@@ -228,7 +228,6 @@ class HLSPIngest(QTabWidget):
         self.gen.clicked.connect(self.genClicked)
         self.run.clicked.connect(self.genAndRunClicked)
         self.tab1.select_signal.connect(self.selectClicked)
-        self.tab2.err_signal.connect(self.bad_message)
 
     def bad_message(self, msg):
         self.status.setTextColor(Qt.red)
@@ -259,7 +258,7 @@ class HLSPIngest(QTabWidget):
         # widget.  Automatically select these loaded entries and inidicate
         # they've been selected.
         try:
-            self.tab1.loadExtensionsYAML(filename)
+            self.tab1.loadExtensionsYAML(filename=filename)
             self.tab1.saveClicked()
             self.selectClicked()
             self.good_message("Loaded {0}".format(filename))
@@ -282,10 +281,10 @@ class HLSPIngest(QTabWidget):
         # to load parameters from filename.  Select the loaded file types and
         # display them.
         try:
-            self.tab1.loadConfigYAML(filename)
+            self.tab1.loadConfigYAML(filename=filename)
             self.tab1.saveClicked()
             self.selectClicked()
-            self.tab2.loadFromYAML(filename)
+            self.tab2.loadFromYAML(filename=filename)
             self.good_message("Loaded {0}".format(filename))
 
         # Catch any MyError instances and write them to the status box.

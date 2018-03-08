@@ -250,19 +250,76 @@ class SelectFiles(QWidget):
         self.selected_files = {}
         self.select_signal.emit()
 
-    def loadExtensionsYAML(self, filename):
-        """ Open a YAML file sent from HLSP metadata checking and load the
-        contents into the form.
+    def loadFromYaml(origin_function):
+        """ Provide a wrapper function for the two methods of loading file
+        type information to this form.  This code is common to both methods
+        and covers reading the YAML file to a dictionary, and inserting data
+        into widget elements.
         """
 
-        # Read the YAML contents into a dictionary.
+        def wrapper(s, **kwargs):
+
+            # Read the YAML contents into a dictionary.
+            filename = kwargs['filename']
+            file_config = read_yaml(filename)
+
+            # If file_config is a string, this is error text.
+            if isinstance(file_config, str):
+                raise MyError(file_config)
+
+            # Translate the file_config dictionary to a standardized
+            # dictionary ready to be inserted in the form.
+            kwargs['file_config'] = file_config
+            files = origin_function(s,
+                                    filename=filename,
+                                    file_config=file_config
+                                   )
+
+            #Clear any changes already made to the form.
+            s.clearClicked(source="load")
+
+            # Begin at the first data row and insert values into the form
+            # elements.
+            row_num = s.firstrow
+            for entry in sorted(files.keys()):
+
+                # If this row item does not exist, trigger a new row creation.
+                ext_box = s.filetypegrid.itemAtPosition(row_num, 1)
+                if ext_box is None:
+                    s.newFileClicked()
+
+                # Get all widgets in the row.
+                sel_box = s.filetypegrid.itemAtPosition(row_num, 0).widget()
+                ext_box = s.filetypegrid.itemAtPosition(row_num, 1).widget()
+                pt_box = s.filetypegrid.itemAtPosition(row_num, 2).widget()
+
+                # Insert file type parameters to the widgets.
+                sel_box.setChecked(True)
+                ext_box.setText(entry)
+                if files[entry] is not None:
+                    try:
+                        pt_box.setCurrentType(files[entry])
+                    except MyError as err:
+                        raise MyError(err.message)
+
+                # Move to the next row.
+                row_num += 1
+
+            return file_config
+        return wrapper
+
+    @loadFromYaml
+    def loadExtensionsYAML(self, **kwargs):
+        """ Open a YAML file sent from HLSP metadata checking and get just the
+        parameters we need.
+        """
+
         files = {}
-        file_config = read_yaml(filename)
+        filename = kwargs['filename']
+        file_config = kwargs['file_config']
 
-        # If read_yaml returns a string, it is error text.
-        if isinstance(file_config, str):
-            raise MyError(file_config)
-
+        # For each extension listed in file_config, create a FileEnding:
+        # CAOMProductType pair in the files dictionary.
         for ext in sorted(file_config.keys()):
 
             # Not every file_config entry will be a list
@@ -279,39 +336,19 @@ class SelectFiles(QWidget):
         if len(files.keys()) == 0:
             raise MyError("No 'FileEnding' rows in {0}".format(filename))
 
-        #Clear any changes already made to the form.
-        self.clearClicked(source="load")
+        return files
 
-        # Begin at the first data row and insert values into the form elements.
-        # (skip the CSV header row)
-        row_num = self.firstrow
-        for entry in sorted(files.keys()):
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
-            if ext_box is None:
-                self.newFileClicked()
-            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
-            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
-            sel_box.setChecked(True)
-            ext_box.setText(entry)
-            if files[entry] is not None:
-                try:
-                    pt_box.setCurrentType(files[entry])
-                except MyError as err:
-                    raise MyError(err.message)
-            row_num += 1
-        self.message = "Loaded {0}".format(filename)
-
-    def loadConfigYAML(self, filename):
-        """ Open an existing full YAML config file and load the contents into
-        the form.
+    @loadFromYaml
+    def loadConfigYAML(self, **kwargs):
+        """ Open an existing full YAML config file and pull out the
+        'file_types' dictionary.
         """
 
-        # Read the YAML contents into a dictionary.
         files = {}
-        file_config = read_yaml(filename)
-        if isinstance(file_config, str):
-            raise MyError(file_config)
+        filename = kwargs['filename']
+        file_config = kwargs['file_config']
+
+        # Get the 'file_types' dictionary.
         try:
             files = file_config["file_types"]
         except KeyError:
@@ -323,26 +360,7 @@ class SelectFiles(QWidget):
             self.error = "No data rows in {0}".format(filename)
             return None
 
-        # Clear any changes already made to the form.
-        self.clearClicked(source="load")
-
-        # Begin at the first data row and insert values into the form elements.
-        # (skip the CSV header row)
-        row_num = self.firstrow
-        for entry in sorted(files.keys()):
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
-            if ext_box is None:
-                self.newFileClicked()
-            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
-            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
-            sel_box.setChecked(True)
-            ext_box.setText(entry)
-            if files[entry] is not None:
-                pt_box.setCurrentType(files[entry])
-            row_num += 1
-
-        return file_config
+        return files
 
     def collectSelectedFiles(self):
         """ When 'save' is clicked, collect all the user entries and write the
