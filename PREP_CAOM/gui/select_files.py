@@ -325,8 +325,24 @@ class SelectFiles(QWidget):
             # Not every file_config entry will be a list
             if isinstance(file_config[ext], list):
                 for product in file_config[ext]:
-                    ending = product['FileEnding']
-                    prod_type = product['FileParams']['CAOMProductType']
+                    try:
+                        ending = product['FileEnding']
+                    except KeyError:
+                        msg = "'FileEnding' not found in .param file"
+                        raise MyError(msg)
+
+                    try:
+                        params = product['FileParams']
+                    except KeyError:
+                        msg = "'FileParams' not found in .param file"
+                        raise MyError(msg)
+
+                    try:
+                        prod_type = params['CAOMProductType']
+                    except KeyError:
+                        msg = "'CAOMProductType' not found in .param file"
+                        raise MyError(msg)
+                        
                     if prod_type == "null":
                         files[ending] = ""
                     else:

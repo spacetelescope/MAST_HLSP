@@ -149,7 +149,7 @@ class HLSPIngest(QTabWidget):
         # create a space label to separate buttons on the right and left sides.
         # Make a Layout for the buttons along the top row.
         height = 30
-        big_width = 200
+        big_width = 160
         small_width = 120
         self.loadtypes = gb.GreyButton("Load .param File", height, big_width)
         self.loadyaml = gb.GreyButton("Load .config File", height, big_width)
@@ -206,18 +206,32 @@ class HLSPIngest(QTabWidget):
         self.gen.setMinimumWidth(250)
         self.run.setMinimumWidth(250)
         self.gengrid = QGridLayout()
-        self.gengrid.addWidget(self.gen, 0, 0)
-        self.gengrid.addWidget(self.run, 1, 0)
+        self.gengrid.addWidget(self.space, 0, 0)
+        self.gengrid.addWidget(self.gen, 1, 0)
+        self.gengrid.addWidget(self.run, 2, 0)
+        self.gengrid.setRowStretch(0, 1)
+        self.gengrid.setRowStretch(1, 0)
+        self.gengrid.setRowStretch(2, 0)
 
         # Add all sub-layouts and the tabs widget to the overall Layout
         self.box = QGridLayout()
         self.box.addLayout(self.buttonsgrid, 0, 0, 1, -1)
-        self.box.addWidget(self.tabs, 1, 0)
-        self.box.addLayout(self.filetypesgrid, 1, 1)
-        self.box.addLayout(self.outputgrid, 2, 0)
-        self.box.addLayout(self.gengrid, 2, 1)
+        self.box.addWidget(self.tabs, 2, 0)
+        self.box.addLayout(self.filetypesgrid, 2, 1)
+        self.box.addLayout(self.outputgrid, 3, 0)
+        self.box.addLayout(self.gengrid, 3, 1)
         self.setLayout(self.box)
-        self.resize(1100,300)
+        self.resize(1100,500)
+
+        # Center the window
+        qtRectangle = self.frameGeometry()
+        print(qtRectangle)
+        screen = QDesktopWidget().availableGeometry()
+        x = (screen.width() - qtRectangle.width()) / 2
+        y = (screen.height() - qtRectangle.height()) / 2
+        self.move(x, y)
+
+        # Name and display the window
         self.setWindowTitle("ConfigGenerator")
         self.show()
 

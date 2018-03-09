@@ -348,7 +348,7 @@ class ConfigGenerator(QWidget):
         self.uniquesgrid.setColumnStretch(1, 1)
         self.uniquesgrid.setColumnStretch(2, 1)
 
-        hd = QLabel("Update nerd Defaults: ", self)
+        hd = QLabel("Update Header Defaults: ", self)
         hd.setToolTip("Entries here will update default values for .fits \
         headers if they exist or create new ones if they don't.")
         hdspace = QSpacerItem(300, 1)
@@ -839,7 +839,12 @@ class ConfigGenerator(QWidget):
             raise MyError(msg)
 
         try:
-            fits = yamlfile["fits"][0]
+            fits = yamlfile["fits"]
+            if len(fits) > 1:
+                msg = "More than one .fits product found in .param file"
+                raise MyError(msg)
+            else:
+                fits = fits[0]
         except KeyError:
             msg = "No fits parameters found in .param file"
             raise MyError(msg)
@@ -889,7 +894,7 @@ class ConfigGenerator(QWidget):
         x_one.widget().setCurrentIndex(0)
         e_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,3)
         e_one.widget().clear()
-        d_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,3)
+        d_one = self.headerentrygrid.itemAtPosition(self.firstrow_headers,4)
         d_one.widget().clear()
 
         # Delete any unique parameter entries beyond the first table row.
