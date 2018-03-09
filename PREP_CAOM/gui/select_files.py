@@ -336,6 +336,8 @@ class SelectFiles(QWidget):
         if len(files.keys()) == 0:
             raise MyError("No 'FileEnding' rows in {0}".format(filename))
 
+        # The files dictionary can now be read by the loadFromYaml wrapper and
+        # inserted into GUI widgets.
         return files
 
     @loadFromYaml
@@ -360,6 +362,8 @@ class SelectFiles(QWidget):
             self.error = "No data rows in {0}".format(filename)
             return None
 
+        # The files dictionary can now be read by the loadFromYaml wrapper and
+        # inserted into GUI widgets.
         return files
 
     def collectSelectedFiles(self):

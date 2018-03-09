@@ -297,15 +297,29 @@ class ConfigGenerator(QWidget):
         self.datatypesgrid.addWidget(dt, 0, 1)
         self.datatypesgrid.addWidget(self.dt_box, 0, 2)
 
+        up = QLabel("HLSP-Unique Parameters: ", self)
+        up.setToolTip("Define additional CAOM parameters to insert that are \
+        not defined in the FITS headers.")
+        upspace = QSpacerItem(100, 1)
+        add_param = gb.GreyButton("+ add a new parameter", 20)
+        add_param.setMinimumWidth(125)
+        add_param.setMaximumWidth(200)
+        self.caomkeywordtitle = QGridLayout()
+        self.caomkeywordtitle.addWidget(up, 0, 0)
+        self.caomkeywordtitle.addItem(upspace, 0, 1)
+        self.caomkeywordtitle.addWidget(add_param, 0, 2)
+
         # Create custom unique parameters to write into the yaml file.  This
         # list is expandable.  Custom parents can be defined in addition to
         # metadataList and provenance.
+        """
         up = QLabel("HLSP-Unique Parameters: ", self)
         up.setToolTip("Define additional CAOM parameters to insert that are \
         not defined in the FITS headers.")
         add_param = gb.GreyButton("+ add a new parameter", 20)
         add_param.setMinimumWidth(125)
         #add_param.setMaximumWidth(175)
+        """
         parent_param = QLabel("XML Parent:", up)
         parent_param.setAlignment(Qt.AlignHCenter)
         caom_param = QLabel("CAOM Keyword:", up)
@@ -319,31 +333,46 @@ class ConfigGenerator(QWidget):
         caom_edit = CAOMKeywordBox()
         value_edit = QLineEdit(value_param)
         self.uniquesgrid = QGridLayout()
-        self.uniquesgrid.addWidget(up, 0, 0)
-        self.uniquesgrid.addWidget(add_param, 0, 2)
-        self.uniquesgrid.addWidget(caom_param, 1, 0)
-        self.uniquesgrid.addWidget(parent_param, 1, 1)
-        self.uniquesgrid.addWidget(value_param, 1, 2)
-        self.uniquesgrid.addWidget(caom_edit, 2, 0)
-        self.uniquesgrid.addWidget(parent_edit, 2, 1)
-        self.uniquesgrid.addWidget(value_edit, 2, 2)
-        self.firstrow_uniques = 2
-        self.nextrow_uniques = 3
+        #self.uniquesgrid.addWidget(up, 0, 0)
+        #self.uniquesgrid.addWidget(add_param, 0, 2)
+        self.uniquesgrid.addWidget(caom_param, 0, 0)
+        self.uniquesgrid.addWidget(parent_param, 0, 1)
+        self.uniquesgrid.addWidget(value_param, 0, 2)
+        self.uniquesgrid.addWidget(caom_edit, 1, 0)
+        self.uniquesgrid.addWidget(parent_edit, 1, 1)
+        self.uniquesgrid.addWidget(value_edit, 1, 2)
+        self.firstrow_uniques = 1
+        self.nextrow_uniques = 2
         self.uniquesgrid.setRowStretch(self.nextrow_uniques, 1)
         self.uniquesgrid.setColumnStretch(0, 0)
         self.uniquesgrid.setColumnStretch(1, 1)
         self.uniquesgrid.setColumnStretch(2, 1)
 
+        hd = QLabel("Update nerd Defaults: ", self)
+        hd.setToolTip("Entries here will update default values for .fits \
+        headers if they exist or create new ones if they don't.")
+        hdspace = QSpacerItem(300, 1)
+        add_header = gb.GreyButton("+ add a new keyword", 20)
+        #add_header.setMinimumWidth(20)
+        add_header.setMaximumWidth(200)
+        self.fitskeywordtitle = QGridLayout()
+        self.fitskeywordtitle.addWidget(hd, 0, 0)
+        self.fitskeywordtitle.addItem(hdspace, 0, 1)
+        self.fitskeywordtitle.addWidget(add_header, 0, 2)
+
+
         # Adjust .fits header keyword default values or add new header keywords
         # along with the necessary parameters to add to the template file.
         # This is an expandable list with fields that will automatically
         # populate based on a user's keyword selection.
+        """
         hd = QLabel("Update Header Defaults: ", self)
         hd.setToolTip("Entries here will update default values for .fits \
         headers if they exist or create new ones if they don't.")
         add_header = gb.GreyButton("+ add a new keyword", 20)
         add_header.setMinimumWidth(125)
         #add_header.setMaximumWidth(175)
+        """
         keyword_label = QLabel("FITS Keyword:", hd)
         keyword_label.setAlignment(Qt.AlignHCenter)
         headcaom_label = QLabel("CAOM Keyword:", hd)
@@ -367,20 +396,20 @@ class ConfigGenerator(QWidget):
         extension_edit = QLineEdit(extension_label)
         default_edit = QLineEdit(default_label)
         self.headerentrygrid = QGridLayout()
-        self.headerentrygrid.addWidget(hd, 0, 0)
-        self.headerentrygrid.addWidget(add_header, 0, 3, 1, 2)
-        self.headerentrygrid.addWidget(keyword_label, 1, 0)
-        self.headerentrygrid.addWidget(headcaom_label, 1, 1)
-        self.headerentrygrid.addWidget(xmlparent_label, 1, 2)
-        self.headerentrygrid.addWidget(extension_label, 1, 3)
-        self.headerentrygrid.addWidget(default_label, 1, 4)
-        self.headerentrygrid.addWidget(self.keyword_edit, 2, 0)
-        self.headerentrygrid.addWidget(headcaom_edit, 2, 1)
-        self.headerentrygrid.addWidget(xmlparent_edit, 2, 2)
-        self.headerentrygrid.addWidget(extension_edit, 2, 3)
-        self.headerentrygrid.addWidget(default_edit, 2, 4)
-        self.firstrow_headers = 2
-        self.nextrow_headers = 3
+        #self.headerentrygrid.addWidget(hd, 0, 0)
+        #self.headerentrygrid.addWidget(add_header, 0, 3, 1, 2)
+        self.headerentrygrid.addWidget(keyword_label, 0, 0)
+        self.headerentrygrid.addWidget(headcaom_label, 0, 1)
+        self.headerentrygrid.addWidget(xmlparent_label, 0, 2)
+        self.headerentrygrid.addWidget(extension_label, 0, 3)
+        self.headerentrygrid.addWidget(default_label, 0, 4)
+        self.headerentrygrid.addWidget(self.keyword_edit, 1, 0)
+        self.headerentrygrid.addWidget(headcaom_edit, 1, 1)
+        self.headerentrygrid.addWidget(xmlparent_edit, 1, 2)
+        self.headerentrygrid.addWidget(extension_edit, 1, 3)
+        self.headerentrygrid.addWidget(default_edit, 1, 4)
+        self.firstrow_headers = 1
+        self.nextrow_headers = 2
         self.headerentrygrid.setRowStretch(self.nextrow_headers, 1)
         self.headerentrygrid.setColumnStretch(0, 0)
         self.headerentrygrid.setColumnStretch(1, 0)
@@ -402,8 +431,10 @@ class ConfigGenerator(QWidget):
         self.grid2.addLayout(self.pathsgrid, 1, 0, 2, 4)
         self.grid2.addLayout(self.headertypesgrid, 1, 4)
         self.grid2.addLayout(self.datatypesgrid, 2, 4, 1, 1)
-        self.grid2.addLayout(self.uniquesgrid, 3, 0, 4, -1)
-        self.grid2.addLayout(self.headerentrygrid, 7, 0, 4, -1)
+        self.grid2.addLayout(self.caomkeywordtitle, 3, 0, 1, -1)
+        self.grid2.addLayout(self.uniquesgrid, 4, 0, 4, -1)
+        self.grid2.addLayout(self.fitskeywordtitle, 8, 0, 1, -1)
+        self.grid2.addLayout(self.headerentrygrid, 9, 0, 4, -1)
 
         # Set the window layout and show it.
         self.setLayout(self.grid2)
@@ -678,8 +709,9 @@ class ConfigGenerator(QWidget):
         :type filename:  str
         """
 
-        # Read the YAML entries into a dictionary.
-        yamlfile = read_yaml(filename)
+        # Read the YAML entries into a dictionary.  select_files will also be
+        # opening the config file, so kill the redundant output.
+        yamlfile = read_yaml(filename, output=False)
 
         # Clear any existing form values before loading the new data.
         self.resetClicked(source="load")
@@ -787,6 +819,51 @@ class ConfigGenerator(QWidget):
             # objects.
             load_ext.setText(values["headerName"])
             load_def.setText(values["headerDefaultValue"])
+
+    def loadParamFile(self, filename):
+
+        # Read the YAML entries into a dictionary.  select_files will also be
+        # opening the config file, so kill the redundant output.
+        yamlfile = read_yaml(filename, output=False)
+
+        # Clear any existing form values before loading the new data.
+        self.resetClicked(source="load")
+
+        # Get the 'filepaths' data out of the dictionary and write it into
+        # the appropriate lineedits
+        try:
+            datadir = yamlfile["InputDir"]
+            self.data_edit.insert(datadir)
+        except KeyError:
+            msg = "'InputDir' either missing or not formatted in .param file"
+            raise MyError(msg)
+
+        try:
+            fits = yamlfile["fits"][0]
+        except KeyError:
+            msg = "No fits parameters found in .param file"
+            raise MyError(msg)
+
+        try:
+            new_head_type = fits["FileParams"]["Standard"].title()
+            if new_head_type in self.header.header_types:
+                n = self.header.header_types.index(new_head_type)
+                self.header.setCurrentIndex(n)
+        except KeyError:
+            msg = "Cound not find a .fits standard in .param file"
+            raise MyError(msg)
+
+        try:
+            new_data_type = fits["FileParams"]["ProductType"].upper()
+            if new_data_type in self.dt_box.data_types:
+                n = self.dt_box.data_types.index(new_data_type)
+                self.dt_box.setCurrentIndex(n)
+            else:
+                self.dt_box.setCurrentIndex(0)
+        except KeyError:
+            msg = "Could not find 'ProductType' parameter in .param file"
+            raise MyError(msg)
+
 
     def resetClicked(self, source="clicked"):
         """ Clear any changes to the form.

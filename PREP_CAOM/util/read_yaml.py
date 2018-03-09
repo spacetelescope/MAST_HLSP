@@ -9,7 +9,7 @@ import yaml
 
 #--------------------
 
-def read_yaml(path):
+def read_yaml(path, output=True):
     """ Open a provided file path and load the yaml-formatted contents
     into a dictionary.  Return an error string if there is a failure.
 
@@ -20,7 +20,8 @@ def read_yaml(path):
     # Try to open a yaml config file.
     try:
         stream = open(path, 'r')
-        print("Opening {0}".format(path))
+        if output:
+            print("Opening {0}".format(path))
     except FileNotFoundError:
         err = "{0} does not exist!".format(path)
         return err

@@ -150,9 +150,9 @@ class HLSPIngest(QTabWidget):
         # Make a Layout for the buttons along the top row.
         height = 30
         big_width = 200
-        small_width = 75
-        self.loadtypes = gb.GreyButton("Load File Types", height, big_width)
-        self.loadyaml = gb.GreyButton("Load YAML Config", height, big_width)
+        small_width = 120
+        self.loadtypes = gb.GreyButton("Load .param File", height, big_width)
+        self.loadyaml = gb.GreyButton("Load .config File", height, big_width)
         self.reset = gb.RedButton("Reset Forms", height, big_width)
         self.help = gb.GreyButton("Help", height, small_width)
         self.caom = gb.GreyButton("CAOM", height, small_width)
@@ -164,19 +164,22 @@ class HLSPIngest(QTabWidget):
         self.buttonsgrid.addWidget(self.loadyaml, 0, 1)
         self.buttonsgrid.addWidget(self.reset, 0, 2)
         self.buttonsgrid.addWidget(self.help, 0, 4)
-        self.buttonsgrid.addWidget(self.caom, 0, 5)
-        self.buttonsgrid.addWidget(self.quit, 0, 6)
+        #self.buttonsgrid.addWidget(self.caom, 0, 5)
+        self.buttonsgrid.addWidget(self.quit, 0, 5)
         self.buttonsgrid.addWidget(self.space, 0, 3)
 
         # Make a Layout for the file_types display along the right side.
         filetypes_label = QLabel("File types selected: ")
         filetypes_label.setMaximumWidth(125)
         self.filetypes_display = QTextEdit()
-        self.filetypes_display.setMaximumWidth(150)
+        self.filetypes_display.setMaximumWidth(200)
         self.filetypes_display.setReadOnly(True)
         self.filetypes_display.setLineWrapMode(QTextEdit.NoWrap)
         self.filetypes_display.setStyleSheet("background: \
                                              rgba(235,235,235,0%);")
+        types_font = QFont()
+        types_font.setPointSize(16)
+        self.filetypes_display.setFont(types_font)
         self.filetypes_display.setMinimumWidth(150)
         self.filetypes_display.setTextColor(Qt.red)
         self.filetypes_display.append("No file types selected")
@@ -261,6 +264,7 @@ class HLSPIngest(QTabWidget):
             self.tab1.loadExtensionsYAML(filename=filename)
             self.tab1.saveClicked()
             self.selectClicked()
+            self.tab2.loadParamFile(filename)
             self.good_message("Loaded {0}".format(filename))
 
         # Catch any MyError instances and write them to the status box.
@@ -390,7 +394,7 @@ class HLSPIngest(QTabWidget):
         self.filetypes_display.clear()
         if len(self.types_list) == 0:
             self.filetypes_display.setTextColor(Qt.red)
-            self.filetypes_display.append("No file types selected!")
+            self.filetypes_display.append("No file types selected")
         else:
             self.filetypes_display.setTextColor(Qt.black)
             for t in self.types_list:
