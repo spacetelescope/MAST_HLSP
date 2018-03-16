@@ -37,6 +37,12 @@ except ImportError:
 #--------------------
 
 def get_file_to_load(parent, prompt):
+    """ Use a file dialog pop up to get a user-determined filename for file
+    creation and saving.
+
+    :param prompt:  The text to use in the dialog pop up window.
+    :type prompt:  str
+    """
 
     loadit = QFileDialog.getOpenFileName(parent, prompt, ".")
     filename = loadit[0]
@@ -70,12 +76,12 @@ class HelpPopup(QDialog):
                 self.helpbox.append(raw_line)
             helpfile.close()
 
-        self.closebutton = QPushButton("Close")
-        self.closebutton.clicked.connect(self.closeClicked)
+        self.closeButton = QPushButton("Close")
+        self.closeButton.clicked.connect(self.closeClicked)
 
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.helpbox)
-        self.vbox.addWidget(self.closebutton)
+        self.vbox.addWidget(self.closeButton)
         self.setLayout(self.vbox)
         self.setWindowTitle("ConfigGenerator Help")
         self.resize(600, 600)
@@ -108,12 +114,12 @@ class CAOMPopup(QDialog):
                 self.caombox.append(raw_line)
             caomfile.close()
 
-        self.closebutton = QPushButton("Close")
-        self.closebutton.clicked.connect(self.closeClicked)
+        self.closeButton = QPushButton("Close")
+        self.closeButton.clicked.connect(self.closeClicked)
 
         self.vbox = QVBoxLayout()
         self.vbox.addWidget(self.caombox)
-        self.vbox.addWidget(self.closebutton)
+        self.vbox.addWidget(self.closeButton)
         self.setLayout(self.vbox)
         self.setWindowTitle("CAOM Parameters")
         self.resize(600, 600)
@@ -151,81 +157,81 @@ class HLSPIngest(QTabWidget):
         height = 30
         big_width = 160
         small_width = 120
-        self.loadtypes = gb.GreyButton("Load .param File", height, big_width)
-        self.loadyaml = gb.GreyButton("Load .config File", height, big_width)
+        space_width = 200
+        self.loadParam = gb.GreyButton("Load .param File", height, big_width)
+        self.loadConfig = gb.GreyButton("Load .config File", height, big_width)
         self.reset = gb.RedButton("Reset Forms", height, big_width)
         self.help = gb.GreyButton("Help", height, small_width)
         self.caom = gb.GreyButton("CAOM", height, small_width)
         self.quit = gb.RedButton("Quit", height, small_width)
         self.space = QLabel("")
-        self.space.setMinimumWidth(200)
-        self.buttonsgrid = QGridLayout()
-        self.buttonsgrid.addWidget(self.loadtypes, 0, 0)
-        self.buttonsgrid.addWidget(self.loadyaml, 0, 1)
-        self.buttonsgrid.addWidget(self.reset, 0, 2)
-        self.buttonsgrid.addWidget(self.help, 0, 4)
-        #self.buttonsgrid.addWidget(self.caom, 0, 5)
-        self.buttonsgrid.addWidget(self.quit, 0, 5)
-        self.buttonsgrid.addWidget(self.space, 0, 3)
+        self.space.setMinimumWidth(space_width)
+        self.buttonsGrid = QGridLayout()
+        self.buttonsGrid.addWidget(self.loadParam, 0, 0)
+        self.buttonsGrid.addWidget(self.loadConfig, 0, 1)
+        self.buttonsGrid.addWidget(self.reset, 0, 2)
+        self.buttonsGrid.addWidget(self.help, 0, 4)
+        #self.buttonsGrid.addWidget(self.caom, 0, 5)
+        self.buttonsGrid.addWidget(self.quit, 0, 5)
+        self.buttonsGrid.addWidget(self.space, 0, 3)
 
         # Make a Layout for the file_types display along the right side.
-        filetypes_label = QLabel("File types selected: ")
-        filetypes_label.setMaximumWidth(125)
-        self.filetypes_display = QTextEdit()
-        self.filetypes_display.setMaximumWidth(200)
-        self.filetypes_display.setReadOnly(True)
-        self.filetypes_display.setLineWrapMode(QTextEdit.NoWrap)
-        self.filetypes_display.setStyleSheet("background: \
+        fileTypesLabel = QLabel("File types selected: ")
+        fileTypesLabel.setMaximumWidth(125)
+        self.fileTypesDisplay = QTextEdit()
+        self.fileTypesDisplay.setMaximumWidth(200)
+        self.fileTypesDisplay.setReadOnly(True)
+        self.fileTypesDisplay.setLineWrapMode(QTextEdit.NoWrap)
+        self.fileTypesDisplay.setStyleSheet("background: \
                                              rgba(235,235,235,0%);")
         types_font = QFont()
         types_font.setPointSize(16)
-        self.filetypes_display.setFont(types_font)
-        self.filetypes_display.setMinimumWidth(150)
-        self.filetypes_display.setTextColor(Qt.red)
-        self.filetypes_display.append("No file types selected")
-        self.filetypesgrid = QGridLayout()
-        self.filetypesgrid.addWidget(filetypes_label, 0, 0)
-        self.filetypesgrid.addWidget(self.filetypes_display, 1, 0)
+        self.fileTypesDisplay.setFont(types_font)
+        self.fileTypesDisplay.setMinimumWidth(150)
+        self.fileTypesDisplay.setTextColor(Qt.red)
+        self.fileTypesDisplay.append("No file types selected")
+        self.fileTypesGrid = QGridLayout()
+        self.fileTypesGrid.addWidget(fileTypesLabel, 0, 0)
+        self.fileTypesGrid.addWidget(self.fileTypesDisplay, 1, 0)
 
         # Make a read-only text box to display status messages
-        res_label = QLabel("Messages:")
-        res_label.setAlignment(Qt.AlignHCenter)
-        self.status = QTextEdit()
-        self.status.setReadOnly(True)
-        self.status.setLineWrapMode(QTextEdit.NoWrap)
-        self.status.setStyleSheet("border-style: solid; \
+        messagesLabel = QLabel("Messages:")
+        messagesLabel.setAlignment(Qt.AlignHCenter)
+        self.messages = QTextEdit()
+        self.messages.setReadOnly(True)
+        self.messages.setLineWrapMode(QTextEdit.NoWrap)
+        self.messages.setStyleSheet("border-style: solid; \
                                   border-width: 1px; \
                                   background: rgba(235,235,235,0%);")
-        self.outputgrid = QGridLayout()
-        self.outputgrid.addWidget(res_label, 0, 0)
-        self.outputgrid.addWidget(self.status, 1, 0)
+        self.messagesGrid = QGridLayout()
+        self.messagesGrid.addWidget(messagesLabel, 0, 0)
+        self.messagesGrid.addWidget(self.messages, 1, 0)
 
         # Make a Layout for the two big "Generate" buttons at the bottom-right
-        self.gen = gb.GreenButton("Generate YAML File", 40)
+        self.generate = gb.GreenButton("Generate YAML File", 40)
         self.run = gb.BlueButton("Generate YAML and Run Script", 40)
-        self.gen.setMinimumWidth(250)
+        self.generate.setMinimumWidth(250)
         self.run.setMinimumWidth(250)
-        self.gengrid = QGridLayout()
-        self.gengrid.addWidget(self.space, 0, 0)
-        self.gengrid.addWidget(self.gen, 1, 0)
-        self.gengrid.addWidget(self.run, 2, 0)
-        self.gengrid.setRowStretch(0, 1)
-        self.gengrid.setRowStretch(1, 0)
-        self.gengrid.setRowStretch(2, 0)
+        self.actionGrid = QGridLayout()
+        self.actionGrid.addWidget(self.space, 0, 0)
+        self.actionGrid.addWidget(self.generate, 1, 0)
+        self.actionGrid.addWidget(self.run, 2, 0)
+        self.actionGrid.setRowStretch(0, 1)
+        self.actionGrid.setRowStretch(1, 0)
+        self.actionGrid.setRowStretch(2, 0)
 
         # Add all sub-layouts and the tabs widget to the overall Layout
         self.box = QGridLayout()
-        self.box.addLayout(self.buttonsgrid, 0, 0, 1, -1)
+        self.box.addLayout(self.buttonsGrid, 0, 0, 1, -1)
         self.box.addWidget(self.tabs, 2, 0)
-        self.box.addLayout(self.filetypesgrid, 2, 1)
-        self.box.addLayout(self.outputgrid, 3, 0)
-        self.box.addLayout(self.gengrid, 3, 1)
+        self.box.addLayout(self.fileTypesGrid, 2, 1)
+        self.box.addLayout(self.messagesGrid, 3, 0)
+        self.box.addLayout(self.actionGrid, 3, 1)
         self.setLayout(self.box)
         self.resize(1100,500)
 
         # Center the window
         qtRectangle = self.frameGeometry()
-        print(qtRectangle)
         screen = QDesktopWidget().availableGeometry()
         x = (screen.width() - qtRectangle.width()) / 2
         y = (screen.height() - qtRectangle.height()) / 2
@@ -239,29 +245,26 @@ class HLSPIngest(QTabWidget):
         self.quit.clicked.connect(self.quitClicked)
         self.help.clicked.connect(self.helpClicked)
         self.caom.clicked.connect(self.caomClicked)
-        self.loadtypes.clicked.connect(self.loadTypesClicked)
-        self.loadyaml.clicked.connect(self.loadYAMLClicked)
+        self.loadParam.clicked.connect(self.loadParamClicked)
+        self.loadConfig.clicked.connect(self.loadConfigClicked)
         self.reset.clicked.connect(self.resetClicked)
-        self.gen.clicked.connect(self.genClicked)
+        self.generate.clicked.connect(self.genClicked)
         self.run.clicked.connect(self.genAndRunClicked)
         self.tab1.select_signal.connect(self.selectClicked)
 
     def bad_message(self, msg):
-        self.status.setTextColor(Qt.red)
-        self.status.append(msg)
+        self.messages.setTextColor(Qt.red)
+        self.messages.append(msg)
 
     def good_message(self, msg):
-        self.status.setTextColor(Qt.darkGreen)
-        self.status.append(msg)
+        self.messages.setTextColor(Qt.darkGreen)
+        self.messages.append(msg)
 
     def neutral_message(self, msg):
-        self.status.setTextColor(Qt.black)
-        self.status.append(msg)
+        self.messages.setTextColor(Qt.black)
+        self.messages.append(msg)
 
-    #def handleErrors(self, msg):
-
-
-    def loadTypesClicked(self):
+    def loadParamClicked(self):
         """ Load a dictionary of file extensions into the tab1 Select File
         Types widget using a tab1 module.
         """
@@ -285,7 +288,7 @@ class HLSPIngest(QTabWidget):
         except MyError as err:
             self.bad_message(err.message)
 
-    def loadYAMLClicked(self):
+    def loadConfigClicked(self):
         """ Get a YAML config file name and pass it to both tab1 and tab2
         modules to load the information.
         """
@@ -321,6 +324,7 @@ class HLSPIngest(QTabWidget):
         if self.cc.confirm:
             self.tab1.clearClicked(source="wrapper")
             self.tab2.resetClicked()
+            self.resize(1100,500)
             self.neutral_message("Forms reset")
 
     def collectAndSaveTabInputs(self):
@@ -405,14 +409,14 @@ class HLSPIngest(QTabWidget):
 
         self.file_types = self.tab1.selected_files
         self.types_list = sorted(self.file_types.keys())
-        self.filetypes_display.clear()
+        self.fileTypesDisplay.clear()
         if len(self.types_list) == 0:
-            self.filetypes_display.setTextColor(Qt.red)
-            self.filetypes_display.append("No file types selected")
+            self.fileTypesDisplay.setTextColor(Qt.red)
+            self.fileTypesDisplay.append("No file types selected")
         else:
-            self.filetypes_display.setTextColor(Qt.black)
+            self.fileTypesDisplay.setTextColor(Qt.black)
             for t in self.types_list:
-                self.filetypes_display.append("*"+t)
+                self.fileTypesDisplay.append("*_"+t)
 
 #--------------------
 

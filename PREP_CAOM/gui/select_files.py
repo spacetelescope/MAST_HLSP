@@ -72,7 +72,7 @@ class SelectFiles(QWidget):
         # Set two variables to track the beginning and end of the file entry
         # table, since it has a variable number of rows
         self.firstrow = 1
-        self.nextrow = 2
+        self.nextrow = self.firstrow + 1
 
         # Define a list variable to track selected files
         self.selected_files = {}
@@ -83,51 +83,53 @@ class SelectFiles(QWidget):
         # Add buttons to create a new file entry row, clear all entries in the
         # table, load an existing .csv file, or write the current contents to a
         # new .csv file.
-        button_width = 160
-        select_all = gb.GreyButton("Select All", 20, button_width)
-        de_all = gb.GreyButton("Deselect All", 20, button_width)
-        add_file = gb.GreyButton("+ add another file type", 20, button_width)
-        self.clear = gb.GreyButton("- clear table", 20, button_width)
-        self.buttonsgrid = QGridLayout()
-        self.buttonsgrid.addWidget(select_all, 0, 0)
-        self.buttonsgrid.addWidget(de_all, 0, 1)
-        self.buttonsgrid.addWidget(add_file, 0, 2)
-        self.buttonsgrid.addWidget(self.clear, 0, 3)
+        b_height = 20
+        b_width = 160
+        select_all = gb.GreyButton("Select All", b_height, b_width)
+        deselect_all = gb.GreyButton("Deselect All", b_height, b_width)
+        add_type = gb.GreyButton("+ Add Another File Type", b_height, b_width)
+        self.clear = gb.GreyButton("- Clear Table", b_height, b_width)
+        self.buttons_grid = QGridLayout()
+        self.buttons_grid.addWidget(select_all, 0, 0)
+        self.buttons_grid.addWidget(deselect_all, 0, 1)
+        self.buttons_grid.addWidget(add_type, 0, 2)
+        self.buttons_grid.addWidget(self.clear, 0, 3)
 
         # Make the widgets and set the layout for the file extensions entry
         # portion of the window
-        ext_label = QLabel("File ends with:")
-        ext_label.setToolTip("Provide a distinctive filename ending to search for within this HLSP ('_img.fits')")
-        dt_label = QLabel("Data Type:")
-        pt_label = QLabel("Product Type:")
-        sel_label = QLabel("Select:")
-        self.ext_edit = QLineEdit()
-        self.pt_box = ProductTypeBox()
-        self.sel_box = QCheckBox()
-        self.sel_box.setChecked(True)
-        self.filetypegrid = QGridLayout()
-        self.filetypegrid.addWidget(sel_label, 0, 0)
-        self.filetypegrid.addWidget(ext_label, 0, 1)
-        self.filetypegrid.addWidget(pt_label, 0, 2)
-        self.filetypegrid.addWidget(self.sel_box, 1, 0)
-        self.filetypegrid.addWidget(self.ext_edit, 1, 1)
-        self.filetypegrid.addWidget(self.pt_box, 1, 2)
-        self.filetypegrid.setRowStretch(self.nextrow, 0)
-        self.filetypegrid.setRowStretch(self.nextrow+1, 1)
+        filetype_label = QLabel("File ends with:")
+        filetype_label.setToolTip(("Provide a distinctive filename ending to "
+                                   "search for within this HLSP ('_img.fits')")
+                                  )
+        producttype_label = QLabel("Product Type:")
+        select_label = QLabel("Select:")
+        filetype_edit = QLineEdit()
+        producttype_box = ProductTypeBox()
+        select_box = QCheckBox()
+        select_box.setChecked(True)
+        self.filetypes_grid = QGridLayout()
+        self.filetypes_grid.addWidget(select_label, 0, 0)
+        self.filetypes_grid.addWidget(filetype_label, 0, 1)
+        self.filetypes_grid.addWidget(producttype_label, 0, 2)
+        self.filetypes_grid.addWidget(select_box, 1, 0)
+        self.filetypes_grid.addWidget(filetype_edit, 1, 1)
+        self.filetypes_grid.addWidget(producttype_box, 1, 2)
+        self.filetypes_grid.setRowStretch(self.nextrow, 0)
+        self.filetypes_grid.setRowStretch(self.nextrow+1, 1)
 
         # Add the sub-layouts to the window layout
-        self.grid = QGridLayout()
-        self.grid.addLayout(self.buttonsgrid, 0, 0, 1, -1)
-        self.grid.addLayout(self.filetypegrid, 1, 0)
+        self.meta_grid = QGridLayout()
+        self.meta_grid.addLayout(self.buttons_grid, 0, 0, 1, -1)
+        self.meta_grid.addLayout(self.filetypes_grid, 1, 0)
 
-        self.setLayout(self.grid)
+        self.setLayout(self.meta_grid)
         self.show()
 
         # Connect all buttons
-        self.sel_box.stateChanged.connect(self.selectBoxClicked)
+        select_box.stateChanged.connect(self.selectBoxClicked)
         select_all.clicked.connect(self.selectAllClicked)
-        de_all.clicked.connect(self.deselectAllClicked)
-        add_file.clicked.connect(self.newFileClicked)
+        deselect_all.clicked.connect(self.deselectAllClicked)
+        add_type.clicked.connect(self.newFileClicked)
         self.clear.clicked.connect(self.clearClicked)
 
     def selectAllClicked(self):
@@ -135,7 +137,7 @@ class SelectFiles(QWidget):
         """
 
         for n in range(self.firstrow, self.nextrow):
-            selected = self.filetypegrid.itemAtPosition(n, 0).widget()
+            selected = self.filetypes_grid.itemAtPosition(n, 0).widget()
             selected.setChecked(True)
 
     def deselectAllClicked(self):
@@ -143,7 +145,7 @@ class SelectFiles(QWidget):
         """
 
         for n in range(self.firstrow, self.nextrow):
-            selected = self.filetypegrid.itemAtPosition(n, 0).widget()
+            selected = self.filetypes_grid.itemAtPosition(n, 0).widget()
             selected.setChecked(False)
 
     def selectBoxClicked(self, state):
@@ -153,17 +155,17 @@ class SelectFiles(QWidget):
         # Many select boxes connect to this module, so need to determine which
         # is sending the signal
         sender = self.sender()
-        ind = self.filetypegrid.indexOf(sender)
-        pos = self.filetypegrid.getItemPosition(ind)
+        ind = self.filetypes_grid.indexOf(sender)
+        pos = self.filetypes_grid.getItemPosition(ind)
         row = pos[0]
-        f = self.filetypegrid.itemAtPosition(row, 1).widget()
-        file_extension = f.text()
-        pt = self.filetypegrid.itemAtPosition(row, 2).widget()
+        fe = self.filetypes_grid.itemAtPosition(row, 1).widget()
+        file_extension = fe.text()
+        pt = self.filetypes_grid.itemAtPosition(row, 2).widget()
         product_type = pt.currentText()
 
         # Toggle visibility based on check box state
         if state == Qt.Checked:
-            f.setStyleSheet("")
+            fe.setStyleSheet("")
             pt.setVisible(True)
             if (file_extension in self.selected_files.keys()
                 or file_extension == ""):
@@ -171,7 +173,7 @@ class SelectFiles(QWidget):
             else:
                 self.selected_files[file_extension] = product_type
         else:
-            f.setStyleSheet("color: DarkGrey; background-color: WhiteSmoke")
+            fe.setStyleSheet("color: DarkGrey; background-color: WhiteSmoke")
             pt.setVisible(False)
             if (file_extension in self.selected_files.keys()
                 and file_extension != ""):
@@ -185,7 +187,7 @@ class SelectFiles(QWidget):
 
 
     def newFileClicked(self):
-        """ When 'add_file' is clicked, create a new row with the same file
+        """ When 'add_type' is clicked, create a new row with the same file
         entry options as the first row.  Create this new row at the nextrow
         position and advance the nextrow tracker.
         """
@@ -200,14 +202,14 @@ class SelectFiles(QWidget):
         new_sel.setChecked(True)
         new_sel.stateChanged.connect(self.selectBoxClicked)
 
-        # Add new widgets to the filetypegrid layout
-        self.filetypegrid.addWidget(new_sel, self.nextrow, 0)
-        self.filetypegrid.addWidget(new_ext, self.nextrow, 1)
-        self.filetypegrid.addWidget(new_pt, self.nextrow, 2)
+        # Add new widgets to the filetypes_grid layout
+        self.filetypes_grid.addWidget(new_sel, self.nextrow, 0)
+        self.filetypes_grid.addWidget(new_ext, self.nextrow, 1)
+        self.filetypes_grid.addWidget(new_pt, self.nextrow, 2)
 
         # Set stretch properties so rows are kept evenly spaced
-        self.filetypegrid.setRowStretch(self.nextrow, 0)
-        self.filetypegrid.setRowStretch(self.nextrow+1, 1)
+        self.filetypes_grid.setRowStretch(self.nextrow, 0)
+        self.filetypes_grid.setRowStretch(self.nextrow+1, 1)
 
         # Advance nextrow
         self.nextrow += 1
@@ -222,27 +224,30 @@ class SelectFiles(QWidget):
             self.cc = ClearConfirm("Clear all file type entries?")
             self.cc.exec_()
             if not self.cc.confirm:
-                return None
+                return
 
         # Empty the items in the first row but don't delete them.
-        sel_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
+        sel_one = self.filetypes_grid.itemAtPosition(self.firstrow,0).widget()
         sel_one.setChecked(False)
-        p_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
+        p_one = self.filetypes_grid.itemAtPosition(self.firstrow,1).widget()
         p_one.clear()
-        pt_one = self.filetypegrid.itemAtPosition(self.firstrow,2).widget()
+        pt_one = self.filetypes_grid.itemAtPosition(self.firstrow,2).widget()
         pt_one.setCurrentIndex(0)
 
         # Remove all elements beyond the first row.
         delete_these = list(reversed(range(self.firstrow+1,
                                            self.nextrow)))
-        if len(delete_these) > 1:
-            for n in delete_these:
-                test = self.filetypegrid.itemAtPosition(n,0)
-                if test == None:
+        if len(delete_these) > 0:
+            for x in delete_these:
+                test = self.filetypes_grid.itemAtPosition(x,0)
+                if test is None:
                     continue
-                self.filetypegrid.itemAtPosition(n,0).widget().setParent(None)
-                self.filetypegrid.itemAtPosition(n,1).widget().setParent(None)
-                self.filetypegrid.itemAtPosition(n,2).widget().setParent(None)
+                widgets_per_row = 3
+                for y in range(widgets_per_row):
+                    z = self.filetypes_grid.itemAtPosition(x,y).widget()
+                    z.setParent(None)
+
+        # Reset the nextrow variable.
         self.nextrow = self.firstrow + 1
 
         # Clear the selected_files dictionary and emit a signal to refresh
@@ -284,14 +289,14 @@ class SelectFiles(QWidget):
             for entry in sorted(files.keys()):
 
                 # If this row item does not exist, trigger a new row creation.
-                ext_box = s.filetypegrid.itemAtPosition(row_num, 1)
+                ext_box = s.filetypes_grid.itemAtPosition(row_num, 1)
                 if ext_box is None:
                     s.newFileClicked()
 
                 # Get all widgets in the row.
-                sel_box = s.filetypegrid.itemAtPosition(row_num, 0).widget()
-                ext_box = s.filetypegrid.itemAtPosition(row_num, 1).widget()
-                pt_box = s.filetypegrid.itemAtPosition(row_num, 2).widget()
+                sel_box = s.filetypes_grid.itemAtPosition(row_num, 0).widget()
+                ext_box = s.filetypes_grid.itemAtPosition(row_num, 1).widget()
+                pt_box = s.filetypes_grid.itemAtPosition(row_num, 2).widget()
 
                 # Insert file type parameters to the widgets.
                 sel_box.setChecked(True)
@@ -342,7 +347,7 @@ class SelectFiles(QWidget):
                     except KeyError:
                         msg = "'CAOMProductType' not found in .param file"
                         raise MyError(msg)
-                        
+
                     if prod_type == "null":
                         files[ending] = ""
                     else:
@@ -388,33 +393,34 @@ class SelectFiles(QWidget):
         """
 
         # Loop over all rows the user might have created in the form.
-        for row in range(self.firstrow, self.filetypegrid.rowCount()):
-            add_sel = self.filetypegrid.itemAtPosition(row, 0)
-            add_ext = self.filetypegrid.itemAtPosition(row, 1)
-            add_pt = self.filetypegrid.itemAtPosition(row, 2)
-            read_ext = None
-            read_pt = None
-            read_sel = None
+        for row in range(self.firstrow, self.nextrow):
+            additional_select = self.filetypes_grid.itemAtPosition(row, 0)
+            additional_extension = self.filetypes_grid.itemAtPosition(row, 1)
+            additional_producttype = self.filetypes_grid.itemAtPosition(row, 2)
 
             # Skip any empty rows (might not be possible/necessary)
-            if add_ext is None:
+            if additional_extension is None:
                 continue
 
-            # Read the entries from the current row.  Skip if there is no text
-            # in the file extension entry.
-            sel_widget = add_sel.widget()
-            read_sel = sel_widget.checkState()
-            if read_sel == 0:
+            # Check the select box first, if that is not checked then skip to
+            # next row.
+            select_widget = additional_select.widget()
+            read_select = select_widget.checkState()
+            if read_select == 0:
                 continue
-            ext_widget = add_ext.widget()
-            read_ext = str(ext_widget.text())
-            if read_ext == "":
-                continue
-            pt_widget = add_pt.widget()
-            read_pt = pt_widget.currentText().upper()
 
-            as_tuple = (read_ext, read_pt)
-            self.selected_files[read_ext] = read_pt
+            # Read in the provided file extension, skip to next row if empty.
+            extension_widget = additional_extension.widget()
+            read_extension = str(extension_widget.text())
+            if read_extension == "":
+                continue
+
+            # Read in the product type selection (can't be empty).
+            producttype_widget = additional_producttype.widget()
+            read_producttype = producttype_widget.currentText().upper()
+
+            as_tuple = (read_extension, read_producttype)
+            self.selected_files[read_extension] = read_producttype
 
         # If all file entry rows have empty name entries, button takes no
         # action
