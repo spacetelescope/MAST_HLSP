@@ -101,7 +101,7 @@ class HeaderTypeBox(QComboBox):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.header_types = ["Standard", "Kepler"]
+        self.header_types = ["Standard", "HST", "Kepler"]
         for type_ in self.header_types:
             self.addItem(type_)
 
