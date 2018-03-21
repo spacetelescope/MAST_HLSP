@@ -18,9 +18,15 @@ inside a QTabWidget.  This GUI will contain any meta-level user functions
 
 import os
 import sys
+from hlsp_to_xml import hlsp_to_xml
+
+import lib.GUIbuttons as gb
+from lib.ClearConfirm import ClearConfirm
+from lib.MyError import MyError
+
 from gui.config_generator import *
-from gui.ext_generator import *
 from gui.select_files import *
+
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -30,10 +36,27 @@ except ImportError:
 
 #--------------------
 
-class HelpPopup(QDialog):
+def get_file_to_load(parent, prompt):
+    """ Use a file dialog pop up to get a user-determined filename for file
+    creation and saving.
+
+    :param prompt:  The text to use in the dialog pop up window.
+    :type prompt:  str
     """
-    Define the help popup window that appears when the user clicks the 'Help'
-    button.
+
+    loadit = QFileDialog.getOpenFileName(parent, prompt, ".")
+    filename = loadit[0]
+
+    if filename == "":
+        return None
+    else:
+        return filename
+
+#--------------------
+
+class HelpPopup(QDialog):
+    """ Define the help popup window that appears when the user clicks the
+    'Help' button.
     """
 
     def __init__(self):
@@ -41,24 +64,24 @@ class HelpPopup(QDialog):
         self.helpUI()
 
     def helpUI(self):
-        #Get the help text from a .txt file.
+        # Get the help text from a .txt file.
         path = "gui/help.txt"
         help_path = os.path.abspath(path)
-        self.helpbox = QTextEdit()
-        self.helpbox.setReadOnly(True)
-        self.helpbox.setLineWrapMode(QTextEdit.NoWrap)
+        help_box = QTextEdit()
+        help_box.setReadOnly(True)
+        help_box.setLineWrapMode(QTextEdit.NoWrap)
         with open(help_path, "r") as helpfile:
             for line in helpfile.readlines():
                 raw_line = line.strip("\n")
-                self.helpbox.append(raw_line)
+                help_box.append(raw_line)
             helpfile.close()
 
-        self.closebutton = QPushButton("Close")
-        self.closebutton.clicked.connect(self.closeClicked)
+        self.close_button = QPushButton("Close")
+        self.close_button.clicked.connect(self.closeClicked)
 
         self.vbox = QVBoxLayout()
-        self.vbox.addWidget(self.helpbox)
-        self.vbox.addWidget(self.closebutton)
+        self.vbox.addWidget(help_box)
+        self.vbox.addWidget(self.close_button)
         self.setLayout(self.vbox)
         self.setWindowTitle("ConfigGenerator Help")
         self.resize(600, 600)
@@ -69,48 +92,8 @@ class HelpPopup(QDialog):
 
 #--------------------
 
-class CAOMPopup(QDialog):
-    """
-    Define the help popup window that appears when the user clicks the 'Help'
-    button.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.caomUI()
-
-    def caomUI(self):
-        #Get the help text from a .txt file.
-        path = "gui/caom_parameters.txt"
-        caom_path = os.path.abspath(path)
-        self.caombox = QTextEdit()
-        self.caombox.setReadOnly(True)
-        self.caombox.setLineWrapMode(QTextEdit.NoWrap)
-        with open(caom_path, "r") as caomfile:
-            for line in caomfile.readlines():
-                raw_line = line.strip("\n")
-                self.caombox.append(raw_line)
-            caomfile.close()
-
-        self.closebutton = QPushButton("Close")
-        self.closebutton.clicked.connect(self.closeClicked)
-
-        self.vbox = QVBoxLayout()
-        self.vbox.addWidget(self.caombox)
-        self.vbox.addWidget(self.closebutton)
-        self.setLayout(self.vbox)
-        self.setWindowTitle("CAOM Parameters")
-        self.resize(600, 600)
-        self.show()
-
-    def closeClicked(self):
-        self.close()
-
-#--------------------
-
 class HLSPIngest(QTabWidget):
-    """
-    Create a tab widget to contain widgets from /gui/ext_generator.py and
+    """ Create a tab widget to contain widgets from /gui/ext_generator.py and
     /gui/config_generator.py.  Provide options to quit or open a help dialog.
     """
 
@@ -119,122 +102,276 @@ class HLSPIngest(QTabWidget):
         self.initUI()
 
     def initUI(self):
+
+        # Set up the tabs contained in this widget
         self.tabs = QTabWidget()
         self.tab1 = SelectFiles()
         self.tab2 = ConfigGenerator()
         self.tabs.addTab(self.tab1, "Select File Types")
         self.tabs.addTab(self.tab2, "Make Config File")
 
-        self.help = QPushButton("Help")
-        self.help.setMaximumWidth(75)
-        self.help.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        self.caom = QPushButton("CAOM")
-        self.caom.setMaximumWidth(75)
-        self.caom.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        self.quit = QPushButton("Quit")
-        self.quit.setMaximumWidth(75)
-        self.quit.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #ffced0;
-                                    border: 2px solid #ff9195;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #ff9195;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #ff9195;
-                                    }""")
+        # Initialize the file_types variable to None
+        self.file_types = None
 
-        #Create a third column to stretch so the Help and Quit buttons
-        #remain over to the left.
-        self.space = QLabel("")
-        self.space.setMinimumWidth(500)
+        # Use the GUIbuttons classes to make all necessary buttons, then
+        # create a space label to separate buttons on the right and left sides.
+        # Make a Layout for the buttons along the top row.
+        height = 30
+        big_width = 160
+        small_width = 120
+        space_width = 200
+        load_param = gb.GreyButton("Load .param File", height, big_width)
+        load_config = gb.GreyButton("Load .config File", height, big_width)
+        reset_button = gb.RedButton("Reset Forms", height, big_width)
+        help_button = gb.GreyButton("Help", height, small_width)
+        quit_button = gb.RedButton("Quit", height, small_width)
+        space_label = QLabel("")
+        space_label.setMinimumWidth(space_width)
+        self.buttons_grid = QGridLayout()
+        self.buttons_grid.addWidget(load_param, 0, 0)
+        self.buttons_grid.addWidget(load_config, 0, 1)
+        self.buttons_grid.addWidget(reset_button, 0, 2)
+        self.buttons_grid.addWidget(help_button, 0, 4)
+        self.buttons_grid.addWidget(quit_button, 0, 5)
+        self.buttons_grid.addWidget(space_label, 0, 3)
 
-        """
-        self.file_count = QTextEdit()
-        self.file_count.setReadOnly(True)
-        self.file_count.setLineWrapMode(QTextEdit.NoWrap)
-        self.file_count.setStyleSheet("border-style: solid; \
-                                  border-width: 0px; \
-                                  background: rgba(235,235,235,0%); \
-                                  text-align: right;")
-        self.file_count.setText("Hi")
-        """
-        self.file_count = QLabel("No file types selected")
-        self.file_count.setAlignment(Qt.AlignRight)
+        # Make a Layout for the file_types display along the right side.
+        filetypes_label = QLabel("File types selected: ")
+        filetypes_label.setMaximumWidth(125)
+        self.filetypes_display = QTextEdit()
+        self.filetypes_display.setMaximumWidth(200)
+        self.filetypes_display.setReadOnly(True)
+        self.filetypes_display.setLineWrapMode(QTextEdit.NoWrap)
+        self.filetypes_display.setStyleSheet("background: \
+                                             rgba(235,235,235,0%);")
+        filetypes_font = QFont()
+        filetypes_font.setPointSize(16)
+        self.filetypes_display.setFont(filetypes_font)
+        self.filetypes_display.setMinimumWidth(150)
+        self.filetypes_display.setTextColor(Qt.red)
+        self.filetypes_display.append("No file types selected")
+        self.filetypes_grid = QGridLayout()
+        self.filetypes_grid.addWidget(filetypes_label, 0, 0)
+        self.filetypes_grid.addWidget(self.filetypes_display, 1, 0)
 
-        self.box = QGridLayout()
-        self.box.addWidget(self.tabs, 1, 0, -1, -1)
-        self.box.addWidget(self.help, 0, 0)
-        self.box.addWidget(self.caom, 0, 1)
-        self.box.addWidget(self.quit, 0, 2)
-        self.box.addWidget(self.space, 0, 3)
-        self.box.addWidget(self.file_count, 0, 4)
-        self.setLayout(self.box)
-        self.resize(1200,300)
+        # Make a read-only text box to display status messages
+        messages_label = QLabel("Messages:")
+        messages_label.setAlignment(Qt.AlignHCenter)
+        self.messages_display = QTextEdit()
+        self.messages_display.setReadOnly(True)
+        self.messages_display.setLineWrapMode(QTextEdit.NoWrap)
+        self.messages_display.setStyleSheet("border-style: solid; \
+                                            border-width: 1px; \
+                                            background: rgba(235,235,235,0%);")
+        self.messages_grid = QGridLayout()
+        self.messages_grid.addWidget(messages_label, 0, 0)
+        self.messages_grid.addWidget(self.messages_display, 1, 0)
+
+        # Make a Layout for the two big "Generate" buttons at the bottom-right
+        self.generate = gb.GreenButton("Generate .config File", 40)
+        self.run = gb.BlueButton("Generate .config and Run Script", 40)
+        self.generate.setMinimumWidth(250)
+        self.run.setMinimumWidth(250)
+        self.action_grid = QGridLayout()
+        self.action_grid.addWidget(space_label, 0, 0)
+        self.action_grid.addWidget(self.generate, 1, 0)
+        self.action_grid.addWidget(self.run, 2, 0)
+        self.action_grid.setRowStretch(0, 1)
+        self.action_grid.setRowStretch(1, 0)
+        self.action_grid.setRowStretch(2, 0)
+
+        # Add all sub-layouts and the tabs widget to the overall Layout
+        self.meta_grid = QGridLayout()
+        self.meta_grid.addLayout(self.buttons_grid, 0, 0, 1, -1)
+        self.meta_grid.addWidget(self.tabs, 2, 0)
+        self.meta_grid.addLayout(self.filetypes_grid, 2, 1)
+        self.meta_grid.addLayout(self.messages_grid, 3, 0)
+        self.meta_grid.addLayout(self.action_grid, 3, 1)
+        self.setLayout(self.meta_grid)
+        self.resize(1100,500)
+
+        # Center the window
+        qtRectangle = self.frameGeometry()
+        screen = QDesktopWidget().availableGeometry()
+        x = (screen.width() - qtRectangle.width()) / 2
+        y = (screen.height() - qtRectangle.height()) / 2
+        self.move(x, y)
+
+        # Name and display the window
         self.setWindowTitle("ConfigGenerator")
         self.show()
 
-        self.quit.clicked.connect(self.quitClicked)
-        self.help.clicked.connect(self.helpClicked)
-        self.caom.clicked.connect(self.caomClicked)
-        self.tab1.save.clicked.connect(self.selectClicked)
-        self.tab1.clear.clicked.connect(self.clearClicked)
+        # Connect all the buttons
+        quit_button.clicked.connect(self.quitClicked)
+        help_button.clicked.connect(self.helpClicked)
+        load_param.clicked.connect(self.loadParamClicked)
+        load_config.clicked.connect(self.loadConfigClicked)
+        reset_button.clicked.connect(self.resetClicked)
+        self.generate.clicked.connect(self.genClicked)
+        self.run.clicked.connect(self.genAndRunClicked)
+        self.tab1.select_signal.connect(self.selectClicked)
+
+    def badMessage(self, msg):
+        self.messages_display.setTextColor(Qt.red)
+        self.messages_display.append(msg)
+
+    def goodMessage(self, msg):
+        self.messages_display.setTextColor(Qt.darkGreen)
+        self.messages_display.append(msg)
+
+    def neutralMessage(self, msg):
+        self.messages_display.setTextColor(Qt.black)
+        self.messages_display.append(msg)
+
+    def loadParamClicked(self):
+        """ Load a dictionary of file extensions into the tab1 Select File
+        Types widget using a tab1 module.
+        """
+
+        # Get a file name using a dialog and skip if None is returned
+        filename = get_file_to_load(self, "Load YAML File")
+        if filename is None:
+            return
+
+        # Use the loadExtensionsYAML module to load values into the tab1
+        # widget.  Automatically select these loaded entries and inidicate
+        # they've been selected.
+        try:
+            self.tab1.loadExtensionsYAML(filename=filename)
+            self.tab1.saveClicked()
+            self.selectClicked()
+            self.tab2.loadParamFile(filename)
+            self.goodMessage("Loaded {0}".format(filename))
+
+        # Catch any MyError instances and write them to the status box.
+        except MyError as err:
+            self.badMessage(err.message)
+
+    def loadConfigClicked(self):
+        """ Get a YAML config file name and pass it to both tab1 and tab2
+        modules to load the information.
+        """
+
+        # Get a file name using a dialog and skip if None is returned
+        filename = get_file_to_load(self, "Load YAML File")
+        if filename is None:
+            return
+
+        # Use the loadConfigYAML and loadFromYAML modules in tab1 and tab2
+        # to load parameters from filename.  Select the loaded file types and
+        # display them.
+        try:
+            self.tab1.loadConfigYAML(filename=filename)
+            self.tab1.saveClicked()
+            self.selectClicked()
+            self.tab2.loadFromYAML(filename=filename)
+            self.goodMessage("Loaded {0}".format(filename))
+
+        # Catch any MyError instances and write them to the status box.
+        except MyError as err:
+            self.badMessage(err.message)
+
+    def resetClicked(self):
+        """ Open a confirmation popup before clearing both tabs.
+        """
+
+        # Open a confirmation popup window
+        self.cc = ClearConfirm("Reset all entries on both forms?")
+        self.cc.exec_()
+
+        # Execute reset modules for both tabs if confirmed
+        if self.cc.confirm:
+            self.tab1.clearClicked(source="wrapper")
+            self.tab2.resetClicked()
+            self.resize(1100,500)
+            self.neutralMessage("Forms reset")
+
+    def collectAndSaveTabInputs(self):
+        """ Collect all the inputs from tab2 and add the file_types list to
+        the dictionary.  Then save it to a .config YAML file.
+        """
+
+        # Raise errors if file_types is empty or None.  Means user has not
+        # loaded or selected any file types.
+        if self.file_types is None:
+            self.badMessage("No file types selected!")
+            return None
+        elif len(self.file_types.keys()) == 0:
+            self.badMessage("No file types selected!")
+            return None
+
+        # Collect inputs from tab2 and add file_types to the resulting
+        # dictionary
+        try:
+            config = self.tab2.collectInputs()
+            config["file_types"] = self.file_types
+        except MyError as err:
+            self.badMessage(err.message)
+            return None
+
+        # Get a file name using a save dialog and save the dictionary to a
+        # YAML-formatted file with a .config extension
+        saveit = QFileDialog.getSaveFileName(self, "Save YAML file", ".")
+        if len(saveit[0]) > 0:
+            saveit = os.path.abspath(saveit[0])
+            if not saveit.endswith(".config"):
+                saveit += ".config"
+            with open(saveit, 'w') as output:
+                yaml.dump(config, output, default_flow_style=False)
+                output.close()
+            print("Saved {0}".format(saveit))
+        else:
+            return None
+
+        return saveit
+
+    def genClicked(self):
+        """ Try to generate a YAML .config file and catch any errors thrown.
+        """
+
+        inputs = self.collectAndSaveTabInputs()
+        if inputs is None:
+            return
+        else:
+            self.goodMessage("Saved {0}".format(inputs))
+
+    def genAndRunClicked(self):
+        """ Try to generate a YAML .config file, then pass that along to
+        hlsp_to_xml.
+        """
+
+        inputs = self.collectAndSaveTabInputs()
+        if inputs is None:
+            return
+        else:
+            self.goodMessage("Saved {0}".format(inputs))
+            self.goodMessage("Launching hlsp_to_xml...")
+            self.goodMessage("...see terminal for output...")
+            hlsp_to_xml(inputs)
 
     def quitClicked(self):
         self.close()
 
     def helpClicked(self):
-        self.helppop = HelpPopup()
-        self.helppop.exec_()
-
-    def caomClicked(self):
-        self.caompop = CAOMPopup()
-        self.caompop.exec_()
+        helppop = HelpPopup()
+        helppop.exec_()
 
     def selectClicked(self):
-        self.tab2.file_types = self.tab1.selected_files
-        types_list = sorted(self.tab2.file_types.keys())
-        self.tab2.filetypes_display.clear()
-        self.tab2.filetypes_display.setTextColor(Qt.black)
-        for t in types_list:
-            self.tab2.filetypes_display.append("*"+t)
-        n_selected = str(len(self.tab1.selected_files))
-        self.file_count.setText("{0} file types selected".format(n_selected))
+        """ When the "Select these types" button is clicked in tab1, we want
+        to set the file_types variable and update the displayed list of
+        selected types for confirmation.
+        """
 
-    def clearClicked(self):
-        self.tab2.file_types = None
-        self.tab2.filetypes_display.clear()
-        self.tab2.filetypes_display.setTextColor(Qt.red)
-        self.tab2.filetypes_display.append("No file types selected")
-        self.file_count.setText("No file types selected")
-
+        self.file_types = self.tab1.selected_files
+        self.types_list = sorted(self.file_types.keys())
+        self.filetypes_display.clear()
+        if len(self.types_list) == 0:
+            self.filetypes_display.setTextColor(Qt.red)
+            self.filetypes_display.append("No file types selected")
+        else:
+            self.filetypes_display.setTextColor(Qt.black)
+            for t in self.types_list:
+                self.filetypes_display.append("*_"+t)
 
 #--------------------
 

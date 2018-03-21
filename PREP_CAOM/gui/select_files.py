@@ -1,17 +1,9 @@
 """
-..class::  DataTypeBox
-    :synopsis:  A subclass of QComboBox to define a desired data type.  Allows
-    setting the QComboBox index via string.
-
 ..class::  ProductTypeBox
     :synopsis:  A subclass of QComboBox to define a desired product data type.
     Allows setting the QComboBox index via string.
 
-..class::  ClearConfirm
-    :synopsis:  Creates a PyQt popup window with a yes/no confirmation dialog.
-    Used before clearing changes made to the form.
-
-..class::  ExtGenerator
+..class::  SelectFiles
     :synopsis:  Creates a PyQt widget that allows a user to define data file
     types with various PyQt tools.  These data definitions tell
     ../hlsp_to_xml.py what HLSP data files to look for while browsing a given
@@ -24,7 +16,13 @@
 import csv
 import os
 import sys
+
+import lib.GUIbuttons as gb
+from lib.ClearConfirm import ClearConfirm
+from lib.MyError import MyError
+
 from util.read_yaml import read_yaml
+
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -35,9 +33,9 @@ except ImportError:
 #--------------------
 
 class ProductTypeBox(QComboBox):
+    """ Create a subclass of QComboBox to contain Product Type options.
     """
-    Create a subclass of QComboBox to contain Product Type options.
-    """
+
     def __init__(self):
         super().__init__()
         self.entries = ["SCIENCE", "CALIBRATION", "PREVIEW", "AUXILIARY",
@@ -49,453 +47,392 @@ class ProductTypeBox(QComboBox):
     def setCurrentType(self, ctype):
         if ctype in self.entries:
             index = self.entries.index(ctype)
-        return QComboBox.setCurrentIndex(self, index)
-
-#--------------------
-
-class SmallGreyButton(QPushButton):
-    def __init__(self, label):
-        super().__init__(label)
-        self.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 20px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        self.setMaximumWidth(175)
-
-#--------------------
-
-class ClearConfirm(QDialog):
-    """
-    Pop up a confirmation dialog window before clearing all changes to the
-    form.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.confirmUI()
-
-    def confirmUI(self):
-        self.confirm = False
-        label = QLabel("Reset all current changes to this form?")
-        label.setAlignment(Qt.AlignHCenter)
-        yes = QPushButton("Yes")
-        no = QPushButton("No")
-
-        g = QGridLayout()
-        g.addWidget(label, 0, 0, 1, -1)
-        g.addWidget(yes, 1, 0)
-        g.addWidget(no, 1, 1)
-        self.setLayout(g)
-        self.setWindowTitle("Confirm Clear")
-        self.resize(300, 50)
-        self.show()
-
-        yes.clicked.connect(self.yesClicked)
-        no.clicked.connect(self.noClicked)
-
-    def yesClicked(self):
-        self.confirm = True
-        self.close()
-
-    def noClicked(self):
-        self.confirm = False
-        self.close()
+            return QComboBox.setCurrentIndex(self, index)
+        else:
+            raise MyError("{0} is not a valid productType!".format(ctype))
 
 #--------------------
 
 class SelectFiles(QWidget):
+    """ Create a GUI to create a CSV table describing files to search for
+    within an HLSP directory and some CAOM parameters to apply to them.  This
+    table is necessary to run hlsp_to_xml.py.
     """
-    Create a GUI to create a CSV table describing files to search for within
-    an HLSP directory and some CAOM parameters to apply to them.  This table
-    is necessary to run hlsp_to_xml.py.
-    """
+
+    # Make a signal for launch_gui to collect selected file types on any
+    # check box toggle.
+    select_signal = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
 
-        #Add buttons to create a new file entry row, clear all entries in the
-        #table, load an existing .csv file, or write the current contents to a
-        #new .csv file.
-        select_all = SmallGreyButton("Select All")
-        de_all = SmallGreyButton("Deselect All")
-        add_file = SmallGreyButton("+ add another file type")
-        self.clear = SmallGreyButton("- clear table")
-        load = QPushButton("Load File")
-        load.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #f2f2f2;
-                                    border: 2px solid #afafaf;
-                                    border-radius: 8px;
-                                    height: 40px
-                                    }
-                                QPushButton:hover {
-                                    border: 4px solid #afafaf;
-                                    }
-                                QPushButton:pressed {
-                                    background-color: #afafaf;
-                                    }""")
-        self.save = QPushButton("Select these types", self)
-        self.save.setStyleSheet("""
-                          QPushButton {
-                            background-color: #7af442;
-                            border: 2px solid #45a018;
-                            border-radius: 8px;
-                            height: 40px
-                            }
-                          QPushButton:hover {
-                            border: 4px solid #45a018;
-                            }
-                          QPushButton:pressed {
-                            background-color: #45a018;
-                            }""")
-        empty = QSpacerItem(200, 1)
-        self.buttonsgrid = QGridLayout()
-        self.buttonsgrid.addWidget(select_all, 0, 0)
-        self.buttonsgrid.addWidget(de_all, 1, 0)
-        self.buttonsgrid.addWidget(add_file, 0, 1)
-        self.buttonsgrid.addWidget(self.clear, 1, 1)
-        self.buttonsgrid.addItem(empty, 0, 2)
-        self.buttonsgrid.addWidget(load, 0, 3, 2, 1)
-        self.buttonsgrid.addWidget(self.save, 0, 4, 2, 2)
-
-        ext_label = QLabel("File ends with:")
-        ext_label.setToolTip("Provide a distinctive filename ending to search for within this HLSP ('_img.fits')")
-        dt_label = QLabel("Data Type:")
-        pt_label = QLabel("Product Type:")
-        sel_label = QLabel("Select:")
-        self.ext_edit = QLineEdit()
-        self.pt_box = ProductTypeBox()
-        self.sel_box = QCheckBox()
-        self.sel_box.setChecked(True)
+        # Set two variables to track the beginning and end of the file entry
+        # table, since it has a variable number of rows
         self.firstrow = 1
-        self.nextrow = 2
-        self.filetypegrid = QGridLayout()
-        self.filetypegrid.addWidget(sel_label, 0, 0)
-        self.filetypegrid.addWidget(ext_label, 0, 1)
-        self.filetypegrid.addWidget(pt_label, 0, 2)
-        self.filetypegrid.addWidget(self.sel_box, 1, 0)
-        self.filetypegrid.addWidget(self.ext_edit, 1, 1)
-        self.filetypegrid.addWidget(self.pt_box, 1, 2)
+        self.nextrow = self.firstrow + 1
 
-        res_label = QLabel("Results:")
-        res_label.setAlignment(Qt.AlignHCenter)
-        self.status = QTextEdit()
-        self.status.setReadOnly(True)
-        self.status.setLineWrapMode(QTextEdit.NoWrap)
-        self.status.setStyleSheet("border-style: solid; \
-                                  border-width: 1px; \
-                                  background: rgba(235,235,235,0%);")
+        # Define a list variable to track selected files
+        self.selected_files = {}
 
-        self.grid = QGridLayout()
-        self.grid.addLayout(self.buttonsgrid, 0, 0)
-        self.grid.addLayout(self.filetypegrid, 1, 0)
-        self.grid.addWidget(res_label, 2, 0)
-        self.grid.addWidget(self.status)
+        self.error = None
+        self.message = None
 
-        self.selected_files = []
+        # Add buttons to create a new file entry row, clear all entries in the
+        # table, load an existing .csv file, or write the current contents to a
+        # new .csv file.
+        b_height = 20
+        b_width = 160
+        select_all = gb.GreyButton("Select All", b_height, b_width)
+        deselect_all = gb.GreyButton("Deselect All", b_height, b_width)
+        add_type = gb.GreyButton("+ Add Another File Type", b_height, b_width)
+        self.clear = gb.GreyButton("- Clear Table", b_height, b_width)
+        self.buttons_grid = QGridLayout()
+        self.buttons_grid.addWidget(select_all, 0, 0)
+        self.buttons_grid.addWidget(deselect_all, 0, 1)
+        self.buttons_grid.addWidget(add_type, 0, 2)
+        self.buttons_grid.addWidget(self.clear, 0, 3)
 
-        self.setLayout(self.grid)
+        # Make the widgets and set the layout for the file extensions entry
+        # portion of the window
+        filetype_label = QLabel("File ends with:")
+        filetype_label.setToolTip(("Provide a distinctive filename ending to "
+                                   "search for within this HLSP ('_img.fits')")
+                                  )
+        producttype_label = QLabel("Product Type:")
+        select_label = QLabel("Select:")
+        filetype_edit = QLineEdit()
+        producttype_box = ProductTypeBox()
+        select_box = QCheckBox()
+        select_box.setChecked(True)
+        self.filetypes_grid = QGridLayout()
+        self.filetypes_grid.addWidget(select_label, 0, 0)
+        self.filetypes_grid.addWidget(filetype_label, 0, 1)
+        self.filetypes_grid.addWidget(producttype_label, 0, 2)
+        self.filetypes_grid.addWidget(select_box, 1, 0)
+        self.filetypes_grid.addWidget(filetype_edit, 1, 1)
+        self.filetypes_grid.addWidget(producttype_box, 1, 2)
+        self.filetypes_grid.setRowStretch(self.nextrow, 0)
+        self.filetypes_grid.setRowStretch(self.nextrow+1, 1)
+
+        # Add the sub-layouts to the window layout
+        self.meta_grid = QGridLayout()
+        self.meta_grid.addLayout(self.buttons_grid, 0, 0, 1, -1)
+        self.meta_grid.addLayout(self.filetypes_grid, 1, 0)
+
+        self.setLayout(self.meta_grid)
         self.show()
 
-        self.sel_box.stateChanged.connect(self.selectClicked)
-        select_all.clicked.connect(self.sallClicked)
-        de_all.clicked.connect(self.dallClicked)
-        add_file.clicked.connect(self.newFileClicked)
+        # Connect all buttons
+        select_box.stateChanged.connect(self.selectBoxClicked)
+        select_all.clicked.connect(self.selectAllClicked)
+        deselect_all.clicked.connect(self.deselectAllClicked)
+        add_type.clicked.connect(self.newFileClicked)
         self.clear.clicked.connect(self.clearClicked)
-        load.clicked.connect(self.loadFromYAMLClicked)
-        self.save.clicked.connect(self.saveClicked)
 
+    def selectAllClicked(self):
+        """ Set all file entries from firstrow to nextrow as selected.
+        """
 
-    def sallClicked(self):
-        for n in range(self.firstrow, self.filetypegrid.rowCount()-1):
-            selected = self.filetypegrid.itemAtPosition(n, 0).widget()
+        for n in range(self.firstrow, self.nextrow):
+            selected = self.filetypes_grid.itemAtPosition(n, 0).widget()
             selected.setChecked(True)
 
+    def deselectAllClicked(self):
+        """ Set all file entries from firstrow to nextrow as unselected.
+        """
 
-    def dallClicked(self):
-        for n in range(self.firstrow, self.filetypegrid.rowCount()-1):
-            selected = self.filetypegrid.itemAtPosition(n, 0).widget()
+        for n in range(self.firstrow, self.nextrow):
+            selected = self.filetypes_grid.itemAtPosition(n, 0).widget()
             selected.setChecked(False)
 
+    def selectBoxClicked(self, state):
+        """ Toggle visibility of file type rows when the select box is clicked.
+        """
 
-    def selectClicked(self, state):
+        # Many select boxes connect to this module, so need to determine which
+        # is sending the signal
         sender = self.sender()
-        ind = self.filetypegrid.indexOf(sender)
-        pos = self.filetypegrid.getItemPosition(ind)
+        ind = self.filetypes_grid.indexOf(sender)
+        pos = self.filetypes_grid.getItemPosition(ind)
         row = pos[0]
-        f = self.filetypegrid.itemAtPosition(row, 1).widget()
-        pt = self.filetypegrid.itemAtPosition(row, 2).widget()
+        fe = self.filetypes_grid.itemAtPosition(row, 1).widget()
+        file_extension = fe.text()
+        pt = self.filetypes_grid.itemAtPosition(row, 2).widget()
+        product_type = pt.currentText()
+
+        # Toggle visibility based on check box state
         if state == Qt.Checked:
-            f.setStyleSheet("")
+            fe.setStyleSheet("")
             pt.setVisible(True)
+            if (file_extension in self.selected_files.keys()
+                or file_extension == ""):
+                pass
+            else:
+                self.selected_files[file_extension] = product_type
         else:
-            f.setStyleSheet("color: DarkGrey; background-color: WhiteSmoke")
+            fe.setStyleSheet("color: DarkGrey; background-color: WhiteSmoke")
             pt.setVisible(False)
+            if (file_extension in self.selected_files.keys()
+                and file_extension != ""):
+                del self.selected_files[file_extension]
+            else:
+                pass
+
+        # Emit a select_signal so launch_gui will update the list of selected
+        # files
+        self.select_signal.emit()
 
 
     def newFileClicked(self):
-        """
-        When 'add_file' is clicked, create a new row with the same file entry
-        options as the first row.
+        """ When 'add_type' is clicked, create a new row with the same file
+        entry options as the first row.  Create this new row at the nextrow
+        position and advance the nextrow tracker.
         """
 
+        # Create new widgets
         new_ext = QLineEdit()
         new_pt = ProductTypeBox()
         new_sel = QCheckBox()
+
+        # Set to selected by default and connect to the select box toggle
+        # module
         new_sel.setChecked(True)
-        new_sel.stateChanged.connect(self.selectClicked)
-        self.filetypegrid.addWidget(new_sel, self.nextrow, 0)
-        self.filetypegrid.addWidget(new_ext, self.nextrow, 1)
-        self.filetypegrid.addWidget(new_pt, self.nextrow, 2)
-        self.filetypegrid.setRowStretch(self.nextrow, 0)
-        self.filetypegrid.setRowStretch(self.nextrow+1, 1)
+        new_sel.stateChanged.connect(self.selectBoxClicked)
+
+        # Add new widgets to the filetypes_grid layout
+        self.filetypes_grid.addWidget(new_sel, self.nextrow, 0)
+        self.filetypes_grid.addWidget(new_ext, self.nextrow, 1)
+        self.filetypes_grid.addWidget(new_pt, self.nextrow, 2)
+
+        # Set stretch properties so rows are kept evenly spaced
+        self.filetypes_grid.setRowStretch(self.nextrow, 0)
+        self.filetypes_grid.setRowStretch(self.nextrow+1, 1)
+
+        # Advance nextrow
         self.nextrow += 1
 
-
-    def clearClicked(self, source="clicked"):
-        """
-        Clear any changes made to the form and reset to original state.
+    def clearClicked(self, source):
+        """ Clear any changes made to the form and reset to original state.
         """
 
-        #Pop up a confirmation dialog if this is not being called from the load
-        #function.
-        if not source == "load":
-            self.cc = ClearConfirm()
+        # Pop up a confirmation dialog if this is not being called from the
+        # load function.
+        if not source:
+            self.cc = ClearConfirm("Clear all file type entries?")
             self.cc.exec_()
             if not self.cc.confirm:
-                return None
+                return
 
-        #Empty the items in the first row but don't delete them.
-        sel_one = self.filetypegrid.itemAtPosition(self.firstrow,0).widget()
+        # Empty the items in the first row but don't delete them.
+        sel_one = self.filetypes_grid.itemAtPosition(self.firstrow,0).widget()
         sel_one.setChecked(False)
-        p_one = self.filetypegrid.itemAtPosition(self.firstrow,1).widget()
+        p_one = self.filetypes_grid.itemAtPosition(self.firstrow,1).widget()
         p_one.clear()
-        pt_one = self.filetypegrid.itemAtPosition(self.firstrow,2).widget()
+        pt_one = self.filetypes_grid.itemAtPosition(self.firstrow,2).widget()
         pt_one.setCurrentIndex(0)
 
-        #Remove all elements beyond the first row.
+        # Remove all elements beyond the first row.
         delete_these = list(reversed(range(self.firstrow+1,
-                                           self.filetypegrid.rowCount()-1)))
-        if len(delete_these) > 1:
-            for n in delete_these:
-                test = self.filetypegrid.itemAtPosition(n,0)
-                if test == None:
+                                           self.nextrow)))
+        if len(delete_these) > 0:
+            for x in delete_these:
+                test = self.filetypes_grid.itemAtPosition(x,0)
+                if test is None:
                     continue
-                self.filetypegrid.itemAtPosition(n,0).widget().setParent(None)
-                self.filetypegrid.itemAtPosition(n,1).widget().setParent(None)
-                self.filetypegrid.itemAtPosition(n,2).widget().setParent(None)
+                widgets_per_row = 3
+                for y in range(widgets_per_row):
+                    z = self.filetypes_grid.itemAtPosition(x,y).widget()
+                    z.setParent(None)
+
+        # Reset the nextrow variable.
         self.nextrow = self.firstrow + 1
 
-        if not source == "load":
-            self.status.setTextColor(Qt.black)
-            self.status.append("Table cleared.")
+        # Clear the selected_files dictionary and emit a signal to refresh
+        # the launch_gui list
+        self.selected_files = {}
+        self.select_signal.emit()
 
-
-    def loadFromCSVClicked(self):
-        """
-        Open an existing CSV file and load the contents into the form.
-        """
-
-        loadit = QFileDialog.getOpenFileName(self, "Load a CSV file", ".")
-        filename = loadit[0]
-
-        #Check the filename, but from a dialog so we expect it to exist.
-        if filename == "":
-            return None
-        elif not filename.endswith(".csv"):
-            self.status.setTextColor(Qt.red)
-            self.status.append("{0} is not a .csv file!".format(filename))
-            return None
-
-        #Read the CSV contents into a list.
-        files = []
-        with open(filename, 'r') as csvfile:
-            read = csv.reader(csvfile)
-            for row in read:
-                files.append(row)
-            csvfile.close()
-
-        #Check that there are any data types to insert.
-        if len(files) <= 1:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No data rows in {0}".format(filename))
-            return None
-
-        #Check the CSV header row and make sure it has the right data.
-        header = files[0]
-        try:
-            ext_index = header.index("extension")
-            pt_index = header.index("productType")
-        except ValueError:
-            self.status.setTextColor(Qt.red)
-            self.status.append("Could not read {0}".format(filename))
-            return None
-
-        #Clear any changes already made to the form.
-        self.clearClicked(source="load")
-
-        #Begin at the first data row and insert values into the form elements.
-        #(skip the CSV header row)
-        row_num = self.firstrow
-        for entry in files[1:]:
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
-            if ext_box is None:
-                self.newFileClicked()
-            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
-            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
-            sel_box.setChecked(True)
-            ext_box.setText(entry[ext_index])
-            pt_box.setCurrentType(entry[pt_index])
-            row_num += 1
-        self.status.setTextColor(Qt.darkGreen)
-        self.status.append("Loaded {0}".format(filename))
-
-
-    def loadFromYAMLClicked(self):
-        """
-        Open an existing YAML file and load the contents into the form.
+    def loadFromYaml(origin_function):
+        """ Provide a wrapper function for the two methods of loading file
+        type information to this form.  This code is common to both methods
+        and covers reading the YAML file to a dictionary, and inserting data
+        into widget elements.
         """
 
-        loadit = QFileDialog.getOpenFileName(self, "Load a YAML file", ".")
-        filename = loadit[0]
+        def wrapper(s, **kwargs):
 
-        """
-        #Check the filename, but from a dialog so we expect it to exist.
-        if filename == "":
-            return None
-        elif not filename.endswith(".csv"):
-            self.status.setTextColor(Qt.red)
-            self.status.append("{0} is not a .csv file!".format(filename))
-            return None
+            # Read the YAML contents into a dictionary.
+            filename = kwargs['filename']
+            file_config = read_yaml(filename)
+
+            # If file_config is a string, this is error text.
+            if isinstance(file_config, str):
+                raise MyError(file_config)
+
+            # Translate the file_config dictionary to a standardized
+            # dictionary ready to be inserted in the form.
+            kwargs['file_config'] = file_config
+            files = origin_function(s,
+                                    filename=filename,
+                                    file_config=file_config
+                                   )
+
+            #Clear any changes already made to the form.
+            s.clearClicked(source="load")
+
+            # Begin at the first data row and insert values into the form
+            # elements.
+            row_num = s.firstrow
+            for entry in sorted(files.keys()):
+
+                # If this row item does not exist, trigger a new row creation.
+                ext_box = s.filetypes_grid.itemAtPosition(row_num, 1)
+                if ext_box is None:
+                    s.newFileClicked()
+
+                # Get all widgets in the row.
+                sel_box = s.filetypes_grid.itemAtPosition(row_num, 0).widget()
+                ext_box = s.filetypes_grid.itemAtPosition(row_num, 1).widget()
+                pt_box = s.filetypes_grid.itemAtPosition(row_num, 2).widget()
+
+                # Insert file type parameters to the widgets.
+                sel_box.setChecked(True)
+                ext_box.setText(entry)
+                if files[entry] is not None:
+                    try:
+                        pt_box.setCurrentType(files[entry])
+                    except MyError as err:
+                        raise MyError(err.message)
+
+                # Move to the next row.
+                row_num += 1
+
+            return file_config
+        return wrapper
+
+    @loadFromYaml
+    def loadExtensionsYAML(self, **kwargs):
+        """ Open a YAML file sent from HLSP metadata checking and get just the
+        parameters we need.
         """
 
-        #Read the YAML contents into a list.
         files = {}
-        file_config = read_yaml(filename)
+        filename = kwargs['filename']
+        file_config = kwargs['file_config']
+
+        # For each extension listed in file_config, create a FileEnding:
+        # CAOMProductType pair in the files dictionary.
         for ext in sorted(file_config.keys()):
+
+            # Not every file_config entry will be a list
             if isinstance(file_config[ext], list):
                 for product in file_config[ext]:
-                    ending = product['FileEnding']
-                    prod_type = product['FileParams']['ProductType']
+                    try:
+                        ending = product['FileEnding']
+                    except KeyError:
+                        msg = "'FileEnding' not found in .param file"
+                        raise MyError(msg)
+
+                    try:
+                        params = product['FileParams']
+                    except KeyError:
+                        msg = "'FileParams' not found in .param file"
+                        raise MyError(msg)
+
+                    try:
+                        prod_type = params['CAOMProductType']
+                    except KeyError:
+                        msg = "'CAOMProductType' not found in .param file"
+                        raise MyError(msg)
+
                     if prod_type == "null":
                         files[ending] = ""
                     else:
-                        files[ending] = prod_type
+                        files[ending] = prod_type.upper()
 
-        #Check that there are any data types to insert.
+        # Check that there are any data types to insert.
         if len(files.keys()) == 0:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No data rows in {0}".format(filename))
-            return None
+            raise MyError("No 'FileEnding' rows in {0}".format(filename))
 
+        # The files dictionary can now be read by the loadFromYaml wrapper and
+        # inserted into GUI widgets.
+        return files
+
+    @loadFromYaml
+    def loadConfigYAML(self, **kwargs):
+        """ Open an existing full YAML config file and pull out the
+        'file_types' dictionary.
         """
-        #Check the CSV header row and make sure it has the right data.
-        header = files[0]
+
+        files = {}
+        filename = kwargs['filename']
+        file_config = kwargs['file_config']
+
+        # Get the 'file_types' dictionary.
         try:
-            ext_index = header.index("extension")
-            pt_index = header.index("productType")
-        except ValueError:
-            self.status.setTextColor(Qt.red)
-            self.status.append("Could not read {0}".format(filename))
+            files = file_config["file_types"]
+        except KeyError:
+            raise MyError("'file_types' not defined in .config file!")
             return None
-        """
 
-        #Clear any changes already made to the form.
-        self.clearClicked(source="load")
+        # Check that there are any data types to insert.
+        if len(files.keys()) == 0:
+            self.error = "No data rows in {0}".format(filename)
+            return None
 
-        #Begin at the first data row and insert values into the form elements.
-        #(skip the CSV header row)
-        row_num = self.firstrow
-        for entry in sorted(files.keys()):
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1)
-            if ext_box is None:
-                self.newFileClicked()
-            sel_box = self.filetypegrid.itemAtPosition(row_num, 0).widget()
-            ext_box = self.filetypegrid.itemAtPosition(row_num, 1).widget()
-            pt_box = self.filetypegrid.itemAtPosition(row_num, 2).widget()
-            sel_box.setChecked(True)
-            ext_box.setText(entry)
-            if files[entry] is not None:
-                pt_box.setCurrentType(entry[pt_index])
-            row_num += 1
-        self.status.setTextColor(Qt.darkGreen)
-        self.status.append("Loaded {0}".format(filename))
+        # The files dictionary can now be read by the loadFromYaml wrapper and
+        # inserted into GUI widgets.
+        return files
 
-
-    def saveClicked(self):
-        """
-        When 'save' is clicked, collect all the user entries and write the
+    def collectSelectedFiles(self):
+        """ When 'save' is clicked, collect all the user entries and write the
         CSV file.
         """
 
-        self.selected_files = {}
+        # Loop over all rows the user might have created in the form.
+        for row in range(self.firstrow, self.nextrow):
+            additional_select = self.filetypes_grid.itemAtPosition(row, 0)
+            additional_extension = self.filetypes_grid.itemAtPosition(row, 1)
+            additional_producttype = self.filetypes_grid.itemAtPosition(row, 2)
 
-        #Loop over all rows the user might have created in the form.
-        for row in range(self.firstrow, self.filetypegrid.rowCount()):
-            add_sel = self.filetypegrid.itemAtPosition(row, 0)
-            add_ext = self.filetypegrid.itemAtPosition(row, 1)
-            add_pt = self.filetypegrid.itemAtPosition(row, 2)
-            read_ext = None
-            read_pt = None
-            read_sel = None
-
-            #Skip any empty rows (might not be possible/necessary)
-            if add_ext is None:
+            # Skip any empty rows (might not be possible/necessary)
+            if additional_extension is None:
                 continue
 
-            #Read the entries from the current row.  Skip if there is no text
-            #in the file extension entry.
-            sel_widget = add_sel.widget()
-            read_sel = sel_widget.checkState()
-            if read_sel == 0:
+            # Check the select box first, if that is not checked then skip to
+            # next row.
+            select_widget = additional_select.widget()
+            read_select = select_widget.checkState()
+            if read_select == 0:
                 continue
-            ext_widget = add_ext.widget()
-            read_ext = str(ext_widget.text())
-            if read_ext == "":
+
+            # Read in the provided file extension, skip to next row if empty.
+            extension_widget = additional_extension.widget()
+            read_extension = str(extension_widget.text())
+            if read_extension == "":
                 continue
-            pt_widget = add_pt.widget()
-            read_pt = pt_widget.currentText().upper()
 
-            as_tuple = (read_ext, read_pt)
-            self.selected_files[read_ext] = read_pt
+            # Read in the product type selection (can't be empty).
+            producttype_widget = additional_producttype.widget()
+            read_producttype = producttype_widget.currentText().upper()
 
-        #If all file entry rows have empty name entries, button takes no action
+            as_tuple = (read_extension, read_producttype)
+            self.selected_files[read_extension] = read_producttype
+
+        # If all file entry rows have empty name entries, button takes no
+        # action
         if len(self.selected_files) == 0:
-            self.status.setTextColor(Qt.red)
-            self.status.append("No file types to save!")
+            self.error = "No file types to save!"
             return None
 
-        #Create a header row, get a name to save the file, and write all
-        #content to the CSV file.
-        """
-        head = ("extension", "productType")
-        saveit = QFileDialog.getSaveFileName(self, "Save CSV file", ".")
-        if len(saveit[0]) > 0:
-            saveit = os.path.abspath(saveit[0])
-            if not saveit.endswith(".csv"):
-                saveit += ".csv"
-            with open(saveit, 'w') as output:
-                writer = csv.writer(output)
-                writer.writerow(head)
-                writer.writerows(self.selected_files)
-            print("Saved {0}".format(saveit))
-            self.status.setTextColor(Qt.darkGreen)
-            self.status.append("Saved {0}".format(saveit))
-            output.close()
-        """
         return self.selected_files
+
+    def saveClicked(self):
+        selection = self.collectSelectedFiles()
+        return selection
 
 #--------------------
 

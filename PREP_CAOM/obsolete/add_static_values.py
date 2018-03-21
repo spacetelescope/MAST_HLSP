@@ -6,15 +6,16 @@
     values does as well)
 """
 
-from CAOMxml import *
-from util.add_value_caomxml import add_value_caomxml
 import logging
+
+from lib.CAOMxml import *
+
+from util.add_value_caomxml import add_value_caomxml
 
 #--------------------
 
 def add_static_values(caomlist, statics, data_type, header_type):
-    """
-    Add entries from the statics dictionary to the caomlist by looking at
+    """ Add entries from the statics dictionary to the caomlist by looking at
     properties of data_type and header_type.  The add_value_caomxml module is
     used to actually create the CAOMxml objects and add them to the caomlist.
     """

@@ -1,13 +1,42 @@
-File Descriptions Help:
-    Here you will want to list each type of file you wish to add to CAOM that you expect to 
-    find in the HLSP directory you will be scanning.  Include the last portion of the 
-    filename as well as the extension (i.e. _img.fits).  Then select appropriate Product 
-    Type descriptions for each file listed.  The Required flag determines whether CAOM
-    processing issues an error or warning if an expected file is not found.
-        
------------------------   
+"Load .param File"
+    Use this to load a .param file created by the previous metadata-checking step.  This
+    will add the list of file extensions and product types (if provided) to the "Select
+    File Types" tab, and fill in the HLSP Data directory, Header Type, and Data Type in the
+    "Make Config File" tab.
+    
+"Load .config File"
+    Load a full previously-generated .config file back into ConfigGenerator.  This will 
+    load all provided data into the forms.
+    
+"Reset Forms"
+    Reset all tabs and file type selections to empty original states.
+    
+"Messages:"
+    All output from user actions will be displayed here.
+    
+"Generate .config File"
+    This will assemble all the entries provided in the two input tabs into a YAML-formatted
+    .config file to use with hlsp_to_xml.py and save it at the user's chosen location.  Any
+    problems assembling the user's entries will be displayed in the "Messages:" section.
+    
+"Generate .config and Run Script"
+    This will assemble the user's entries into a YAML-formatted .config file and save it
+    to disk (identical to "Generate .config File") but will then immediately launch 
+    hlsp_to_xml.py with the new .config file.
+    
+-----------------------
+Tabs:
+
+"Select File Types"
+    Once loaded with a .param file, this form will provide a listing of all file extensions
+    found in the given HLSP data directory.  The user can then select which of these file
+    types to send together to CAOM as an 'observation'.  The list of selected file types
+    should update dynamically under "File types selected:" on the right side as selections
+    are made.  The user may also adjust the assigned product type value or add additional 
+    file types.  The form will not generate a .config file if no file types are selected
+    here.
  
-Config File Help:
+"Make Config File"
     This will assemble a YAML config file to use with hlsp_to_xml.py, which tries to 
     automate as much of the process as possible, but the user must provide certain 
     information.
@@ -15,10 +44,6 @@ Config File Help:
     
     HLSP Data:
         Insert the file path to the HLSP data files you wish to scan.
-        
-    File Extensions Table:
-        Insert the file path to the CSV file containing file descriptions for this HLSP.  
-        You may have just created this file with the previous widget.
         
     Output File:
         This provides the file path and name for the hlsp_to_xml.py output XML file.  Name 
@@ -37,9 +62,15 @@ Config File Help:
         
     HLSP-Unique Parameters:
         Define any parameters you would like to insert in CAOM that are not available in 
-        the FITS headers of these HLSP files.  'Parent' defines which section of the XML 
-        file to create the entry in.  'CAOM Keyword' will define how the parameter is 
-        inserted into CAOM.  'Value' is the value you'd like to associate with this keyword.  
-        A common entry is Parent="provenance", CAOM Keyword="reference", Value=
-        "http://www...".  Parameters defined in this section will also overwrite existing
-        parameters of the same CAOM keyword.
+        the FITS headers of these HLSP files.  A list of unused and used CAOM keywords is
+        provided to choose from, with pre-defined XML parents, but the user may also 
+        make their own entries if new keywords are needed.  New XML parents may also be 
+        defined, so the user may create new sections of the XML template tree if desired.
+        
+    Update Header Defaults:
+        The user may update .fits header keyword default values or other properties with
+        entries in this section.  A list of .fits header keywords is pre-populated based
+        on the "Header Type" selection above, along with associated CAOM keywords and
+        expected extension information.  The user may also define new keyword entries 
+        here as well.  Entries here will update an existing .fits header entry if found or 
+        create a new one if not.

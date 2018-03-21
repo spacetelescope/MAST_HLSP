@@ -2,7 +2,7 @@ hlsp:
     metadataList:
         collection: HLSP
         intent: SCIENCE
-        observationID: FILEROOT
+        observationID: FILEROOTSUFFIX
 timeseries:
     metadataList:
         algorithm: timeseries
@@ -13,6 +13,6 @@ kepler:
         instrument_name: Kepler
 product_properties:
     calibrationLevel: HLSP
-    fileNameDescriptor: FILEROOT
+    fileNameDescriptor: FILEROOTSUFFIX
     planeNumber: 1
     releaseType: DATA
