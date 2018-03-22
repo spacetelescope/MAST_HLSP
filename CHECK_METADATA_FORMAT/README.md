@@ -21,3 +21,11 @@ compliance.
 
 ### Example Usage
 python check_metadata_format.py *name_of_precheck_data_format_output_file*
+
+
+# Status of Template Definitions
+| Product Type | mast | hst | jwst | k2  |
+| ------------ | ---- | --- | ---- | --  |
+| image	       | no   | no  | no   | n/a |
+| spectrum     | no   | no  | no   | n/a |
+| timeseries   | yes  | no  | no   | yes |
