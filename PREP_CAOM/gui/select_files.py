@@ -45,6 +45,7 @@ class ProductTypeBox(QComboBox):
             self.addItem(item)
 
     def setCurrentType(self, ctype):
+        ctype = ctype.upper()
         if ctype in self.entries:
             index = self.entries.index(ctype)
             return QComboBox.setCurrentIndex(self, index)

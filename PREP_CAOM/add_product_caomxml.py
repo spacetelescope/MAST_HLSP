@@ -25,7 +25,7 @@ def add_product_caomxml(caomlist, filepath, extensions, data_type):
 
     :param filepath:  The path where all the files for the current HLSP are
                       located.
-    :type filepath:  string
+    :type filepath:  str
 
     :param extensions:  A dictionary of file type suffixes with corresponding
                         productType values.

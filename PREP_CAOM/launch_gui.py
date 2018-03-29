@@ -315,7 +315,7 @@ class HLSPIngest(QTabWidget):
         if len(saveit[0]) > 0:
             saveit = os.path.abspath(saveit[0])
             if not saveit.endswith(".config"):
-                saveit += ".config"
+                ".".join(saveit, "config")
             with open(saveit, 'w') as output:
                 yaml.dump(config, output, default_flow_style=False)
                 output.close()
