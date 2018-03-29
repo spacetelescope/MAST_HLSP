@@ -1,0 +1,43 @@
+# HDUs and names for required and recommended HLSP FITS keyword records.
+#   Applies to TIMESERIES files following the K2 standard.
+# Last update: 2018-Mar-22
+#
+# Keyword dictionaries:
+#   required:  KW record must be present in the named HDU
+#   recommended: KW record should be present in the named HDU
+#   suggested: KW record may be present in the named HDU
+
+# DATE-OBS add fields
+#FALLBACK_OPTION: DATE-OBS, TIME-OBS
+
+PRODUCT: timeseries
+STANDARD: k2
+PHDU:
+    required:
+      - TELESCOP
+      - INSTRUME
+      - OBJECT
+      - RA_OBJ
+      - DEC_OBJ
+      - EQUINOX
+      - DATE-OBS
+      - EXPTIME
+      - EXPSTART
+      - EXPEND
+
+    recommended:
+      - PROPOSID
+      - DETECTOR
+      - FILTER
+
+    can_be_multi:
+      - INSTRUME
+      - FILTER
+      - DETECTOR
+
+    deprecated_to_check:
+      - EPOCH
+
+    alternate_forms:
+      [DATE-OBS, TIME-OBS]
+
