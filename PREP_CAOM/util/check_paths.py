@@ -17,6 +17,10 @@ import os
 
 #--------------------
 
+def log_and_print_msg(msg):
+    logging.error(msg)
+    print("*** {0}".format(msg))
+
 def check_existing_dir(path):
     """ Check a user-provided directory that should already exist (such
     as an HLSP directory).  Quit if the directory is not found.
@@ -28,15 +32,14 @@ def check_existing_dir(path):
     try:
         fullpath = os.path.abspath(path)
     except TypeError:
-        logging.error("check_existing_dir was passed an empty path!")
-        print("Aborting, see log!")
-        quit()
-    if not os.path.exists(fullpath):
-        logging.error("{0} does not exist!".format(fullpath))
-        print("Aborting, see log!")
-        quit()
-    else:
+        log_and_print_msg("check_existing_dir was passed an empty path!")
+        return None
+
+    if os.path.exists(fullpath):
         return fullpath
+    else:
+        log_and_print_msg("{0} does not exist!".format(fullpath))
+        return None
 
 #--------------------
 
@@ -47,19 +50,18 @@ def check_existing_file(path):
     :param path: File path to be checked.
     :type path: string
     """
-    
+
     try:
         fullpath = os.path.abspath(path)
     except TypeError:
-        logging.error("check_existing_file was passed an empty path!")
-        print("Aborting, see log!")
-        quit()
-    if not os.path.isfile(fullpath):
-        logging.error("{0} does not exist!".format(fullpath))
-        print("Aborting, see log!")
-        quit()
-    else:
+        log_and_print_msg("check_existing_file was passed an empty path!")
+        return None
+
+    if os.path.isfile(fullpath):
         return fullpath
+    else:
+        log_and_print_msg("{0} does not exist!".format(fullpath))
+        return None
 
 #--------------------
 
@@ -71,12 +73,13 @@ def check_new_file(path):
     :param path: File path to be checked.
     :type path: string
     """
+
     try:
         fullpath = os.path.abspath(path)
     except TypeError:
-        logging.error("check_new_file was passed an empty path!")
-        print("Aborting, see log!")
-        quit()
+        log_and_print_msg("check_new_file was passed an empty path!")
+        return None
+
     directory = os.path.dirname(fullpath)
     if not os.path.exists(directory):
         try:
