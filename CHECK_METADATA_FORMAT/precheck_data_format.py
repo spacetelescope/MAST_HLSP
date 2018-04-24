@@ -43,7 +43,7 @@ def precheck_data_format(idir, hlsp_name):
 
     # Create the output file, based on the name of the HLSP.
     make_parameter_file("check_metadata_format_" + hlsp_name.strip().lower() +
-                        "_extensions.param", file_endings, all_file_endings,
+                        ".hlsp", file_endings, all_file_endings,
                         idir)
 
     logging.info('Finished at ' + datetime.datetime.now().isoformat())

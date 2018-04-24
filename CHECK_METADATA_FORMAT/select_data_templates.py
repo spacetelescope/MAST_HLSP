@@ -32,7 +32,8 @@ def setup_args():
                                      " their data formats.")
 
     parser.add_argument("ifile", action="store", type=str, help="[Required]"
-                        " Parameter file created by precheck_data_format.")
+                        " Parameter file created by precheck_data_format ("
+                        "ends in .hlsp).")
 
     return parser
 
