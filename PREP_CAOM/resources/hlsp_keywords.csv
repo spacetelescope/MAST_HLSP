@@ -3,7 +3,7 @@
 "instrument_keywords","PRIMARY","metadataList","DATE-OBS","DATE","DATE-OBS","DATE"
 "instrument_keywords","PRIMARY","metadataList","EXPEND","null","EXPEND",""
 "instrument_keywords","PRIMARY","metadataList","EXPSTART","null","EXPSTART",""
-"instrument_keywords","PRIMARY","metadataList","EXPTIME","EXPTIME","EXPTIME",""
+"instrument_keywords","PRIMARY","metadataList","EXPTIME","TIMEDEL","EXPTIME",""
 "instrument_keywords","PRIMARY","metadataList","FILTER","FILTER","FILTER1","FILTER"
 "instrument_keywords","PRIMARY","metadataList","null","null","FILTER2",""
 "instrument_keywords","1","metadataList","null","DATE-OBS","null",""

@@ -14,15 +14,24 @@ def check_log(filepath):
     :param filepath: File path for the log file.
     :type filepath: string
     """
+
     fullpath = os.path.abspath(filepath)
-    errors = 0
-    warnings = 0
+    errors = warnings = 0
+    info = False
+
     with open(fullpath) as log:
-        as_lines = log.readlines()
-        for n in as_lines:
-            if n.startswith("***WARNING"):
+
+        # Reset error & warning tallies when a new session is found via
+        # additional '***INFO' lines
+        for line in log:
+            if line.startswith("***INFO"):
+                info = not info
+                if info:
+                    errors = warnings = 0
+            elif line.startswith("***WARNING"):
                 warnings += 1
-            elif n.startswith("***ERROR"):
+            elif line.startswith("***ERROR"):
                 errors += 1
-        log.close()
-    print("Logged {0} errors and {1} warnings".format(errors, warnings))
+
+    print("Logged {0} errors and {1} warnings in the last "
+          "session".format(errors, warnings))

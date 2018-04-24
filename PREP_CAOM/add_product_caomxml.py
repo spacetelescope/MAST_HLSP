@@ -37,6 +37,9 @@ def add_product_caomxml(caomlist, filepath, extensions, data_type):
 
     # Make sure filepaths are full and valid
     filepath = cp.check_existing_dir(filepath)
+    if filepath is None:
+        print("*** No products added")
+        return caomlist
 
     # Walk filepath and check files found against the list of defined
     # extensions.  If the extension matches, create a product subelement with

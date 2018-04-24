@@ -34,6 +34,45 @@ class HeaderKeyword():
         self.section = "metadataList"
         self.default = "None"
 
+    @property
+    def keyword(self):
+        return self._keyword
+
+    @keyword.setter
+    def keyword(self, keyword):
+        self._keyword = keyword.upper()
+
+    @property
+    def caom(self):
+        return self._caom
+
+    @caom.setter
+    def caom(self, caom):
+        self._caom = caom
+
+    @property
+    def headerName(self):
+        return self._headerName
+
+    @headerName.setter
+    def headerName(self, headerName):
+        self._headerName = headerName
+
+    @property
+    def section(self):
+        return self._section
+
+    @section.setter
+    def section(self, section):
+        self._section = section
+
+    @property
+    def default(self):
+        return self._default
+
+    @default.setter
+    def default(self, default):
+        self._default = default
 #--------------------
 
 class HeaderKeywordList(list):
@@ -77,6 +116,8 @@ def read_header_keywords_table(filepath):
 
     # Open the file at filepath and read it into a list.
     tablepath = cp.check_existing_file(filepath)
+    if tablepath is None:
+        return None
     keywords = []
     with open(tablepath) as csvfile:
         hlsp_keys = csv.reader(csvfile, delimiter=",")

@@ -45,21 +45,16 @@ from util.check_log import check_log
 from util.read_yaml import read_yaml
 
 # Set global variables
-global EXPECTED_CONFIGS
 EXPECTED_CONFIGS = ["data_type",
                     "filepaths",
                     "file_types",
                     "header_type",
-                    "unique_parameters"]
-global EXPECTED_PATHS
+                    "unique_parameters",]
 EXPECTED_PATHS = ["hlsppath",
                   "output",
-                  "overwrite"]
-global KEYWORD_TABLE
+                  "overwrite",]
 KEYWORD_TABLE = "resources/hlsp_keywords.csv"
-global LOG
 LOG = "hlsp_to_xml.log"
-global STATICS
 STATICS = "resources/hlsp_caom_staticvalues.yaml"
 
 #--------------------
@@ -75,21 +70,27 @@ def hlsp_to_xml(config):
 
     # Check the user-provided config file path.
     config = cp.check_existing_file(config)
+    if config is None:
+        return
 
     # Try to read in the yaml config file.
-    parameters = read_yaml(config)
+    try:
+        parameters = read_yaml(config)
+    except (FileNotFoundError, TypeError) as err:
+        print(err)
+        return
 
     # Make sure the config file has all the expected sections
     for section in EXPECTED_CONFIGS:
         if section not in parameters:
             print("{0} does not define '{1}'!".format(config, section))
-            quit()
+            return
 
     # Make sure all necessary filepaths have been provided
     for path in EXPECTED_PATHS:
         if path not in parameters["filepaths"]:
             print("{0} is missing an '{1}' filepath!".format(config, path))
-            quit()
+            return
 
     # Config parameters have been checked, now read into variables
     paths = parameters["filepaths"]
@@ -107,6 +108,8 @@ def hlsp_to_xml(config):
     outdir = os.path.dirname(output)
     logfile = os.path.join(outdir, LOG)
     logfile = cp.check_new_file(logfile)
+    if logfile is None:
+        return
     logging.basicConfig(filename=logfile,
                         format='***%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
@@ -115,15 +118,18 @@ def hlsp_to_xml(config):
 
     # Prepare the output file
     output = cp.check_new_file(output)
+    if output is None:
+        return
     print("Opening {0}".format(output))
     if overwrite or not os.path.isfile(output):
         with open(output, 'w') as xmlfile:
             xmlfile.close()
     else:
-        logging.error("{0} already exists. Set overwrite=True to proceed."
-                      .format(output))
-        print("Aborting, see log!")
-        quit()
+        err = "{0} already exists. Set overwrite=True to proceed.".format(
+                                                                       output)
+        logging.error(err)
+        print(err)
+        return
 
     # Begin the lxml tree and add the main subelements
     composite = etree.Element("CompositeObservation")
@@ -138,7 +144,14 @@ def hlsp_to_xml(config):
     # Read the static CAOM values from the yaml file
     print("Creating standard HLSP entries...")
     statics = cp.check_existing_file(STATICS)
-    static_values = read_yaml(statics)
+    if statics is None:
+        return
+    try:
+        static_values = read_yaml(statics)
+    except (FileNotFoundError, TypeError) as err:
+        logging.error(err)
+        print(err)
+        return
 
     # Add standard entries
     caomlist = add_value_caomxml(caomlist, static_values["hlsp"])
@@ -157,10 +170,10 @@ def hlsp_to_xml(config):
 
     # Add CAOMxml entries for HLSP-specifiic CAOM parameters.
     print("Adding unique entries for this HLSP...")
-    if uniques is not None:
-        caomlist = add_value_caomxml(caomlist, uniques)
-    else:
+    if uniques is None:
         logging.warning("No unique parameters provided in the yaml config.")
+    else:
+        caomlist = add_value_caomxml(caomlist, uniques)
     print("...done!")
 
     # Add product entries to the list of CAOMxml objects

@@ -18,7 +18,6 @@
     immediately launch ../hlsp_to_xml.py with said file.
 """
 
-import copy
 import csv
 import os
 import sys
@@ -29,7 +28,6 @@ import lib.GUIbuttons as gb
 import lib.HeaderKeyword as hk
 from lib.MyError import MyError
 
-import util.check_paths as cp
 from util.read_yaml import read_yaml
 
 try:
@@ -166,7 +164,7 @@ class CAOMKeywordBox(QComboBox):
                       }
 
         # Create a merged dictionary
-        self.allvalues = self.inuse.copy()
+        self.allvalues = dict(self.inuse)
         self.allvalues.update(self.unused)
 
         # Use a QFont object to distinguish category seperators
@@ -519,6 +517,7 @@ class ConfigGenerator(QWidget):
             pos = section.getItemPosition(headers_index)
         else:
             return
+
         row = pos[0]
         col = pos[1]
 
@@ -669,7 +668,7 @@ class ConfigGenerator(QWidget):
         parents = uniques.keys()
         for p in parents:
             sub_dictionary = uniques[p]
-            copy_dictionary = copy.deepcopy(sub_dictionary)
+            copy_dictionary = dict(sub_dictionary)
 
             # Look at the first row to see if you're loading into FIRST_ENTRY
             # or NEXT_ENTRY.
@@ -854,47 +853,51 @@ class ConfigGenerator(QWidget):
         # the appropriate lineedits
         try:
             datadir = yamlfile["InputDir"]
-            self.data_dir_edit.insert(datadir)
         except KeyError:
             msg = "'InputDir' either missing or not formatted in .param file"
             raise MyError(msg)
+        else:
+            self.data_dir_edit.insert(datadir)
 
         # Identify the single .fits entry defined in the .param file, if
         # present.
         try:
             fits = yamlfile["fits"]
+        except KeyError:
+            msg = "No fits parameters found in .param file"
+            raise MyError(msg)
+        else:
             if len(fits) > 1:
                 msg = "More than one .fits product found in .param file"
                 raise MyError(msg)
             else:
                 fits = fits[0]
-        except KeyError:
-            msg = "No fits parameters found in .param file"
-            raise MyError(msg)
 
         # If the single .fits entry is present, get the standard that was
         # used for metadata checking.
         try:
             new_head_type = fits["FileParams"]["Standard"].title()
-            if new_head_type in self.headertype_box.header_types:
-                n = self.headertype_box.header_types.index(new_head_type)
-                self.headertype_box.setCurrentIndex(n)
         except KeyError:
             msg = "Could not find a .fits standard in .param file"
             raise MyError(msg)
+        else:
+            if new_head_type in self.headertype_box.header_types:
+                n = self.headertype_box.header_types.index(new_head_type)
+                self.headertype_box.setCurrentIndex(n)
 
         # If the single .fits entry is present, get the ProductType information
         # defined in the .param file.
         try:
             new_data_type = fits["FileParams"]["ProductType"].upper()
+        except KeyError:
+            msg = "Could not find 'ProductType' parameter in .param file"
+            raise MyError(msg)
+        else:
             if new_data_type in self.datatype_box.data_types:
                 n = self.datatype_box.data_types.index(new_data_type)
                 self.datatype_box.setCurrentIndex(n)
             else:
                 self.datatype_box.setCurrentIndex(0)
-        except KeyError:
-            msg = "Could not find 'ProductType' parameter in .param file"
-            raise MyError(msg)
 
     def resetClicked(self):
         """ Clear any changes to the form.
@@ -924,33 +927,33 @@ class ConfigGenerator(QWidget):
         d_one.widget().clear()
 
         # Delete any unique parameter entries beyond the first table row.
-        delete_these = list(reversed(range(self.firstrow_uniques+1,
-                                           self.nextrow_uniques)))
-        if len(delete_these) > 0:
-            for a in delete_these:
-                test = self.uniques_grid.itemAtPosition(a,0)
-                if test is None:
-                    continue
-                widgets_per_row = 3
-                for b in range(widgets_per_row):
-                    c = self.uniques_grid.itemAtPosition(a,b).widget()
-                    c.setParent(None)
+        delete_these = range(self.nextrow_uniques - 1,
+                             self.firstrow_uniques,
+                             -1)
+        for a in delete_these:
+            test = self.uniques_grid.itemAtPosition(a, 0)
+            if test is None:
+                continue
+            widgets_per_row = 3
+            for b in range(widgets_per_row):
+                c = self.uniques_grid.itemAtPosition(a, b).widget()
+                c.setParent(None)
 
         # Reset the nextrow_uniques variable.
         self.nextrow_uniques = self.firstrow_uniques + 1
 
         # Delete any header keyword entries beyond the first row.
-        delete_these = list(reversed(range(self.firstrow_headers+1,
-                                           self.nextrow_headers)))
-        if len(delete_these) > 0:
-            for x in delete_these:
-                test = self.headerdefault_grid.itemAtPosition(x,0)
-                if test is None:
-                    continue
-                widgets_per_row = 5
-                for y in range(widgets_per_row):
-                    z = self.headerdefault_grid.itemAtPosition(x,y).widget()
-                    z.setParent(None)
+        delete_these = range(self.nextrow_headers - 1,
+                             self.firstrow_headers,
+                             -1)
+        for x in delete_these:
+            test = self.headerdefault_grid.itemAtPosition(x,0)
+            if test is None:
+                continue
+            widgets_per_row = 5
+            for y in range(widgets_per_row):
+                z = self.headerdefault_grid.itemAtPosition(x,y).widget()
+                z.setParent(None)
 
         # Reset the nextrow_headers variable.
         self.nextrow_headers = self.firstrow_headers + 1
@@ -1001,9 +1004,7 @@ class ConfigGenerator(QWidget):
             add_caom = self.uniques_grid.itemAtPosition(row, 0)
             add_parent = self.uniques_grid.itemAtPosition(row, 1)
             add_value = self.uniques_grid.itemAtPosition(row, 2)
-            unique_parent = None
-            unique_caom = None
-            unique_value = None
+            unique_parent = unique_caom = unique_value = None
 
             # Skip totally empty rows, empty values are okay for defining a new
             # parent.
@@ -1030,16 +1031,16 @@ class ConfigGenerator(QWidget):
 
             # crawl_dictionary returns a tuple:
             # (updated dictionary, inserted boolean flag)
-            new_uniques = insert[0]
-            inserted = insert[1]
+            new_uniques, inserted = insert
 
             # If crawl_dictionary did not insert the new parameter, the defined
             # parent is not currently present in the dictionary, so create a
             # new entry.
-            if not inserted:
-                uniques[unique_parent] = parameter
-            else:
+            if inserted:
                 uniques = new_uniques
+            else:
+                uniques[unique_parent] = parameter
+
         config["unique_parameters"] = uniques
 
         # Collect all header keyword entries the user may have provided.

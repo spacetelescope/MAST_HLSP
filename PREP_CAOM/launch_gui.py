@@ -304,10 +304,11 @@ class HLSPIngest(QTabWidget):
         # dictionary
         try:
             config = self.tab2.collectInputs()
-            config["file_types"] = self.file_types
         except MyError as err:
             self.badMessage(err.message)
             return None
+        else:
+            config["file_types"] = self.file_types
 
         # Get a file name using a save dialog and save the dictionary to a
         # YAML-formatted file with a .config extension
@@ -315,7 +316,7 @@ class HLSPIngest(QTabWidget):
         if len(saveit[0]) > 0:
             saveit = os.path.abspath(saveit[0])
             if not saveit.endswith(".config"):
-                ".".join(saveit, "config")
+                ".".join([saveit, "config"])
             with open(saveit, 'w') as output:
                 yaml.dump(config, output, default_flow_style=False)
                 output.close()
