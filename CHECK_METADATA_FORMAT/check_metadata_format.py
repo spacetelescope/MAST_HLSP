@@ -13,7 +13,12 @@ import numpy
 import os
 import yaml
 
+import sys
+sys.path.append("../")
+from lib import FitsKeyword
+
 from apply_metadata_check import apply_metadata_check
+
 #--------------------
 
 def check_metadata_format(paramfile):
@@ -30,13 +35,25 @@ def check_metadata_format(paramfile):
 #    templates_to_read = ["TEMPLATES/timeseries_mast.yml",
 #                         "TEMPLATES/timeseries_k2.yml"]
     templates_to_read = ["TEMPLATES/timeseries_k2.yml"]
+
+    
+    # Create FitsKeywordList object for each standard in all_standards array.
+    # These are used to define the expected keywords for a given template
+    # standard, but can have any part overwritten by the .hlsp file.
     all_standards = numpy.asarray([])
     for ttr in templates_to_read:
         if os.path.isfile(ttr):
             with open(ttr, 'r') as istream:
-                all_standards = numpy.append(all_standards, yaml.load(istream))
+                yaml_data = yaml.load(istream)
+                all_standards = numpy.append(all_standards,
+                                             FitsKeyword.FitsKeywordList(
+                                                 yaml_data['PRODUCT'],
+                                                 yaml_data['STANDARD'],
+                                                 yaml_data['KEYWORDS']))
         else:
             raise IOError("Template file not found: " + ttr)
+
+    import ipdb; ipdb.set_trace()
 
     # Start logging to an output file.
     logging.basicConfig(filename="check_metadata_format.log",

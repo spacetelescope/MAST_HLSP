@@ -19,16 +19,32 @@ class FitsKeyword():
     Attach a number of parameters to a given .fits header keyword.
     """
 
-    def __init__(self, keyword):
+    def __init__(self, kw, keyword):
+        self.fits_keyword = kw
         self.alternates = "null"
+        if "alternates" in keyword:
+            self.alternates = keyword["alternates"]
         self.caom_keyword = "null"
+        if "caom_keyword" in keyword:
+            self.caom_keyword = keyword["caom_keyword"]
         self.caom_status = "required"
+        if "caom_status" in keyword:
+            self.caom_status = keyword["caom_status"]
         self.default = "None"
-        self.fits_keyword = keyword
+        if "default" in keyword:
+            self.default = keyword["default"]
         self.header = 0
+        if "header" in keyword:
+            self.header = keyword["header"]
         self.hlsp_status = "required"
+        if "hlsp_status" in keyword:
+            self.hlsp_status = keyword["hlsp_status"]
         self.multiple = False
+        if "multiple" in keyword:
+            self.multiple = keyword["multiple"]
         self.xml_parent = "metadataList"
+        if "metadataList" in keyword:
+            self.xml_parent = keyword["xml_parent"]
 
     def __repr__(self):
         return ("<FitsKeyword({0.fits_keyword}, "
@@ -119,16 +135,17 @@ class FitsKeyword():
 
 #--------------------
 
-class FitsKeywordList(list):
+class FitsKeywordList(object):
     """
     Create a list of FitsKeyword objects and provide methods for list
         manipulation.
     """
 
-    def __init__(self, header_type):
-        super().__init__()
-        self.header_type = header_type
-        self.keywords = []
+    def __init__(self, product_type, standard_type, keywords_dict):
+        self.product_type = product_type
+        self.standard_type = standard_type
+        self.keywords = [FitsKeyword(x, keywords_dict[x]) for x in
+                         keywords_dict]
 
     def add(self, hk):
         if isinstance(hk, FitsKeyword):
@@ -147,6 +164,7 @@ class FitsKeywordList(list):
                 return member
         return None
 
+    # NOTE: This will have to be re-done given new constructor.
     def sort(self):
         sorted_list = FitsKeywordList(self.header_type)
         for k in sorted(self.keywords):
