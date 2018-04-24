@@ -18,38 +18,38 @@ KEYWORDS:
         multiple: False
         alternates: TIME-OBS
     DATE-END:
-	header: 1
-	hlsp_status: required
+        header: 1
+        hlsp_status: required
         caom_status: required
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
         alternates: null
     DEC_OBJ:
-	header: 0
-	hlsp_status: required
+        header: 0
+        hlsp_status: required
         caom_status: required
         caom_keyword: targetPosition_coordinates_cval2
         xml_parent: metadataList
         multiple: False
         alternates: null
     EQUINOX:
-	header: 1
-	hlsp_status: required
+        header: 1
+        hlsp_status: required
         caom_status: required
         caom_keyword: targetPosition_equinox
         xml_parent: metadataList
         multiple: False
         alternates: null
     EXPTIME:
-	header: -999
-	hlsp_status: omitted
+        header: -999
+        hlsp_status: omitted
         caom_status: required
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
         alternates: null
-	default: 1765.463013
+        default: 1765.463013
     FILTER:
         header: 1
         hlsp_status: required
@@ -58,26 +58,26 @@ KEYWORDS:
         xml_parent: metadataList
         multiple: False
         alternates: null
-	default: Kepler
+        default: Kepler
     INSTRUME:
-	header: 1
-	hlsp_status: required
+        header: 1
+        hlsp_status: required
         caom_status: omitted
         caom_keyword: instrument_name
         xml_parent: metadataList
         multiple: False
         alternates: null
     OBJECT:
-	header: 0
-	hlsp_status: required
+        header: 0
+        hlsp_status: required
         caom_status: required
         caom_keyword: target_name
         xml_parent: metadataList
         multiple: False
         alternates: null
     RA_OBJ:
-	header: 0
-	hlsp_status: required
+        header: 0
+        hlsp_status: required
         caom_status: required
         caom_keyword: targetPosition_coordinates_cval1
         xml_parent: metadataList
@@ -92,11 +92,10 @@ KEYWORDS:
         multiple: False
         alternates: null
     TIMEDEL:
-	header: 1
-	hlsp_status: required
+        header: 1
+        hlsp_status: required
         caom_status: omitted
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
         alternates: null
-

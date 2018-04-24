@@ -2,6 +2,7 @@ from astropy.io import fits
 import logging
 import numpy
 import os
+from ..lib import FitsKeyword
 
 #--------------------
 
@@ -57,6 +58,12 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
 
     all_endings_to_check = numpy.asarray(
         [x['FileEnding'] for x in endings_to_check])
+
+    # Create FitsKeywordList object for each standard in the all_standards array.
+    # These are used to define the expected keywords for a given template
+    # standard, but can have any part overwritten by the .hlsp file.
+
+    import ipdb; ipdb.set_trace()
 
     # Loop over each file in the file_base_dir.
     for froot, _, file_list in os.walk(file_base_dir):

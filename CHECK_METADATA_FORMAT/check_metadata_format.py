@@ -27,8 +27,9 @@ def check_metadata_format(paramfile):
     """
 
     # Read in all the YAML standard template files once to pass along.
-    templates_to_read = ["TEMPLATES/timeseries_mast.yml",
-                         "TEMPLATES/timeseries_k2.yml"]
+#    templates_to_read = ["TEMPLATES/timeseries_mast.yml",
+#                         "TEMPLATES/timeseries_k2.yml"]
+    templates_to_read = ["TEMPLATES/timeseries_k2.yml"]
     all_standards = numpy.asarray([])
     for ttr in templates_to_read:
         if os.path.isfile(ttr):

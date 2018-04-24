@@ -15,16 +15,17 @@ neatly-packaged objects.
 #--------------------
 
 class FitsKeyword():
-    """ Attach a number of parameters to a given .fits header keyword.
+    """
+    Attach a number of parameters to a given .fits header keyword.
     """
 
     def __init__(self, keyword):
-        self.alternates = []
-        self.caom_keyword = None
+        self.alternates = "null"
+        self.caom_keyword = "null"
         self.caom_status = "required"
         self.default = "None"
         self.fits_keyword = keyword
-        self.header = "0"
+        self.header = 0
         self.hlsp_status = "required"
         self.multiple = False
         self.xml_parent = "metadataList"
@@ -40,7 +41,6 @@ class FitsKeyword():
 
     @alternates.setter
     def alternates(self, alts):
-        assert type(alts) is list
         self._alternates = alts
 
     @property
@@ -85,7 +85,7 @@ class FitsKeyword():
 
     @header.setter
     def header(self, head):
-        assert (int(head) or head == "0")
+        assert type(head) is int
         self._header = head
 
     @property
@@ -120,8 +120,9 @@ class FitsKeyword():
 #--------------------
 
 class FitsKeywordList(list):
-    """ Create a list of FitsKeyword objects and provide methods for list
-    manipulation.
+    """
+    Create a list of FitsKeyword objects and provide methods for list
+        manipulation.
     """
 
     def __init__(self, header_type):
