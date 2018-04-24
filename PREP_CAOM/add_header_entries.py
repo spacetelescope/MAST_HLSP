@@ -35,6 +35,9 @@ def add_header_entries(caomlist, tablepath, header_type):
 
     # Open the csv file and parse into a list
     tablepath = cp.check_existing_file(tablepath)
+    if tablepath is None:
+        print("*** No header keywords added")
+        return caomlist
     print("...opening {0}...".format(tablepath))
     keywords = []
     with open(tablepath) as csvfile:
@@ -51,10 +54,11 @@ def add_header_entries(caomlist, tablepath, header_type):
     try:
         key_index = keywords[0].index(header_type)
     except ValueError:
-        logging.error("'{0}' is not a header type defined in {1}"
-                      .format(header_type, tablepath))
-        print("Aborting, see log!")
-        quit()
+        err = "'{0}' is not a header type defined in {1}".format(header_type,
+                                                                 tablepath)
+        logging.error(err)
+        print(err)
+        return caomlist
 
     # Create a CAOMxml object for each entry in the table (skipping the head
     # row and 'null' entries).  Add each CAOMxml object to caomlist.
