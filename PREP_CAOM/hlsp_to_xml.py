@@ -194,8 +194,7 @@ def hlsp_to_xml(config):
 
     # Add CAOMxml elements to xmltree
     print("Writing everything to XML...")
-    caomlist = caomlist.sort()
-    for entry in caomlist:
+    for entry in sorted(caomlist):
 
         # Skip extra top-level entries caused by recursion in add_value_caomxml
         if xmltree.find(entry.label) is None:

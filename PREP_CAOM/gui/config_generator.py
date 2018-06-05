@@ -99,9 +99,16 @@ class HeaderTypeBox(QComboBox):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.header_types = ["Standard", "HST", "Kepler"]
+        self.header_types = ["STANDARD", "HST", "KEPLER"]
         for type_ in self.header_types:
             self.addItem(type_)
+
+    def setTo(self, target):
+        if target.upper() in self.header_types:
+            n = self.findText(target.upper())
+            self.setCurrentIndex(n)
+        else:
+            self.setCurrentIndex(0)
 
 #--------------------
 
@@ -116,6 +123,13 @@ class DataTypeBox(QComboBox):
                           ]
         for type_ in self.data_types:
             self.addItem(type_)
+
+    def setTo(self, target):
+        if target.upper() in self.data_types:
+            n = self.findText(target.upper())
+            self.setCurrentIndex(n)
+        else:
+            self.setCurrentIndex(0)
 
 #--------------------
 
@@ -653,6 +667,21 @@ class ConfigGenerator(QWidget):
         # Update self.nextrow_headers.
         self.nextrow_headers += 1
 
+    def clearConfigPaths(self):
+        self.data_dir_edit.clear()
+        self.output_dir_edit.clear()
+
+    def loadConfigPaths(self, paths_dict):
+        self.clearConfigPaths()
+        self.data_dir_edit.insert(paths_dict["InputDir"])
+        self.output_dir_edit.insert(paths_dict["Output"])
+
+    def setProductType(self, data_product_type):
+        self.datatype_box.setTo(data_product_type)
+
+    def setHeaderStandard(self, header_type):
+        self.headertype_box.setTo(header_type)
+
     def loadDictionaries(self, uniques):
         """ Recursively handles loading multi-level dictionaries to the unique
         parameters table.
@@ -904,8 +933,7 @@ class ConfigGenerator(QWidget):
         """
 
         #Empty the immediately-available elements.
-        self.data_dir_edit.clear()
-        self.output_dir_edit.clear()
+        self.clearConfigPaths()
         self.overwrite_on.setChecked(True)
         self.headertype_box.setCurrentIndex(0)
         self.datatype_box.setCurrentIndex(0)

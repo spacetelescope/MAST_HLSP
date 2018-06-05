@@ -12,44 +12,40 @@ neatly-packaged objects.
     to add a new object, find an object, or sort the list.
 """
 
-#--------------------
+import inspect
 
-class FitsKeyword():
+# --------------------
+
+
+class FitsKeyword(object):
     """
     Attach a number of parameters to a given .fits header keyword.
     """
 
-    def __init__(self, kw, keyword):
+    _status_choices = ["omitted", "recommended", "required"]
+
+    def __init__(self, kw, parameters=None):
         self.fits_keyword = kw
         self.alternates = "null"
-        if "alternates" in keyword:
-            self.alternates = keyword["alternates"]
         self.caom_keyword = "null"
-        if "caom_keyword" in keyword:
-            self.caom_keyword = keyword["caom_keyword"]
         self.caom_status = "required"
-        if "caom_status" in keyword:
-            self.caom_status = keyword["caom_status"]
         self.default = "None"
-        if "default" in keyword:
-            self.default = keyword["default"]
         self.header = 0
-        if "header" in keyword:
-            self.header = keyword["header"]
         self.hlsp_status = "required"
-        if "hlsp_status" in keyword:
-            self.hlsp_status = keyword["hlsp_status"]
         self.multiple = False
-        if "multiple" in keyword:
-            self.multiple = keyword["multiple"]
         self.xml_parent = "metadataList"
-        if "metadataList" in keyword:
-            self.xml_parent = keyword["xml_parent"]
+
+        if parameters:
+            [setattr(self, key, val) for key, val in parameters.items()]
+
+    def __lt__(self, another):
+        return self.fits_keyword < another.fits_keyword
 
     def __repr__(self):
         return ("<FitsKeyword({0.fits_keyword}, "
                 "CAOM={0.caom_keyword}, "
-                "HEADER={0.header})>".format(self))
+                "HEADER={0.header})>".format(self)
+                )
 
     @property
     def alternates(self):
@@ -74,10 +70,12 @@ class FitsKeyword():
     @caom_status.setter
     def caom_status(self, c_status):
         c_status = str(c_status).lower()
-        assert (c_status == "omitted"
-                or c_status == "recommended"
-                or c_status == "required")
-        self._caom_status = c_status
+        if c_status in self._status_choices:
+            self._caom_status = c_status
+        else:
+            err = "'{0}' is not an allowed value for caom_status".format(
+                c_status)
+            raise ValueError(err)
 
     @property
     def default(self):
@@ -101,8 +99,11 @@ class FitsKeyword():
 
     @header.setter
     def header(self, head):
-        assert type(head) is int
-        self._header = head
+        if type(head) is int:
+            self._header = head
+        else:
+            err = "'header' must be of type <int>"
+            raise TypeError(err)
 
     @property
     def hlsp_status(self):
@@ -111,10 +112,12 @@ class FitsKeyword():
     @hlsp_status.setter
     def hlsp_status(self, h_status):
         h_status = str(h_status).lower()
-        assert (h_status == "omitted"
-                or h_status == "recommended"
-                or h_status == "required")
-        self._hlsp_status = h_status
+        if h_status in self._status_choices:
+            self._hlsp_status = h_status
+        else:
+            err = "{0} is not an allowed value for hlsp_status".format(
+                h_status)
+            raise ValueError(err)
 
     @property
     def multiple(self):
@@ -122,8 +125,11 @@ class FitsKeyword():
 
     @multiple.setter
     def multiple(self, flag):
-        assert type(flag) is bool
-        self._multiple = flag
+        if type(flag) is bool:
+            self._multiple = flag
+        else:
+            err = "'multiple' must be of type <bool>"
+            raise TypeError(err)
 
     @property
     def xml_parent(self):
@@ -133,19 +139,22 @@ class FitsKeyword():
     def xml_parent(self, parent):
         self._xml_parent = parent
 
-#--------------------
+# --------------------
 
-class FitsKeywordList(object):
+
+class FitsKeywordList(list):
     """
     Create a list of FitsKeyword objects and provide methods for list
         manipulation.
     """
 
     def __init__(self, product_type, standard_type, keywords_dict):
+        super().__init__()
         self.product_type = product_type
         self.standard_type = standard_type
-        self.keywords = [FitsKeyword(x, keywords_dict[x]) for x in
-                         keywords_dict]
+        self.keywords = [FitsKeyword(x, parameters=keywords_dict[x])
+                         for x in keywords_dict
+                         ]
 
     def add(self, hk):
         if isinstance(hk, FitsKeyword):
@@ -164,16 +173,10 @@ class FitsKeywordList(object):
                 return member
         return None
 
-    # NOTE: This will have to be re-done given new constructor.
-    def sort(self):
-        sorted_list = FitsKeywordList(self.header_type)
-        for k in sorted(self.keywords):
-            keyword_obj = self.find_fits(k)
-            sorted_list.add(keyword_obj)
-        return sorted_list
+# --------------------
 
-#--------------------
 
 if __name__ == "__main__":
-    test = FitsKeyword("this")
-    print(test)
+    p = {"default": "what?", "header": 1, "caom_keyword": "no"}
+    test = FitsKeyword("this", parameters=p)
+    print(test.__dict__)
