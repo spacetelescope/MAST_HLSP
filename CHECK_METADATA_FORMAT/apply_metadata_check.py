@@ -2,7 +2,7 @@
 .. module:: apply_metadata_check
     :synopsis: Applies the check of header keywords and values given a standard.
 
-.. moduleauthor:: Scott W. Fleming <fleming@stsci.edu>
+().. moduleauthor:: Scott W. Fleming <fleming@stsci.edu>
 """
 
 import logging
@@ -31,15 +31,15 @@ def validate_date(datevals, this_file):
     if len(datevals[0]) != 4:
         logging.error('File: {0}'.format(this_file) +
                       ', first part of "DATE-OBS" does not look like a 4-digit' +
-                      ' year. Value is: {1}.'.format(datevals[0]))
+                      ' year. Value is: {0}.'.format(datevals[0]))
     if len(datevals[1]) != 2 or int(datevals[1]) < 1 or int(datevals[1]) > 12:
         logging.error('File: {0}'.format(this_file) +
                       ', second part of "DATE-OBS" does not look like a' +
-                      ' 2-digit month. Value is: {1}.'.format(datevals[1]))
+                      ' 2-digit month. Value is: {0}.'.format(datevals[1]))
     if len(datevals[2]) != 2 or int(datevals[2]) < 1 or int(datevals[2]) > 31:
         logging.error('File: {0}'.format(this_file) +
                       ', third part of "DATE-OBS" does not look like a 2-digit' +
-                      ' day. Value is: {1}.'.format(datevals[2]))
+                      ' day. Value is: {0}.'.format(datevals[2]))
 
 #--------------------
 
@@ -60,17 +60,17 @@ def validate_time(timevals, this_file):
     if len(timevals) != 3:
         logging.error('File: {0}'.format(this_file) +
                       ', keyword "TIME-OBS" is not in a "hh:mm:ss.ss" format.' +
-                      ' Value is: {1}.'.format(timevals))
+                      ' Value is: {0}.'.format(timevals))
     if (len(timevals[0]) != 2 or int(timevals[0]) < 0 or
             int(timevals[0]) > 24):
         logging.error('File: {0}'.format(this_file) +
                       ', first part of "TIME-OBS" does not look like' +
-                      ' a 2-digit hour. Value is: {1}.'.format(timevals[0]))
+                      ' a 2-digit hour. Value is: {0}.'.format(timevals[0]))
     if (len(timevals[1]) != 2 or int(timevals[1]) < 0 or
             int(timevals[1]) > 60):
         logging.error('File: {0}'.format(this_file) +
                       ', second part of "TIME-OBS" does not look like' +
-                      ' a 2-digit minute. Value is: {1}.'.format(timevals[1]))
+                      ' a 2-digit minute. Value is: {0}.'.format(timevals[1]))
     # If there's a 'z' sticking around at the end of the string, strip it
     # before comparing values.
     seconds_val = timevals[2]
@@ -79,7 +79,7 @@ def validate_time(timevals, this_file):
     if (float(seconds_val) < 0. or float(seconds_val) > 60.):
         logging.error('File: {0}'.format(this_file) +
                       ', third part of "TIME-OBS" does not look like a valid' +
-                      ' seconds field. Value is: {1}.'.format(seconds_val))
+                      ' seconds field. Value is: {0}.'.format(seconds_val))
 
 #--------------------
 
@@ -119,7 +119,7 @@ def check_date_obs(header, this_file):
                 logging.error('File: {0}'.format(this_file) +
                               ', "z" or "Z" for "zulu" is not allowed in' +
                               ' time string.  Current value' +
-                              ' is: {1}.'.format(header['TIME-OBS']))
+                              ' is: {0}.'.format(header['TIME-OBS']))
             tsplits = header['TIME-OBS'].strip().split(':')
             validate_time(tsplits, this_file)
     elif 'T' in date_obs_str and len(date_obs_str) >= 19:
@@ -128,7 +128,7 @@ def check_date_obs(header, this_file):
             logging.error('File: {0}'.format(this_file) +
                           ', "z" or "Z" for "zulu" is not allowed in' +
                           ' "DATE-OBS" string.' +
-                          '  Current value is: {1}.'.format(date_obs_str))
+                          '  Current value is: {0}.'.format(date_obs_str))
         datetimesplits = date_obs_str.split('T')
         datesplits = datetimesplits[0].split('-')
         timesplits = datetimesplits[1].split(':')
@@ -139,7 +139,7 @@ def check_date_obs(header, this_file):
                       ', keyword "DATE-OBS" is in the header' +
                       ' but is not in either a "YYYY-MM-DD" or' +
                       ' "YYYY-MM-DDThh:mm:ss.ss" format.  Value' +
-                      ' is: {1}.'.format(date_obs_str))
+                      ' is: {0}.'.format(date_obs_str))
 
 #--------------------
 
@@ -184,25 +184,25 @@ def apply_check(this_file, template_standard):
                     if kw.caom_status == 'required':
                         logging.error('File: {0}'.format(this_file) +
                                       ", Missing CAOM required" +
-                                      " keyword: {1}".format(kw.fits_keyword) +
+                                      " keyword: {0}".format(kw.fits_keyword) +
                                       ', and no default value is' +
                                       ' specififed.')
                     elif kw.caom_status == 'recommended':
                         logging.warning('File: {0}'.format(this_file) +
                                         ", Missing CAOM recommended" +
-                                        " keyword: {1}".format(kw.fits_keyword) +
+                                        " keyword: {0}".format(kw.fits_keyword) +
                                         ', and no default value is' +
                                         ' specififed.')
                     if kw.hlsp_status == 'required':
                         logging.error('File: {0}'.format(this_file) +
                                       ", Missing HLSP required" +
-                                      " keyword: {1}".format(kw.fits_keyword) +
+                                      " keyword: {0}".format(kw.fits_keyword) +
                                       ', and no default value is' +
                                       ' specififed.')
                     elif kw.hlsp_status == 'recommended':
                         logging.warning('File: {0}'.format(this_file) +
                                         ", Missing HLSP recommended" +
-                                        " keyword: {1}".format(kw.fits_keyword) +
+                                        " keyword: {0}".format(kw.fits_keyword) +
                                         ', and no default value is' +
                                         ' specififed.')
             if not is_in_hdr and kw_checked is not None:
@@ -210,48 +210,64 @@ def apply_check(this_file, template_standard):
                 if kw.hlsp_status == "required":
                     logging.error('File: {0}'.format(this_file) +
                                   ", Missing HLSP required keyword: " +
-                                  '"{1}".'.format(kw_checked))
+                                  '"{0}".'.format(kw_checked))
                 elif kw.hlsp_status == "recommended":
                     logging.warning('File: {0}'.format(this_file) +
                                     ", Missing HLSP recommened keyword: " +
-                                    '"{1}".'.format(kw_checked))
+                                    '"{0}".'.format(kw_checked))
                 # Check required/recommended CAOM keywords.
                 if kw.caom_status == "required":
                     logging.error('File: {0}'.format(this_file) +
                                   ", Missing CAOM required keyword: " +
-                                  '"{1}".'.format(kw_checked))
+                                  '"{0}".'.format(kw_checked))
                     # If a required CAOM keyword is missing, but a default
                     # value is present, inform the user a fallback default
                     # is being used.
                     if kw.default is not None:
                         logging.info('File: {0}'.format(this_file) +
                                      ", Using default" +
-                                     " value of {1}".format(str(kw.default)) +
+                                     " value of {0}".format(str(kw.default)) +
                                      " for CAOM required " +
-                                     'keyword "{2}".'.format(kw_checked))
+                                     'keyword "{0}".'.format(kw_checked))
                 elif kw.caom_status == "recommended":
                     logging.warning('File: {0}'.format(this_file) +
                                     ", Missing CAOM recommended keyword: " +
-                                    '"{1}".'.format(kw_checked))
+                                    '"{0}".'.format(kw_checked))
                     # If a recommended CAOM keyword is missing, but a default
                     # value is present, inform the user a fallback default
                     # is being used.
                     if kw.default is not None:
                         logging.info('File: {0}'.format(this_file) +
                                      ', Using default value' +
-                                     ' of "{1}"'.format(str(kw.default)) +
+                                     ' of "{0}"'.format(str(kw.default)) +
                                      ' for CAOM recommended ' +
-                                     'keyword "{2}".'.format(kw_checked))
+                                     'keyword "{0}".'.format(kw_checked))
             # Now do some sanity checking of keywords if present.
             if is_in_hdr and kw_checked is not None:
                 if kw_checked == "DATE-OBS":
                     # Check DATE-OBS keyword is correct format, if not,
                     # try TIME-OBS.
                     check_date_obs(hdulist[kw.header].header, this_file)
-                elif kw.multiple:
-                    # Check if this keyword has alternatives and is set to
-                    # 'MULTI' properly.
-                    pass
+                if kw.multiple:
+                    # Check if this keyword is set to 'MULTI' properly.
+                    kw_value_checked = hdulist[kw.header].header[kw_checked]
+                    if kw_value_checked.lower() == "multi":
+                        # Make sure there are other keywords of the format
+                        # KW[0:6]nn.  There should be at least two of them.
+                        if (kw_checked[0:6]+'01' not in
+                                hdulist[kw.header].header.keys() or
+                                kw_checked[0:6]+'02' not in
+                                hdulist[kw.header].header.keys()):
+                            logging.error('File: {0} has'.format(this_file) +
+                                          ' keyword "{0}"'.format(kw_checked) +
+                                          ' set to "MULTI" but does not have' +
+                                          ' at least two of keyword' +
+                                          ' {0}nn.'.format(kw_checked[0:6]))
+                    elif kw_value_checked.lower() == "multiple":
+                        logging.error('File: {0} has'.format(this_file) +
+                                      ' keyword "{0}"'.format(kw_checked) +
+                                      ' set to "MULTIPLE" but should be' +
+                                      ' set to "MULTI".')
 
 #--------------------
 

@@ -18,7 +18,6 @@ from apply_metadata_check import apply_metadata_check
 sys.path.append("../")
 from lib import FitsKeyword
 
-
 #--------------------
 
 def check_metadata_format(paramfile):
