@@ -131,7 +131,7 @@ class SelectFiles(QWidget):
         select_all.clicked.connect(self.selectAllClicked)
         deselect_all.clicked.connect(self.deselectAllClicked)
         add_type.clicked.connect(self.newFileClicked)
-        self.clear.clicked.connect(self.clearClicked)
+        self.clear.clicked.connect(lambda: self.clearClicked(confirm=True))
 
     def selectAllClicked(self):
         """ Set all file entries from firstrow to nextrow as selected.
@@ -215,13 +215,13 @@ class SelectFiles(QWidget):
         # Advance nextrow
         self.nextrow += 1
 
-    def clearClicked(self, source):
+    def clearClicked(self, confirm=True):
         """ Clear any changes made to the form and reset to original state.
         """
 
         # Pop up a confirmation dialog if this is not being called from the
         # load function.
-        if not source:
+        if confirm:
             self.cc = ClearConfirm("Clear all file type entries?")
             self.cc.exec_()
             if not self.cc.confirm:
@@ -255,6 +255,36 @@ class SelectFiles(QWidget):
         # the launch_gui list
         self.selected_files = {}
         self.select_signal.emit()
+
+    def loadFileTypes(self, types_dict):
+        if types_dict is None:
+            return
+        self.clearClicked(confirm=False)
+        row_num = self.firstrow
+        for ftype, params in types_dict.items():
+            # If this row item does not exist, trigger a new row creation.
+            ext_box = self.filetypes_grid.itemAtPosition(row_num, 1)
+            if ext_box is None:
+                self.newFileClicked()
+
+            # Get all widgets in the row.
+            sel_box = self.filetypes_grid.itemAtPosition(row_num, 0).widget()
+            ext_box = self.filetypes_grid.itemAtPosition(row_num, 1).widget()
+            pt_box = self.filetypes_grid.itemAtPosition(row_num, 2).widget()
+
+            # Insert file type parameters to the widgets.
+            sel_box.setChecked(True)
+            ext_box.setText(ftype)
+            try:
+                pt_box.setCurrentType(params["CAOMProductType"])
+            except MyError as err:
+                raise MyError(err.message)
+
+            # Move to the next row.
+            row_num += 1
+
+        self.collectSelectedFiles()
+
 
     def loadFromYaml(origin_function):
         """ Provide a wrapper function for the two methods of loading file

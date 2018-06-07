@@ -55,7 +55,7 @@ def adjust_defaults(caomlist, header_type, keyword_updates):
         # If the listed keyword does not already exist, make a new CAOMheader
         # object, set parameters, and add it to caomlist
         else:
-            print("making new entry for {0}".format(key))
+            print("...making new entry for {0}...".format(key))
             new_entry = CAOMheader(values["caom"])
             new_entry.headerKeyword = key
             new_entry.headerDefaultValue = values["headerDefaultValue"]

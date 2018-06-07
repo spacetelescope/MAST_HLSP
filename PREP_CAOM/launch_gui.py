@@ -27,6 +27,8 @@ from lib.MyError import MyError
 from gui.config_generator import *
 from gui.select_files import *
 
+from util.read_yaml import read_yaml
+
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
@@ -204,24 +206,87 @@ class HLSPIngest(QTabWidget):
         # Connect all the buttons
         quit_button.clicked.connect(self.quitClicked)
         help_button.clicked.connect(self.helpClicked)
-        load_param.clicked.connect(self.loadParamClicked)
+        load_param.clicked.connect(self.loadHLSPClicked)
         load_config.clicked.connect(self.loadConfigClicked)
-        reset_button.clicked.connect(self.resetClicked)
+        reset_button.clicked.connect(lambda: self.resetClicked(confirm=True))
         self.generate.clicked.connect(self.genClicked)
         self.run.clicked.connect(self.genAndRunClicked)
         self.tab1.select_signal.connect(self.selectClicked)
 
     def badMessage(self, msg):
         self.messages_display.setTextColor(Qt.red)
-        self.messages_display.append(msg)
+        self.messages_display.append(str(msg))
 
     def goodMessage(self, msg):
         self.messages_display.setTextColor(Qt.darkGreen)
-        self.messages_display.append(msg)
+        self.messages_display.append(str(msg))
 
     def neutralMessage(self, msg):
         self.messages_display.setTextColor(Qt.black)
-        self.messages_display.append(msg)
+        self.messages_display.append(str(msg))
+
+    def loadHLSPClicked(self):
+        filename = get_file_to_load(self, "Load an .hlsp file")
+        if filename is None:
+            return
+
+        try:
+            self.hlsp_yaml = read_yaml(filename)
+        except TypeError as err:
+            self.badMessage(err)
+            return
+
+        try:
+            file_paths = self.hlsp_yaml["FilePaths"]
+        except KeyError:
+            file_paths = None
+        else:
+            self.tab2.loadConfigPaths(file_paths)
+
+        try:
+            file_types = self.hlsp_yaml["FileTypes"]
+            data_product_type = []
+            standard = []
+            for ftype, params in file_types.items():
+                pt = params["ProductType"]
+                std = params["Standard"]
+                if pt not in data_product_type and pt != "none":
+                    data_product_type.append(params["ProductType"])
+                if std not in standard and std != "none":
+                    standard.append(params["Standard"])
+            if len(data_product_type) == 1:
+                data_product_type = data_product_type[0]
+            else:
+                data_product_type = None
+                self.badMessage("Multiple data product types found in the "
+                                ".hlsp file!")
+            if len(standard) == 1:
+                standard = standard[0]
+            else:
+                standard = None
+                self.badMessage("Multiple .fits header standards found in "
+                                "the .hlsp file!")
+        except KeyError:
+            data_product_type = None
+            file_types = None
+            standard = None
+        else:
+            self.tab1.loadFileTypes(file_types)
+            self.tab2.setProductType(data_product_type)
+            self.tab2.setHeaderStandard(standard)
+            self.selectClicked()
+
+        try:
+            key_updates = self.hlsp_yaml["KeywordUpdates"]
+        except KeyError:
+            key_updates = None
+
+        try:
+            new_parameters = self.hlsp_yaml["UniqueParameters"]
+        except KeyError:
+            new_parameters = None
+
+        #self.tab2.loadConfigInfo(file_paths, )
 
     def loadParamClicked(self):
         """ Load a dictionary of file extensions into the tab1 Select File
@@ -271,20 +336,22 @@ class HLSPIngest(QTabWidget):
         except MyError as err:
             self.badMessage(err.message)
 
-    def resetClicked(self):
+    def resetClicked(self, confirm=True):
         """ Open a confirmation popup before clearing both tabs.
         """
 
         # Open a confirmation popup window
-        self.cc = ClearConfirm("Reset all entries on both forms?")
-        self.cc.exec_()
+        if confirm:
+            self.cc = ClearConfirm("Reset all entries on both forms?")
+            self.cc.exec_()
+            if not self.cc.confirm:
+                return
 
         # Execute reset modules for both tabs if confirmed
-        if self.cc.confirm:
-            self.tab1.clearClicked(source="wrapper")
-            self.tab2.resetClicked()
-            self.resize(1100,500)
-            self.neutralMessage("Forms reset")
+        self.tab1.clearClicked(confirm=False)
+        self.tab2.resetClicked()
+        self.resize(1100,500)
+        self.neutralMessage("Forms reset")
 
     def collectAndSaveTabInputs(self):
         """ Collect all the inputs from tab2 and add the file_types list to
