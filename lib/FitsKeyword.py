@@ -39,12 +39,12 @@ class FitsKeyword(object):
             [setattr(self, key, val) for key, val in parameters.items()]
 
     def __lt__(self, another):
-        return self.fits_keyword < another.fits_keyword
+        return (self.fits_keyword < another.fits_keyword)
 
     def __repr__(self):
-        return ("<FitsKeyword({0.fits_keyword}, "
+        return ("<FitsKeyword ({0.fits_keyword})>: "
                 "CAOM={0.caom_keyword}, "
-                "HEADER={0.header})>".format(self)
+                "HEADER={0.header}".format(self)
                 )
 
     @property
@@ -142,33 +142,45 @@ class FitsKeyword(object):
 # --------------------
 
 
-class FitsKeywordList(list):
+class FitsKeywordList(object):
     """
     Create a list of FitsKeyword objects and provide methods for list
         manipulation.
     """
 
     def __init__(self, product_type, standard_type, keywords_dict):
-        super().__init__()
         self.product_type = product_type
         self.standard_type = standard_type
         self.keywords = [FitsKeyword(x, parameters=keywords_dict[x])
                          for x in keywords_dict
                          ]
 
+    def __display__(self):
+        """Only used for testing."""
+        print("<FitsKeywordList>")
+        print("product_type: {0}".format(self.product_type))
+        print("standard_type: {0}".format(self.standard_type))
+        print(".keywords: ")
+        [print(member) for member in self.keywords]
+
+    def __str__(self):
+        return ("<FitsKeywordList>: product_type={0.product_type}, "
+                "standard_type={0.standard_type}, "
+                "num_keywords={1}".format(self, len(self.keywords))
+                )
+
     def add(self, hk):
         if isinstance(hk, FitsKeyword):
-            self.append(hk)
-            self.keywords.append(hk.keyword)
+            self.keywords.append(hk)
 
     def find_caom(self, target_keyword):
-        for member in self:
+        for member in self.keywords:
             if member.caom_keyword == target_keyword:
                 return member
         return None
 
     def find_fits(self, target_keyword):
-        for member in self:
+        for member in self.keywords:
             if member.fits_keyword == target_keyword:
                 return member
         return None
@@ -176,7 +188,34 @@ class FitsKeywordList(list):
 # --------------------
 
 
+def __test__():
+    """
+    Run some test cases for both FitsKeyword and FitsKeywordList classes.
+    """
+
+    dict1 = {"alternates": ["pink", "purple"],
+             "caom_keyword": "colors",
+             "default": "black",
+             "header": 9}
+
+    dict2 = {"caom_keyword": "stars",
+             "default": "Sun",
+             "hlsp_status": "recommended"}
+
+    kw1 = FitsKeyword("here", parameters=dict1)
+    print("--- kw1 ---")
+    [print("{0}: {1}".format(key, val)) for key, val in kw1.__dict__.items()]
+
+    kw2 = FitsKeyword("there", parameters=dict2)
+    print("--- kw2 ---")
+    [print("{0}: {1}".format(key, val)) for key, val in kw2.__dict__.items()]
+
+    kd = {"here2": dict1, "there2": dict2}
+    mylist = FitsKeywordList("thing", "HST9000", kd)
+    mylist.__display__()
+
+# --------------------
+
+
 if __name__ == "__main__":
-    p = {"default": "what?", "header": 1, "caom_keyword": "no"}
-    test = FitsKeyword("this", parameters=p)
-    print(test.__dict__)
+    __test__()

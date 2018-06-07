@@ -23,29 +23,38 @@ from get_all_files import get_all_files
 KNOWN_MISSIONS_FILE = "known_missions.dat"
 KNOWN_FILTERS_FILE = "known_filters.dat"
 
-#--------------------
+# CURRENT_DIR will allow this script to find the .dat files when run from
+# outside the CHECK_FILE_NAMES directory as well.
+CURRENT_DIR = os.path.dirname(__file__)
+
+# --------------------
+
 
 def read_known_missions():
     """ Reads in a list of known missions from a file on disk. """
-    if os.path.isfile(KNOWN_MISSIONS_FILE):
-        with open(KNOWN_MISSIONS_FILE, 'r') as km_file:
+    missions_file = os.path.join(CURRENT_DIR, KNOWN_MISSIONS_FILE)
+    if os.path.isfile(missions_file):
+        with open(missions_file, 'r') as km_file:
             return set([x.strip() for x in km_file.readlines()])
     else:
         raise OSError('Known Missions file not found.  Looking for "' +
-                      KNOWN_MISSIONS_FILE + '".')
+                      missions_file + '".')
 
-#--------------------
+# --------------------
+
 
 def read_known_filters():
     """ Reads in a list of known filters from a file on disk. """
-    if os.path.isfile(KNOWN_FILTERS_FILE):
-        with open(KNOWN_FILTERS_FILE, 'r') as kf_file:
+    filters_file = os.path.join(CURRENT_DIR, KNOWN_FILTERS_FILE)
+    if os.path.isfile(filters_file):
+        with open(filters_file, 'r') as kf_file:
             return set([x.strip() for x in kf_file.readlines()])
     else:
         raise OSError('Known Filters file not found.  Looking for "' +
-                      KNOWN_FILTERS_FILE + '".')
+                      filters + '".')
 
-#--------------------
+# --------------------
+
 
 def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
                      exclude_filters=None):
@@ -76,7 +85,8 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     """
 
     # Start logging to an output file.
-    logging.basicConfig(filename="check_file_names.log",
+    logfile = "check_file_names.log"
+    logging.basicConfig(filename=logfile,
                         format='%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
     logging.info('Started at ' + datetime.datetime.now().isoformat())
@@ -101,7 +111,10 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
 
     logging.info('Finished at ' + datetime.datetime.now().isoformat())
 
-#--------------------
+    return logfile
+
+# --------------------
+
 
 def setup_args():
     """
@@ -135,7 +148,8 @@ def setup_args():
 
     return parser
 
-#--------------------
+# --------------------
+
 
 if __name__ == "__main__":
 
@@ -146,4 +160,4 @@ if __name__ == "__main__":
     check_file_names(INPUT_ARGS.idir, INPUT_ARGS.hlsp_name, INPUT_ARGS.root_dir,
                      INPUT_ARGS.exclude_missions, INPUT_ARGS.exclude_filters)
 
-#--------------------
+# --------------------

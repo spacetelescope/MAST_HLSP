@@ -41,6 +41,10 @@ class CAOMxml(object):
     def __str__(self):
         return "{0.label}: parent={0.parent}".format(self)
 
+    def attributes_dict(self):
+        d = {key: val for key, val in self.__dict__.items() if "__" not in key}
+        return d
+
     def fill_lxml_entry(self, entry):
         s = etree.SubElement(entry, "source")
         s.text = "None"
@@ -62,7 +66,11 @@ class CAOMxml(object):
             # object's 'parent' parameter.
             if element.tag == self.parent:
                 entry = etree.SubElement(element, self.label)
-                self.fill_lxml_entry(entry)
+                attributes = self.attributes_dict()
+                for attr, val in attributes.items():
+                    sub = etree.SubElement(entry, attr)
+                    sub.text = val
+                # self.fill_lxml_entry(entry)
                 return xmltree
 
         # If the 'parent' parameter is not found in xmltree, create it as a new
@@ -208,8 +216,8 @@ class CAOMxmlList(list):
             self.append(caom_obj)
             self.labels.append(caom_obj.label)
         else:
-            print("CAOMxmlList cannot accept members other than CAOMxml!")
-            return self
+            err = "CAOMxmlList cannot accept members other than CAOMxml!"
+            raise TypeError(err)
 
     def findlabel(self, target):
         target = str(target)
