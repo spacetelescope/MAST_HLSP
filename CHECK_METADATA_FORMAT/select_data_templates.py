@@ -45,7 +45,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename="select_data_templates.log",
                         format='%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
-    logging.info('Started at ' + datetime.datetime.now().isoformat())
+    logging.info('Started at %s', datetime.datetime.now().isoformat())
 
     # Create ArgumentParser object that holds command-line args and options.
     INPUT_ARGS = setup_args().parse_args()
@@ -54,7 +54,9 @@ if __name__ == "__main__":
     APP = QApplication(sys.argv)
     WIDGET = SelectDataTemplatesGUI()
     sys.exit(APP.exec_())
-
-    logging.info('Finished at ' + datetime.datetime.now().isoformat())
+    # NOTE: This logging statement does not show up in the log file. To-do item
+    # would be to determine how to log when the QT window is closed by the user
+    # but is not a high priority item.
+    logging.info('Finished at %s', datetime.datetime.now().isoformat())
 
 #--------------------

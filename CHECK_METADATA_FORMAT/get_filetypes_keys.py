@@ -8,10 +8,6 @@
 
 #--------------------
 
-import numpy
-
-#--------------------
-
 def get_filetypes_keys(ilist):
     """
     Extracts keys as a list of strings given a list of dicts from parsing a

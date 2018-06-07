@@ -9,15 +9,15 @@
 import argparse
 import datetime
 import logging
-import numpy
 import os
-import yaml
-
 import sys
+import numpy
+import yaml
+from apply_metadata_check import apply_metadata_check
+
 sys.path.append("../")
 from lib import FitsKeyword
 
-from apply_metadata_check import apply_metadata_check
 
 #--------------------
 
@@ -36,7 +36,6 @@ def check_metadata_format(paramfile):
 #                         "TEMPLATES/timeseries_k2.yml"]
     templates_to_read = ["TEMPLATES/timeseries_k2.yml"]
 
-    
     # Create FitsKeywordList object for each standard in all_standards array.
     # These are used to define the expected keywords for a given template
     # standard, but can have any part overwritten by the .hlsp file.
@@ -53,13 +52,11 @@ def check_metadata_format(paramfile):
         else:
             raise IOError("Template file not found: " + ttr)
 
-    import ipdb; ipdb.set_trace()
-
     # Start logging to an output file.
     logging.basicConfig(filename="check_metadata_format.log",
                         format='%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
-    logging.info('Started at ' + datetime.datetime.now().isoformat())
+    logging.info('Started at %s', datetime.datetime.now().isoformat())
 
     # Read in the parameter file.
     if os.path.isfile(paramfile):
@@ -70,27 +67,24 @@ def check_metadata_format(paramfile):
                       paramfile + '".')
 
     # The root directory of the HLSP files is stored in the parameter file.
-    if 'InputDir' in param_data:
-        file_base_dir = param_data['InputDir']
+    if 'InputDir' in param_data['FilePaths']:
+        file_base_dir = param_data['FilePaths']['InputDir']
     else:
         raise ValueError("Parameter file missing 'InputDir' field: " +
                          '"' + paramfile + '".')
 
-    # Loop over each extension, and then each file ending.  Run the metadata
-    # checks on any file ending marked to be checked for HLSP requirements.
-    # NOTE: One of the "extension" keys is the InputDir where the files are, so
-    # skip over that one.
+    # Loop over each file ending.  Run the metadata checks on any file ending
+    # marked to be checked for HLSP requirements.
     endings_to_check = []
-    for exten in param_data.keys():
-        if exten != 'InputDir':
-            for ending in param_data[exten]:
-                if ending['FileParams']['RunCheck']:
-                    endings_to_check.append(ending)
+    for ending in param_data['FileTypes']:
+        this_key = [*ending][0]
+        if ending[this_key]['RunCheck']:
+            endings_to_check.append(ending)
 
     # Apply the metadata correction on the requested file endings.
     apply_metadata_check(file_base_dir, endings_to_check, all_standards)
 
-    logging.info('Finished at ' + datetime.datetime.now().isoformat())
+    logging.info('Finished at %s', datetime.datetime.now().isoformat())
 
 #--------------------
 

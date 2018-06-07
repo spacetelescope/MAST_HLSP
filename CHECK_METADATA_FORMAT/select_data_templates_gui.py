@@ -13,6 +13,8 @@ import sys
 import numpy
 import yaml
 
+from get_filetypes_keys import get_filetypes_keys
+
 try:
     from PyQt5.QtCore import Qt
     from PyQt5.QtGui import QFont
@@ -100,7 +102,7 @@ class SelectDataTemplatesGUI(QtWidgets.QWidget):
         # ending.  If the structure of the parameter file changes, this will
         # have to be updated as well.
         file_ending_list = numpy.asarray(
-            [[*x][0] for x in self.param_data['FileTypes']])
+            get_filetypes_keys(self.param_data['FileTypes']))
         index = numpy.where(file_ending_list == ending)[0]
 
         if len(index) == 1:
@@ -195,7 +197,8 @@ class SelectDataTemplatesGUI(QtWidgets.QWidget):
         if cur_value is not None:
             widget.setCurrentIndex(widget.findText(cur_value))
         else:
-            exten = ending.split('.')[-1]
+            # Note: This will ignore the zipped part of the ending if gzipped.
+            exten = ending.rstrip('.gz').split('.')[-1]
             if exten == 'fits':
                 widget.setCurrentIndex(widget.findText("fits"))
                 self.update_yaml_value(ending, "FileType", "fits")
@@ -237,7 +240,8 @@ class SelectDataTemplatesGUI(QtWidgets.QWidget):
         if cur_value is not None:
             widget.setChecked(cur_value)
         else:
-            exten = ending.split('.')[-1]
+            # Note: This will ignore the zipped part of the ending if gzipped.
+            exten = ending.rstrip('.gz').split('.')[-1]
             # Default for the first run through depends on file extension.
             if (exten == 'png' or exten == 'tiff' or exten == 'jpg' or
                     exten == 'jpeg'):

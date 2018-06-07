@@ -1,7 +1,145 @@
-from astropy.io import fits
+"""
+.. module:: apply_metadata_check
+    :synopsis: Applies the check of header keywords and values given a standard.
+
+.. moduleauthor:: Scott W. Fleming <fleming@stsci.edu>
+"""
+
 import logging
-import numpy
 import os
+from astropy.io import fits
+import numpy
+
+from get_filetypes_keys import get_filetypes_keys
+
+#--------------------
+
+def validate_date(datevals, this_file):
+    """
+    Given an list of dates in [YYYY, MM, DD] order, checks to make sure they
+        are valid date values.
+
+    :param datevals: The list of data values.
+
+    :type datevals: list
+
+    :param this_file: Name of file being checked.
+
+    :type this_file: str
+    """
+
+    if len(datevals[0]) != 4:
+        logging.error('File: {0}'.format(this_file) +
+                      ', first part of "DATE-OBS" does not look like a 4-digit' +
+                      ' year. Value is: {1}.'.format(datevals[0]))
+    if len(datevals[1]) != 2 or int(datevals[1]) < 1 or int(datevals[1]) > 12:
+        logging.error('File: {0}'.format(this_file) +
+                      ', second part of "DATE-OBS" does not look like a' +
+                      ' 2-digit month. Value is: {1}.'.format(datevals[1]))
+    if len(datevals[2]) != 2 or int(datevals[2]) < 1 or int(datevals[2]) > 31:
+        logging.error('File: {0}'.format(this_file) +
+                      ', third part of "DATE-OBS" does not look like a 2-digit' +
+                      ' day. Value is: {1}.'.format(datevals[2]))
+
+#--------------------
+
+def validate_time(timevals, this_file):
+    """
+    Given an list of times in [hh, mm, ss.ss] order, checks to make sure they
+        are valid time values.
+
+    :param timevals: The list of data values.
+
+    :type timevals: list
+
+    :param this_file: Name of file being checked.
+
+    :type this_file: str
+    """
+
+    if len(timevals) != 3:
+        logging.error('File: {0}'.format(this_file) +
+                      ', keyword "TIME-OBS" is not in a "hh:mm:ss.ss" format.' +
+                      ' Value is: {1}.'.format(timevals))
+    if (len(timevals[0]) != 2 or int(timevals[0]) < 0 or
+            int(timevals[0]) > 24):
+        logging.error('File: {0}'.format(this_file) +
+                      ', first part of "TIME-OBS" does not look like' +
+                      ' a 2-digit hour. Value is: {1}.'.format(timevals[0]))
+    if (len(timevals[1]) != 2 or int(timevals[1]) < 0 or
+            int(timevals[1]) > 60):
+        logging.error('File: {0}'.format(this_file) +
+                      ', second part of "TIME-OBS" does not look like' +
+                      ' a 2-digit minute. Value is: {1}.'.format(timevals[1]))
+    # If there's a 'z' sticking around at the end of the string, strip it
+    # before comparing values.
+    seconds_val = timevals[2]
+    if timevals[2][-1].lower() == 'z':
+        seconds_val = timevals[2][0:-1]
+    if (float(seconds_val) < 0. or float(seconds_val) > 60.):
+        logging.error('File: {0}'.format(this_file) +
+                      ', third part of "TIME-OBS" does not look like a valid' +
+                      ' seconds field. Value is: {1}.'.format(seconds_val))
+
+#--------------------
+
+def check_date_obs(header, this_file):
+    """
+    Checks that the DATE-OBS keyword is in the correct format, or if not
+        that the TIME-OBS keyword is also supplied.
+
+    :param header: The header with the DATE-OBS string to check.
+
+    :type header: astropy.io.fits.header.Header
+
+    :param this_file: Name of file being checked.
+
+    :type this_file: str
+    """
+
+    date_obs_str = header['DATE-OBS'].strip()
+
+    # Format should be YYYY-MM-DDThh:mm:ss.ss
+    # Check first if the DATE-OBS is only the date,
+    # (which would be YYYY-MM-DD).
+    if len(date_obs_str.split('-')) == 3 and 'T' not in date_obs_str:
+        # Then the first must be 4 digits, the next two 2 digits,
+        # and the TIME-OBS keyword must be present in hh:mm:ss.ss format.
+        dsplits = date_obs_str.split('-')
+        validate_date(dsplits, this_file)
+        if 'TIME-OBS' not in header.keys():
+            logging.error('File: {0}'.format(this_file) +
+                          ', header contains the' +
+                          ' "DATE-OBS" keyword with only the date information,' +
+                          ' but does not include the "TIME-OBS keyword" with' +
+                          'the time information.')
+        else:
+            # No 'z' or 'Z' for "zulu" time zone allowed.
+            if header['TIME-OBS'].strip()[-1].lower() == 'z':
+                logging.error('File: {0}'.format(this_file) +
+                              ', "z" or "Z" for "zulu" is not allowed in' +
+                              ' time string.  Current value' +
+                              ' is: {1}.'.format(header['TIME-OBS']))
+            tsplits = header['TIME-OBS'].strip().split(':')
+            validate_time(tsplits, this_file)
+    elif 'T' in date_obs_str and len(date_obs_str) >= 19:
+        # No 'z' or 'Z' for "zulu" time zone allowed.
+        if date_obs_str[-1].lower() == 'z':
+            logging.error('File: {0}'.format(this_file) +
+                          ', "z" or "Z" for "zulu" is not allowed in' +
+                          ' "DATE-OBS" string.' +
+                          '  Current value is: {1}.'.format(date_obs_str))
+        datetimesplits = date_obs_str.split('T')
+        datesplits = datetimesplits[0].split('-')
+        timesplits = datetimesplits[1].split(':')
+        validate_date(datesplits, this_file)
+        validate_time(timesplits, this_file)
+    else:
+        logging.error('File: {0}'.format(this_file) +
+                      ', keyword "DATE-OBS" is in the header' +
+                      ' but is not in either a "YYYY-MM-DD" or' +
+                      ' "YYYY-MM-DDThh:mm:ss.ss" format.  Value' +
+                      ' is: {1}.'.format(date_obs_str))
 
 #--------------------
 
@@ -20,21 +158,100 @@ def apply_check(this_file, template_standard):
 
     # Check each extension.
     with fits.open(this_file, mode="readonly") as hdulist:
-        for exten in template_standard.keys():
-            if exten != 'PRODUCT' and exten != 'STANDARD':
-                # Determine FITS header extension based on keyword in template.
-                if exten == 'PHDU':
-                    hdr_kws = list(hdulist[0].header.keys())
-                # Check required keywords in the header.
-                for rqkw in template_standard[exten]['required']:
-                    if rqkw not in hdr_kws:
-                        logging.error("File: " + this_file +
-                                      ", Missing required keyword: " + rqkw)
-                # Check recommended keywords in the header.
-                for rckw in template_standard[exten]['recommended']:
-                    if rckw not in hdr_kws:
-                        logging.warning("File: " + this_file +
-                                        ", Missing recommened keyword: " + rckw)
+        for kw in template_standard.keywords:
+            if kw.header >= 0:
+                kw_checked = kw.fits_keyword
+                is_in_hdr = kw_checked in hdulist[kw.header].header.keys()
+                # If this keyword is missing from the header, try the alternate
+                # keyword(s) instead, if one exists.
+                # The alternates are stored as a comma-separated string.
+                if not is_in_hdr:
+                    if kw.alternates is not None:
+                        for kwa in kw.alternates.strip().split(','):
+                            kw_checked = kwa
+                            is_in_hdr = kw_checked in (
+                                hdulist[kw.header].header.keys())
+                            if is_in_hdr:
+                                break
+
+            else:
+                #### ---------------------------------
+                #### If header is negative value need to make sure a default is
+                #### specified here if HLSP/CAOM is required/recommended ....
+                #### ---------------------------------
+                if kw.default is None:
+                    kw_checked = None
+                    if kw.caom_status == 'required':
+                        logging.error('File: {0}'.format(this_file) +
+                                      ", Missing CAOM required" +
+                                      " keyword: {1}".format(kw.fits_keyword) +
+                                      ', and no default value is' +
+                                      ' specififed.')
+                    elif kw.caom_status == 'recommended':
+                        logging.warning('File: {0}'.format(this_file) +
+                                        ", Missing CAOM recommended" +
+                                        " keyword: {1}".format(kw.fits_keyword) +
+                                        ', and no default value is' +
+                                        ' specififed.')
+                    if kw.hlsp_status == 'required':
+                        logging.error('File: {0}'.format(this_file) +
+                                      ", Missing HLSP required" +
+                                      " keyword: {1}".format(kw.fits_keyword) +
+                                      ', and no default value is' +
+                                      ' specififed.')
+                    elif kw.hlsp_status == 'recommended':
+                        logging.warning('File: {0}'.format(this_file) +
+                                        ", Missing HLSP recommended" +
+                                        " keyword: {1}".format(kw.fits_keyword) +
+                                        ', and no default value is' +
+                                        ' specififed.')
+            if not is_in_hdr and kw_checked is not None:
+                # Check required/recommended HLSP keywords.
+                if kw.hlsp_status == "required":
+                    logging.error('File: {0}'.format(this_file) +
+                                  ", Missing HLSP required keyword: " +
+                                  '"{1}".'.format(kw_checked))
+                elif kw.hlsp_status == "recommended":
+                    logging.warning('File: {0}'.format(this_file) +
+                                    ", Missing HLSP recommened keyword: " +
+                                    '"{1}".'.format(kw_checked))
+                # Check required/recommended CAOM keywords.
+                if kw.caom_status == "required":
+                    logging.error('File: {0}'.format(this_file) +
+                                  ", Missing CAOM required keyword: " +
+                                  '"{1}".'.format(kw_checked))
+                    # If a required CAOM keyword is missing, but a default
+                    # value is present, inform the user a fallback default
+                    # is being used.
+                    if kw.default is not None:
+                        logging.info('File: {0}'.format(this_file) +
+                                     ", Using default" +
+                                     " value of {1}".format(str(kw.default)) +
+                                     " for CAOM required " +
+                                     'keyword "{2}".'.format(kw_checked))
+                elif kw.caom_status == "recommended":
+                    logging.warning('File: {0}'.format(this_file) +
+                                    ", Missing CAOM recommended keyword: " +
+                                    '"{1}".'.format(kw_checked))
+                    # If a recommended CAOM keyword is missing, but a default
+                    # value is present, inform the user a fallback default
+                    # is being used.
+                    if kw.default is not None:
+                        logging.info('File: {0}'.format(this_file) +
+                                     ', Using default value' +
+                                     ' of "{1}"'.format(str(kw.default)) +
+                                     ' for CAOM recommended ' +
+                                     'keyword "{2}".'.format(kw_checked))
+            # Now do some sanity checking of keywords if present.
+            if is_in_hdr and kw_checked is not None:
+                if kw_checked == "DATE-OBS":
+                    # Check DATE-OBS keyword is correct format, if not,
+                    # try TIME-OBS.
+                    check_date_obs(hdulist[kw.header].header, this_file)
+                elif kw.multiple:
+                    # Check if this keyword has alternatives and is set to
+                    # 'MULTI' properly.
+                    pass
 
 #--------------------
 
@@ -55,12 +272,11 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
     :type all_standards: numpy.ndarray
     """
 
-    all_endings_to_check = numpy.asarray(
-        [x['FileEnding'] for x in endings_to_check])
+    all_endings_to_check = numpy.asarray(get_filetypes_keys(endings_to_check))
 
     # Loop over each file in the file_base_dir.
     for froot, _, file_list in os.walk(file_base_dir):
-        if len(file_list) > 0:
+        if file_list:
             for this_file in file_list:
                 this_ending = this_file.split('_')[-1]
                 if this_ending in all_endings_to_check:
@@ -69,25 +285,23 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
                     where_this_ending = numpy.where(
                         all_endings_to_check == this_ending)[0]
                     if len(where_this_ending) == 1:
-                        prodtype = endings_to_check[where_this_ending[0]]['FileParams']['ProductType']
-                        standard = endings_to_check[where_this_ending[0]]['FileParams']['Standard']
-                        # Identify which standard template to pass to.
-                        all_standard_index = (
-                            numpy.where(
-                                (numpy.asarray(
-                                    [x['PRODUCT'] == prodtype for x in all_standards]))
-                                & (numpy.asarray(
-                                    [x['STANDARD'] == standard for x in all_standards]))))[0]
+                        ending_params = endings_to_check[where_this_ending[0]]
+                        prodtype = ending_params[this_ending]['ProductType']
+                        standard = ending_params[this_ending]['Standard']
+                        # Identify which standard template to pass.
+                        all_standard_index = [i for i, x in enumerate(
+                            all_standards) if (
+                                x.product_type == prodtype and
+                                x.standard_type == standard)]
                         if len(all_standard_index) == 1:
                             apply_check(os.path.join(froot, this_file),
                                         all_standards[all_standard_index[0]])
                         else:
                             raise ValueError("No template standard found "
                                              "for this combination of product "
-                                             "type and standard: " + product +
+                                             "type and standard: " + prodtype +
                                              ", " + standard + ".")
                     else:
                         raise ValueError("No match or multiple match "
                                          "for this file ending inside "
                                          "'apply_metadata_check'.")
-
