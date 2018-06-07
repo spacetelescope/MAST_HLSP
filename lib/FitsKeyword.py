@@ -14,6 +14,7 @@ neatly-packaged objects.
 
 # --------------------
 
+
 class FitsKeyword(object):
     """
     Attach a number of parameters to a given .fits header keyword.
@@ -41,13 +42,8 @@ class FitsKeyword(object):
     def __repr__(self):
         return ("<FitsKeyword ({0.fits_keyword})>: "
                 "CAOM={0.caom_keyword}, "
-<<<<<<< HEAD
                 "HEADER={0.header}".format(self)
                 )
-=======
-                "HEADER={0.header})>".format(self)
-               )
->>>>>>> 56e23902975a1492010dcaedd82076716225cb1c
 
     @property
     def alternates(self):
@@ -155,7 +151,7 @@ class FitsKeywordList(object):
         self.standard_type = standard_type
         self.keywords = [FitsKeyword(x, parameters=keywords_dict[x])
                          for x in keywords_dict
-                        ]
+                         ]
 
     def __display__(self):
         """Only used for testing."""
@@ -172,28 +168,17 @@ class FitsKeywordList(object):
                 )
 
     def add(self, hk):
-        # NOTE: self.append() may not work without defining that method...
         if isinstance(hk, FitsKeyword):
             self.keywords.append(hk)
 
     def find_caom(self, target_keyword):
-<<<<<<< HEAD
         for member in self.keywords:
-=======
-        # NOTE: may not be able to iterater directly over this...
-        for member in self:
->>>>>>> 56e23902975a1492010dcaedd82076716225cb1c
             if member.caom_keyword == target_keyword:
                 return member
         return None
 
     def find_fits(self, target_keyword):
-<<<<<<< HEAD
         for member in self.keywords:
-=======
-        # NOTE: may not be able to iterater directly over this...
-        for member in self:
->>>>>>> 56e23902975a1492010dcaedd82076716225cb1c
             if member.fits_keyword == target_keyword:
                 return member
         return None
