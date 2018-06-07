@@ -12,10 +12,7 @@ neatly-packaged objects.
     to add a new object, find an object, or sort the list.
 """
 
-import inspect
-
 # --------------------
-
 
 class FitsKeyword(object):
     """
@@ -45,7 +42,7 @@ class FitsKeyword(object):
         return ("<FitsKeyword({0.fits_keyword}, "
                 "CAOM={0.caom_keyword}, "
                 "HEADER={0.header})>".format(self)
-                )
+               )
 
     @property
     def alternates(self):
@@ -99,7 +96,7 @@ class FitsKeyword(object):
 
     @header.setter
     def header(self, head):
-        if type(head) is int:
+        if isinstance(head, int):
             self._header = head
         else:
             err = "'header' must be of type <int>"
@@ -125,7 +122,7 @@ class FitsKeyword(object):
 
     @multiple.setter
     def multiple(self, flag):
-        if type(flag) is bool:
+        if isinstance(flag, bool):
             self._multiple = flag
         else:
             err = "'multiple' must be of type <bool>"
@@ -142,32 +139,34 @@ class FitsKeyword(object):
 # --------------------
 
 
-class FitsKeywordList(list):
+class FitsKeywordList(object):
     """
     Create a list of FitsKeyword objects and provide methods for list
         manipulation.
     """
 
     def __init__(self, product_type, standard_type, keywords_dict):
-        super().__init__()
         self.product_type = product_type
         self.standard_type = standard_type
         self.keywords = [FitsKeyword(x, parameters=keywords_dict[x])
                          for x in keywords_dict
-                         ]
+                        ]
 
     def add(self, hk):
+        # NOTE: self.append() may not work without defining that method...
         if isinstance(hk, FitsKeyword):
             self.append(hk)
             self.keywords.append(hk.keyword)
 
     def find_caom(self, target_keyword):
+        # NOTE: may not be able to iterater directly over this...
         for member in self:
             if member.caom_keyword == target_keyword:
                 return member
         return None
 
     def find_fits(self, target_keyword):
+        # NOTE: may not be able to iterater directly over this...
         for member in self:
             if member.fits_keyword == target_keyword:
                 return member
