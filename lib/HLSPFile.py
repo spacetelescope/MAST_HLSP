@@ -12,9 +12,12 @@ class HLSPFile(object):
 
         self.file_paths = {"InputDir": "", "Output": ""}
         self.file_types = []
+        self.hlsp_name = "Blank"
         self.keyword_updates = []
         self.unique_parameters = {}
         self.updated = False
+        steps = ["filenames_checked", "metadata_checked", "files_selected"]
+        self.ingest = {s: False for s in steps}
 
     def add_filetype(self, ftype):
 

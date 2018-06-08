@@ -37,7 +37,11 @@ class FitsKeyword(object):
             [setattr(self, key, val) for key, val in parameters.items()]
 
     def __lt__(self, another):
-        return (self.fits_keyword < another.fits_keyword)
+        if isinstance(another, FitsKeyword):
+            return (self.fits_keyword < another.fits_keyword)
+        else:
+            raise TypeError("FitsKeyword object comparison attempted with "
+                            "<{0}> ".format(type(another)))
 
     def __repr__(self):
         return ("<FitsKeyword ({0.fits_keyword})>: "
