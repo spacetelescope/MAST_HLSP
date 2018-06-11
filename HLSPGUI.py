@@ -1,5 +1,6 @@
 import os
 import sys
+import yaml
 base = sys.path[0]
 subdirectories = [x for x in os.listdir(base) if (os.path.isdir(x)
                                                   and x[0] is not ".")
@@ -41,7 +42,7 @@ class HLSPGUI(QTabWidget):
         super().__init__()
         self.hlsp = HLSPFile()
 
-        load_hlsp = GreyButton("Load an .hlsp File", 60, min_width=150)
+        load_hlsp = GreyButton("Load an .hlsp File", 70, min_width=150)
 
         path_label = QLabel("HLSP Data Path: ")
         self.hlsp_path_edit = QLineEdit()
@@ -49,6 +50,8 @@ class HLSPGUI(QTabWidget):
 
         name_label = QLabel("HLSP Name: ")
         self.hlsp_name_edit = QLineEdit()
+
+        save_hlsp_button = GreyButton("Save to .hlsp File", 70, min_width=150)
 
         # Set up the tabs contained in this widget
         self.tabs = QTabWidget()
@@ -65,6 +68,7 @@ class HLSPGUI(QTabWidget):
         self.meta_grid.addWidget(load_hlsp, 0, 0, 2, 1)
         self.meta_grid.addWidget(path_label, 0, 1)
         self.meta_grid.addWidget(self.hlsp_path_edit, 0, 2)
+        self.meta_grid.addWidget(save_hlsp_button, 0, 3, 2, 1)
         self.meta_grid.addWidget(name_label, 1, 1)
         self.meta_grid.addWidget(self.hlsp_name_edit, 1, 2)
         self.meta_grid.addWidget(self.tabs, 2, 0, 1, -1)
@@ -86,18 +90,24 @@ class HLSPGUI(QTabWidget):
     def closeEvent(self, event):
         """Reset the stdout variable and print a close statement to confirm."""
 
+        event.accept()
+        """
         save_prompt = ClearConfirm("Save to .hlsp file?")
         save_prompt.exec_()
         if save_prompt.confirm:
             event.accept()
         else:
             event.ignore()
+        """
+
+    def save_hlsp(self):
+        pass
 
     def update_hlsp_path(self):
 
         current_path = self.hlsp_path_edit.text()
         self.hlsp.update_filepaths(input=current_path)
-        self.hlsp.updated = True
+        self.hlsp.toggle_updated(True)
 
 # --------------------
 

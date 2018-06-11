@@ -1,6 +1,11 @@
-from .FileType import FileType
-from .FitsKeyword import FitsKeyword
+from lib.FileType import FileType
+from lib.FitsKeyword import FitsKeyword
 import yaml
+
+try:
+    from PyQt5.QtCore import pyqtSignal
+except ImportError:
+    from PyQt4.QtCore import pyqtSignal
 
 
 class HLSPFile(object):
@@ -52,6 +57,9 @@ class HLSPFile(object):
 
         with open(filename, 'w') as yamlfile:
             yaml.dump(self.as_dict(), yamlfile)
+
+    def toggle_updated(self, flag):
+        self.updated = flag
 
     def update_filepaths(self, input=None, output=None):
 
