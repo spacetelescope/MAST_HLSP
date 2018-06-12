@@ -1,98 +1,107 @@
 
 
-
-class FileType():
-
-    param_names = ["CAOMProductType",
-                   "FileType",
-                   "MRPCheck",
-                   "ProductType",
-                   "RunCheck",
-                   "Standard",
-                  ]
+class FileType(object):
 
     def __init__(self, ftype, param_dict=None):
         self.ftype = ftype
+        self.caom_product_type = "science"
+        self.file_type = "none"
+        self.mrp_check = True
+        self.product_type = "image"
+        self.run_check = False
+        self.standard = None
 
         if param_dict:
-            self.params = {x: param_dict[x] for x in self.param_names}
-        else:
-            self.params = {x: None for x in self.param_names}
+            [setattr(self, key, val) for key, val in param_dict.items()]
 
     def __repr__(self):
-        return "<FileType({0.ftype}: {0.params})>".format(self)
+        return "<FileType({0.ftype}: {0.__dict__})>".format(self)
 
     def __lt__(self, another):
         return (self.ftype < another.ftype)
 
     @property
-    def CAOMProductType(self):
-        return self.params["CAOMProductType"]
+    def caom_product_type(self):
+        return self._caom_product_type
 
-    @CAOMProductType.setter
-    def CAOMProductType(self, caom_type):
+    @caom_product_type.setter
+    def caom_product_type(self, caom_type):
         ct = ["auxiliary", "preview", "science", "thumbnail"]
         new_type = caom_type.lower()
         assert new_type in ct
-        self.params["CAOMProductType"] = new_type
+        self._caom_product_type = new_type
 
     @property
-    def FileType(self):
-        return self.params["FileType"]
+    def file_type(self):
+        return self._file_type
 
-    @FileType.setter
-    def FileType(self, file_type):
+    @file_type.setter
+    def file_type(self, ftype):
         ft = ["fits", "graphic", "none", "text"]
-        new_type = file_type.lower()
+        new_type = ftype.lower()
         assert new_type in ft
-        self.params["FileType"] = new_type
+        self._file_type = new_type
 
     @property
-    def MRPCheck(self):
-        return self.params["MRPCheck"]
+    def mrp_check(self):
+        return self._mrp_check
 
-    @MRPCheck.setter
-    def MRPCheck(self, status):
-        assert type(status) is bool
-        self.params["MRPCheck"] = status
+    @mrp_check.setter
+    def mrp_check(self, status):
+        if isinstance(status, bool):
+            self._mrp_check = status
+        else:
+            err = "FileType.mrp_check given a non-boolean value."
+            raise ValueError(err)
 
     @property
-    def ProductType(self):
-        return self.params["ProductType"]
+    def product_type(self):
+        return self._product_type
 
-    @ProductType.setter
-    def ProductType(self, product_type):
+    @product_type.setter
+    def product_type(self, ptype):
         pt = ["catalog", "image", "spectrum", "timeseries"]
-        new_type = product_type.lower()
-        assert new_type in pt
-        self.params["ProductType"] = new_type
+        new_type = ptype.lower()
+        if new_type in pt:
+            self._product_type = new_type
+        else:
+            err = "{0} is not a valid value for FileType.product_type.".format(
+                ptype)
+            raise ValueError(err)
 
     @property
-    def RunCheck(self):
-        return self.params["RunCheck"]
+    def run_check(self):
+        return self._run_check
 
-    @RunCheck.setter
-    def RunCheck(self, status):
-        assert type(status) is bool
-        self.params["RunCheck"] = status
+    @run_check.setter
+    def run_check(self, status):
+        if isinstance(status, bool):
+            self._run_check = status
+        else:
+            err = "FileType.run_check given a non-boolean value."
+            raise ValueError(err)
 
     @property
-    def Standard(self):
-        return self.params["Standard"]
+    def standard(self):
+        return self._standard
 
-    @Standard.setter
-    def Standard(self, std):
-        self.params["Standard"] = std
+    @standard.setter
+    def standard(self, std):
+        self._standard = std
 
 
-if __name__ == "__main__":
+def __test__():
     f = FileType("this")
-    f.CAOMProductType = "auxiliary"
-    f.FileType = "text"
-    f.MRPCheck = False
-    f.ProductType = "Spectrum"
-    f.RunCheck = True
-    f.Standard = "derp"
+    f.caom_product_type = "auxiliary"
+    f.file_type = "text"
+    f.mrp_check = False
+    f.product_type = "Spectrum"
+    f.run_check = True
+    f.standard = "derp"
     k = FileType("zzz")
     l = sorted([k, f])
     print(l)
+
+
+if __name__ == "__main__":
+    __test__()

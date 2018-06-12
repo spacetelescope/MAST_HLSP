@@ -33,6 +33,7 @@ class UpdateKeywordsGUI(QWidget):
                              )
         self.standard = (self.standard[0] if len(self.standard) == 1 else None)
 
+        self.keyword_table = QTableView()
 
 # --------------------
 
@@ -43,13 +44,14 @@ class FitsKeywordModel(QAbstractTableModel):
     QTableView widget.
     """
 
-    def __init__(self, pdframe, parent=None):
+    def __init__(self, keyword_list, parent=None):
         """
         Upon initialization, move the data into a numpy array (faster) and set
         up variables.
         """
 
         super().__init__(parent)
+        pdframe = keyword_list.to_dataframe()
         self._data = np.array(pdframe.values)
         self._ind = pdframe.index
         self._cols = pdframe.columns

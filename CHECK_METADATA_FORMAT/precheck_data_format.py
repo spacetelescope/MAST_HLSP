@@ -14,7 +14,8 @@ import logging
 from get_all_file_endings import get_all_file_endings
 from make_parameter_file import make_parameter_file
 
-#--------------------
+# --------------------
+
 
 def precheck_data_format(idir, hlsp_name):
     """
@@ -42,13 +43,16 @@ def precheck_data_format(idir, hlsp_name):
     file_endings = set([x.split('.')[-1] for x in all_file_endings])
 
     # Create the output file, based on the name of the HLSP.
-    make_parameter_file("check_metadata_format_" + hlsp_name.strip().lower() +
-                        ".hlsp", file_endings, all_file_endings,
-                        idir)
+    filename = "check_metadata_format_{0}.hlsp".format(
+        hlsp_name.strip().lower())
+    make_parameter_file(filename, file_endings, all_file_endings, idir)
 
     logging.info('Finished at ' + datetime.datetime.now().isoformat())
 
-#--------------------
+    return filename
+
+# --------------------
+
 
 def setup_args():
     """
@@ -70,7 +74,8 @@ def setup_args():
 
     return parser
 
-#--------------------
+# --------------------
+
 
 if __name__ == "__main__":
 
@@ -80,4 +85,4 @@ if __name__ == "__main__":
     # Call main function.
     precheck_data_format(INPUT_ARGS.idir, INPUT_ARGS.hlsp_name)
 
-#--------------------
+# --------------------

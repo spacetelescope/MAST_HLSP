@@ -1,5 +1,7 @@
-from lib.FileType import FileType
-from lib.FitsKeyword import FitsKeyword
+from bin.read_yaml import read_yaml
+from FileType import FileType
+from FitsKeyword import FitsKeyword
+import re
 import yaml
 
 try:
@@ -13,16 +15,16 @@ class HLSPFile(object):
     def __init__(self):
         super().__init__()
 
+        steps = ["filenames_checked", "metadata_checked", "files_selected"]
         self._prep_level = 0
+        self._updated = False
 
         self.file_paths = {"InputDir": "", "Output": ""}
         self.file_types = []
         self.hlsp_name = "Blank"
+        self.ingest = {s: False for s in steps}
         self.keyword_updates = []
         self.unique_parameters = {}
-        self.updated = False
-        steps = ["filenames_checked", "metadata_checked", "files_selected"]
-        self.ingest = {s: False for s in steps}
 
     def add_filetype(self, ftype):
 
@@ -50,13 +52,21 @@ class HLSPFile(object):
 
         return file_formatted_dict
 
+    def load_from_yaml(self, filename):
+
+        load_dict = read_yaml(filename)
+        for key, val in load_dict.items():
+            key = re.findall('[A-Z][^A-Z]*', key)
+            attr = "_".join([k.lower() for k in key])
+            setattr(self, attr, val)
+
     def save(self, filename):
 
         if not filename.endswith(".hlsp"):
             filename = ".".join([filename, "hlsp"])
 
         with open(filename, 'w') as yamlfile:
-            yaml.dump(self.as_dict(), yamlfile)
+            yaml.dump(self.as_dict(), yamlfile, default_flow_style=False)
 
     def toggle_updated(self, flag):
         self.updated = flag
@@ -71,3 +81,12 @@ class HLSPFile(object):
             new_paths["Output"] = output
 
         self.file_paths.update(new_paths)
+
+
+def __test__():
+    h = HLSPFile()
+    h.save("test_ouput")
+
+
+if __name__ == "__main__":
+    __test__()

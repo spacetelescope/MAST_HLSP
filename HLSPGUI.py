@@ -12,7 +12,7 @@ from bin.read_yaml import read_yaml
 from CHECK_METADATA_FORMAT import select_data_templates_gui
 from gui.GUIbuttons import BlueButton, GreenButton, GreyButton, RedButton
 from gui.CheckFilenamesGUI import CheckFilenamesGUI
-from gui.CheckMetadataGUI import CheckMetadataGUI
+from gui.metadata import CheckMetadataGUI
 from gui.ClearConfirm import ClearConfirm
 from gui.MyError import MyError
 from lib.HLSPFile import HLSPFile
@@ -56,12 +56,13 @@ class HLSPGUI(QTabWidget):
         # Set up the tabs contained in this widget
         self.tabs = QTabWidget()
         self.step1 = CheckFilenamesGUI(parent=self)
-        self.step2 = CheckMetadataGUI()
+        self.step2 = CheckMetadataGUI(parent=self)
         self.tabs.addTab(self.step1, "1: Check Filenames")
         self.tabs.addTab(self.step2, "2: Check Metadata")
         self.tbar = self.tabs.tabBar()
         #self.tbar.setTabTextColor(0, Qt.red)
 
+        save_hlsp_button.clicked.connect(self.save_hlsp)
         self.hlsp_path_edit.textEdited.connect(self.update_hlsp_path)
 
         self.meta_grid = QGridLayout()
@@ -101,7 +102,8 @@ class HLSPGUI(QTabWidget):
         """
 
     def save_hlsp(self):
-        pass
+        filename = "test_gui_results"
+        self.hlsp.save(filename)
 
     def update_hlsp_path(self):
 

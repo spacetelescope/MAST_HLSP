@@ -12,6 +12,8 @@ neatly-packaged objects.
     to add a new object, find an object, or sort the list.
 """
 
+import pandas as pd
+
 # --------------------
 
 
@@ -141,6 +143,18 @@ class FitsKeyword(object):
     def xml_parent(self, parent):
         self._xml_parent = parent
 
+    def as_dict(self):
+
+        file_formatted_dict = {}
+        for key, val in self.__dict__.items():
+            if key[0] == "_":
+                key = key[1:]
+            key = key.split("_")
+            key = "".join([k.capitalize() for k in key])
+            file_formatted_dict[key] = val
+
+        return file_formatted_dict
+
 # --------------------
 
 
@@ -187,6 +201,15 @@ class FitsKeywordList(object):
                 return member
         return None
 
+    def to_dataframe(self):
+        pdframe = pd.DataFrame()
+        for member in self.keywords:
+            keys = member.as_dict().keys()
+            vals = member.as_dict().values()
+            row = pd.DataFrame(data=[vals], columns=keys)
+            pdframe = pd.concat([pdframe, row])
+        return pdframe
+
 # --------------------
 
 
@@ -215,6 +238,7 @@ def __test__():
     kd = {"here2": dict1, "there2": dict2}
     mylist = FitsKeywordList("thing", "HST9000", kd)
     mylist.__display__()
+    print(mylist.to_dataframe())
 
 # --------------------
 
