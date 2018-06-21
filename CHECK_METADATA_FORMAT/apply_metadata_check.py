@@ -14,7 +14,51 @@ from get_filetypes_keys import get_filetypes_keys
 
 #--------------------
 
-def validate_date(datevals, this_file):
+def write_log(fname, logstring, logtype, log_message_counts):
+    """
+    Writes a logging string in a formatted way.
+
+    :param fname: The name of the file.
+
+    :type fname: str
+
+    :param logstring: The string to log.
+
+    :type logstring: str
+
+    :param logtype: The type of message to log.
+
+    :type logtype: str
+
+    :param log_message_counts: Keeps track of the number of times a message is
+        logged.
+
+    :type log_message_counts: dict
+    """
+
+    if logtype == 'error':
+        logging.error('File: {0}'.format(fname) +
+                      '; ' + logstring)
+    elif logtype == 'warning':
+        logging.warning('File: {0}'.format(fname) +
+                        '; ' + logstring)
+    elif logtype == "info":
+        logging.info('File: {0}'.format(fname) +
+                     '; ' + logstring)
+    else:
+        raise ValueError("Type of log message not understood, passed a" +
+                         " value of " + logtype + ".")
+
+    # Update log message counts.
+    if logstring not in log_message_counts.keys():
+        log_message_counts[logstring] = {'count': 1, 'type': logtype}
+    else:
+        log_message_counts[logstring]['count'] = (
+            log_message_counts[logstring]['count'] + 1)
+
+#--------------------
+
+def validate_date(datevals, this_file, log_message_counts):
     """
     Given an list of dates in [YYYY, MM, DD] order, checks to make sure they
         are valid date values.
@@ -26,24 +70,30 @@ def validate_date(datevals, this_file):
     :param this_file: Name of file being checked.
 
     :type this_file: str
+
+    :param log_message_counts: Keeps track of the number of times a message is
+        logged.
+
+    :type log_message_counts: dict
     """
 
     if len(datevals[0]) != 4:
-        logging.error('File: {0}'.format(this_file) +
-                      ', first part of "DATE-OBS" does not look like a 4-digit' +
-                      ' year. Value is: {0}.'.format(datevals[0]))
+        logstring = ('first part of "DATE-OBS" does not look like a 4-digit' +
+                     ' year.')
+        write_log(this_file, logstring, 'error', log_message_counts)
+
     if len(datevals[1]) != 2 or int(datevals[1]) < 1 or int(datevals[1]) > 12:
-        logging.error('File: {0}'.format(this_file) +
-                      ', second part of "DATE-OBS" does not look like a' +
-                      ' 2-digit month. Value is: {0}.'.format(datevals[1]))
+        logstring = ('second part of "DATE-OBS" does not look like a' +
+                     ' 2-digit month.')
+        write_log(this_file, logstring, 'error', log_message_counts)
     if len(datevals[2]) != 2 or int(datevals[2]) < 1 or int(datevals[2]) > 31:
-        logging.error('File: {0}'.format(this_file) +
-                      ', third part of "DATE-OBS" does not look like a 2-digit' +
-                      ' day. Value is: {0}.'.format(datevals[2]))
+        logstring = ('third part of "DATE-OBS" does not look like a 2-digit' +
+                     ' day.')
+        write_log(this_file, logstring, 'error', log_message_counts)
 
 #--------------------
 
-def validate_time(timevals, this_file):
+def validate_time(timevals, this_file, log_message_counts):
     """
     Given an list of times in [hh, mm, ss.ss] order, checks to make sure they
         are valid time values.
@@ -55,35 +105,39 @@ def validate_time(timevals, this_file):
     :param this_file: Name of file being checked.
 
     :type this_file: str
+
+    :param log_message_counts: Keeps track of the number of times a message is
+        logged.
+
+    :type log_message_counts: dict
     """
 
     if len(timevals) != 3:
-        logging.error('File: {0}'.format(this_file) +
-                      ', keyword "TIME-OBS" is not in a "hh:mm:ss.ss" format.' +
-                      ' Value is: {0}.'.format(timevals))
+        logstring = 'keyword "TIME-OBS" is not in a "hh:mm:ss.ss" format.'
+        write_log(this_file, logstring, 'error', log_message_counts)
     if (len(timevals[0]) != 2 or int(timevals[0]) < 0 or
             int(timevals[0]) > 24):
-        logging.error('File: {0}'.format(this_file) +
-                      ', first part of "TIME-OBS" does not look like' +
-                      ' a 2-digit hour. Value is: {0}.'.format(timevals[0]))
+        logstring = ('first part of "TIME-OBS" does not look like' +
+                     ' a 2-digit hour.')
+        write_log(this_file, logstring, 'error', log_message_counts)
     if (len(timevals[1]) != 2 or int(timevals[1]) < 0 or
             int(timevals[1]) > 60):
-        logging.error('File: {0}'.format(this_file) +
-                      ', second part of "TIME-OBS" does not look like' +
-                      ' a 2-digit minute. Value is: {0}.'.format(timevals[1]))
+        logstring = ('second part of "TIME-OBS" does not look like' +
+                     ' a 2-digit minute.')
+        write_log(this_file, logstring, 'error', log_message_counts)
     # If there's a 'z' sticking around at the end of the string, strip it
     # before comparing values.
     seconds_val = timevals[2]
     if timevals[2][-1].lower() == 'z':
         seconds_val = timevals[2][0:-1]
     if (float(seconds_val) < 0. or float(seconds_val) > 60.):
-        logging.error('File: {0}'.format(this_file) +
-                      ', third part of "TIME-OBS" does not look like a valid' +
-                      ' seconds field. Value is: {0}.'.format(seconds_val))
+        logstring = ('third part of "TIME-OBS" does not look like a valid' +
+                     ' seconds field.')
+        write_log(this_file, logstring, 'error', log_message_counts)
 
 #--------------------
 
-def check_date_obs(header, this_file):
+def check_date_obs(header, this_file, log_message_counts):
     """
     Checks that the DATE-OBS keyword is in the correct format, or if not
         that the TIME-OBS keyword is also supplied.
@@ -95,6 +149,11 @@ def check_date_obs(header, this_file):
     :param this_file: Name of file being checked.
 
     :type this_file: str
+
+    :param log_message_counts: Keeps track of the number of times a message is
+        logged.
+
+    :type log_message_counts: dict
     """
 
     date_obs_str = header['DATE-OBS'].strip()
@@ -106,44 +165,41 @@ def check_date_obs(header, this_file):
         # Then the first must be 4 digits, the next two 2 digits,
         # and the TIME-OBS keyword must be present in hh:mm:ss.ss format.
         dsplits = date_obs_str.split('-')
-        validate_date(dsplits, this_file)
+        validate_date(dsplits, this_file, log_message_counts)
         if 'TIME-OBS' not in header.keys():
-            logging.error('File: {0}'.format(this_file) +
-                          ', header contains the' +
-                          ' "DATE-OBS" keyword with only the date information,' +
-                          ' but does not include the "TIME-OBS keyword" with' +
-                          'the time information.')
+            logstring = ('header contains the' +
+                         ' "DATE-OBS" keyword with only the date information,' +
+                         ' but does not include the "TIME-OBS keyword" with' +
+                         'the time information.')
+            write_log(this_file, logstring, 'error', log_message_counts)
         else:
             # No 'z' or 'Z' for "zulu" time zone allowed.
             if header['TIME-OBS'].strip()[-1].lower() == 'z':
-                logging.error('File: {0}'.format(this_file) +
-                              ', "z" or "Z" for "zulu" is not allowed in' +
-                              ' time string.  Current value' +
-                              ' is: {0}.'.format(header['TIME-OBS']))
+                logstring = ('"z" or "Z" for "zulu" is not allowed in' +
+                             ' time string.')
+                write_log(this_file, logstring, 'error', log_message_counts)
             tsplits = header['TIME-OBS'].strip().split(':')
-            validate_time(tsplits, this_file)
+            validate_time(tsplits, this_file, log_message_counts)
     elif 'T' in date_obs_str and len(date_obs_str) >= 19:
         # No 'z' or 'Z' for "zulu" time zone allowed.
         if date_obs_str[-1].lower() == 'z':
-            logging.error('File: {0}'.format(this_file) +
-                          ', "z" or "Z" for "zulu" is not allowed in' +
-                          ' "DATE-OBS" string.' +
-                          '  Current value is: {0}.'.format(date_obs_str))
+            logstring = ('"z" or "Z" for "zulu" is not allowed in' +
+                         ' "DATE-OBS" string.')
+            write_log(this_file, logstring, 'error', log_message_counts)
         datetimesplits = date_obs_str.split('T')
         datesplits = datetimesplits[0].split('-')
         timesplits = datetimesplits[1].split(':')
-        validate_date(datesplits, this_file)
-        validate_time(timesplits, this_file)
+        validate_date(datesplits, this_file, log_message_counts)
+        validate_time(timesplits, this_file, log_message_counts)
     else:
-        logging.error('File: {0}'.format(this_file) +
-                      ', keyword "DATE-OBS" is in the header' +
-                      ' but is not in either a "YYYY-MM-DD" or' +
-                      ' "YYYY-MM-DDThh:mm:ss.ss" format.  Value' +
-                      ' is: {0}.'.format(date_obs_str))
+        logstring = ('keyword "DATE-OBS" is in the header' +
+                     ' but is not in either a "YYYY-MM-DD" or' +
+                     ' "YYYY-MM-DDThh:mm:ss.ss" format.')
+        write_log(this_file, logstring, 'error', log_message_counts)
 
 #--------------------
 
-def apply_check(this_file, template_standard):
+def apply_check(this_file, template_standard, log_message_counts):
     """
     Conducts the standard verification on the given file.
 
@@ -154,6 +210,11 @@ def apply_check(this_file, template_standard):
     :param template_standard: The standard template to use for this file.
 
     :type standard: dict
+
+    :param log_message_counts: Keeps track of the number of times a message is
+        logged.
+
+    :type log_message_counts: dict
     """
 
     # Check each extension.
@@ -182,72 +243,81 @@ def apply_check(this_file, template_standard):
                 if kw.default is None:
                     kw_checked = None
                     if kw.caom_status == 'required':
-                        logging.error('File: {0}'.format(this_file) +
-                                      ", Missing CAOM required" +
-                                      " keyword: {0}".format(kw.fits_keyword) +
-                                      ', and no default value is' +
-                                      ' specififed.')
+                        logstring = ("Missing CAOM required" +
+                                     " keyword: {0}".format(kw.fits_keyword) +
+                                     ', and no default value is' +
+                                     ' specififed.')
+                        write_log(this_file, logstring, 'error',
+                                  log_message_counts)
                     elif kw.caom_status == 'recommended':
-                        logging.warning('File: {0}'.format(this_file) +
-                                        ", Missing CAOM recommended" +
-                                        " keyword: {0}".format(kw.fits_keyword) +
-                                        ', and no default value is' +
-                                        ' specififed.')
+                        logstring = ("Missing CAOM recommended" +
+                                     " keyword: {0}".format(kw.fits_keyword) +
+                                     ', and no default value is' +
+                                     ' specififed.')
+                        write_log(this_file, logstring, 'warning',
+                                  log_message_counts)
                     if kw.hlsp_status == 'required':
-                        logging.error('File: {0}'.format(this_file) +
-                                      ", Missing HLSP required" +
-                                      " keyword: {0}".format(kw.fits_keyword) +
-                                      ', and no default value is' +
-                                      ' specififed.')
+                        logstring = ("Missing HLSP required" +
+                                     " keyword: {0}".format(kw.fits_keyword) +
+                                     ', and no default value is' +
+                                     ' specififed.')
+                        write_log(this_file, logstring, 'error',
+                                  log_message_counts)
                     elif kw.hlsp_status == 'recommended':
-                        logging.warning('File: {0}'.format(this_file) +
-                                        ", Missing HLSP recommended" +
-                                        " keyword: {0}".format(kw.fits_keyword) +
-                                        ', and no default value is' +
-                                        ' specififed.')
+                        logstring = ("Missing HLSP recommended" +
+                                     " keyword: {0}".format(kw.fits_keyword) +
+                                     ', and no default value is' +
+                                     ' specififed.')
+                        write_log(this_file, logstring, 'warning',
+                                  log_message_counts)
             if not is_in_hdr and kw_checked is not None:
                 # Check required/recommended HLSP keywords.
                 if kw.hlsp_status == "required":
-                    logging.error('File: {0}'.format(this_file) +
-                                  ", Missing HLSP required keyword: " +
-                                  '"{0}".'.format(kw_checked))
+                    logstring = ("Missing HLSP required keyword: " +
+                                 '"{0}".'.format(kw_checked))
+                    write_log(this_file, logstring, 'error', log_message_counts)
                 elif kw.hlsp_status == "recommended":
-                    logging.warning('File: {0}'.format(this_file) +
-                                    ", Missing HLSP recommened keyword: " +
-                                    '"{0}".'.format(kw_checked))
+                    logstring = ("Missing HLSP recommened keyword: " +
+                                 '"{0}".'.format(kw_checked))
+                    write_log(this_file, logstring, 'warning',
+                              log_message_counts)
                 # Check required/recommended CAOM keywords.
                 if kw.caom_status == "required":
-                    logging.error('File: {0}'.format(this_file) +
-                                  ", Missing CAOM required keyword: " +
-                                  '"{0}".'.format(kw_checked))
+                    logstring = ("Missing CAOM required keyword: " +
+                                 '"{0}".'.format(kw_checked))
+                    write_log(this_file, logstring, 'error', log_message_counts)
                     # If a required CAOM keyword is missing, but a default
                     # value is present, inform the user a fallback default
                     # is being used.
                     if kw.default is not None:
-                        logging.info('File: {0}'.format(this_file) +
-                                     ", Using default" +
+                        logstring = ("Using default" +
                                      " value of {0}".format(str(kw.default)) +
                                      " for CAOM required " +
                                      'keyword "{0}".'.format(kw_checked))
+                        write_log(this_file, logstring, 'info',
+                                  log_message_counts)
                 elif kw.caom_status == "recommended":
-                    logging.warning('File: {0}'.format(this_file) +
-                                    ", Missing CAOM recommended keyword: " +
-                                    '"{0}".'.format(kw_checked))
+                    logstring = ("Missing CAOM recommended keyword: " +
+                                 '"{0}".'.format(kw_checked))
+                    write_log(this_file, logstring, 'warning',
+                              log_message_counts)
                     # If a recommended CAOM keyword is missing, but a default
                     # value is present, inform the user a fallback default
                     # is being used.
                     if kw.default is not None:
-                        logging.info('File: {0}'.format(this_file) +
-                                     ', Using default value' +
+                        logstring = ('Using default value' +
                                      ' of "{0}"'.format(str(kw.default)) +
                                      ' for CAOM recommended ' +
                                      'keyword "{0}".'.format(kw_checked))
+                        write_log(this_file, logstring, 'info',
+                                  log_message_counts)
             # Now do some sanity checking of keywords if present.
             if is_in_hdr and kw_checked is not None:
                 if kw_checked == "DATE-OBS":
                     # Check DATE-OBS keyword is correct format, if not,
                     # try TIME-OBS.
-                    check_date_obs(hdulist[kw.header].header, this_file)
+                    check_date_obs(hdulist[kw.header].header, this_file,
+                                   log_message_counts)
                 if kw.multiple:
                     # Check if this keyword is set to 'MULTI' properly.
                     kw_value_checked = hdulist[kw.header].header[kw_checked]
@@ -258,16 +328,18 @@ def apply_check(this_file, template_standard):
                                 hdulist[kw.header].header.keys() or
                                 kw_checked[0:6]+'02' not in
                                 hdulist[kw.header].header.keys()):
-                            logging.error('File: {0} has'.format(this_file) +
-                                          ' keyword "{0}"'.format(kw_checked) +
-                                          ' set to "MULTI" but does not have' +
-                                          ' at least two of keyword' +
-                                          ' {0}nn.'.format(kw_checked[0:6]))
+                            logstring = ('Keyword "{0}"'.format(kw_checked) +
+                                         ' is set to "MULTI" but does not' +
+                                         ' have at least two of keyword' +
+                                         ' {0}nn.'.format(kw_checked[0:6]))
+                            write_log(this_file, logstring, 'error',
+                                      log_message_counts)
                     elif kw_value_checked.lower() == "multiple":
-                        logging.error('File: {0} has'.format(this_file) +
-                                      ' keyword "{0}"'.format(kw_checked) +
-                                      ' set to "MULTIPLE" but should be' +
-                                      ' set to "MULTI".')
+                        logstring = ('Keyword "{0}"'.format(kw_checked) +
+                                     ' is set to "MULTIPLE" but should be' +
+                                     ' set to "MULTI".')
+                        write_log(this_file, logstring, 'error',
+                                  log_message_counts)
 
 #--------------------
 
@@ -286,9 +358,15 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
     :param all_standards: Set of standard templates to use.
 
     :type all_standards: numpy.ndarray
+
+    :returns: dict -- A count of the messages being logged.
     """
 
     all_endings_to_check = numpy.asarray(get_filetypes_keys(endings_to_check))
+
+    # This dict will store all the messages logged, and count how many times
+    # that message is logged.
+    log_message_counts = {}
 
     # Loop over each file in the file_base_dir.
     for froot, _, file_list in os.walk(file_base_dir):
@@ -311,7 +389,8 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
                                 x.standard_type == standard)]
                         if len(all_standard_index) == 1:
                             apply_check(os.path.join(froot, this_file),
-                                        all_standards[all_standard_index[0]])
+                                        all_standards[all_standard_index[0]],
+                                        log_message_counts)
                         else:
                             raise ValueError("No template standard found "
                                              "for this combination of product "
@@ -321,3 +400,4 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
                         raise ValueError("No match or multiple match "
                                          "for this file ending inside "
                                          "'apply_metadata_check'.")
+    return log_message_counts
