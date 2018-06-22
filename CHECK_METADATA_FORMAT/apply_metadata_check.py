@@ -63,7 +63,7 @@ def validate_date(datevals, this_file, log_message_counts):
     Given an list of dates in [YYYY, MM, DD] order, checks to make sure they
         are valid date values.
 
-    :param datevals: The list of data values.
+    :param datevals: The list of date values.
 
     :type datevals: list
 
@@ -98,7 +98,7 @@ def validate_time(timevals, this_file, log_message_counts):
     Given an list of times in [hh, mm, ss.ss] order, checks to make sure they
         are valid time values.
 
-    :param timevals: The list of data values.
+    :param timevals: The list of date values.
 
     :type timevals: list
 
@@ -115,25 +115,26 @@ def validate_time(timevals, this_file, log_message_counts):
     if len(timevals) != 3:
         logstring = 'keyword "TIME-OBS" is not in a "hh:mm:ss.ss" format.'
         write_log(this_file, logstring, 'error', log_message_counts)
-    if (len(timevals[0]) != 2 or int(timevals[0]) < 0 or
-            int(timevals[0]) > 24):
-        logstring = ('first part of "TIME-OBS" does not look like' +
-                     ' a 2-digit hour.')
-        write_log(this_file, logstring, 'error', log_message_counts)
-    if (len(timevals[1]) != 2 or int(timevals[1]) < 0 or
-            int(timevals[1]) > 60):
-        logstring = ('second part of "TIME-OBS" does not look like' +
-                     ' a 2-digit minute.')
-        write_log(this_file, logstring, 'error', log_message_counts)
-    # If there's a 'z' sticking around at the end of the string, strip it
-    # before comparing values.
-    seconds_val = timevals[2]
-    if timevals[2][-1].lower() == 'z':
-        seconds_val = timevals[2][0:-1]
-    if (float(seconds_val) < 0. or float(seconds_val) > 60.):
-        logstring = ('third part of "TIME-OBS" does not look like a valid' +
-                     ' seconds field.')
-        write_log(this_file, logstring, 'error', log_message_counts)
+    else:
+        if (len(timevals[0]) != 2 or int(timevals[0]) < 0 or
+                int(timevals[0]) > 24):
+            logstring = ('first part of "TIME-OBS" does not look like' +
+                         ' a 2-digit hour.')
+            write_log(this_file, logstring, 'error', log_message_counts)
+        if (len(timevals[1]) != 2 or int(timevals[1]) < 0 or
+                int(timevals[1]) > 60):
+            logstring = ('second part of "TIME-OBS" does not look like' +
+                         ' a 2-digit minute.')
+            write_log(this_file, logstring, 'error', log_message_counts)
+        # If there's a 'z' sticking around at the end of the string, strip it
+        # before comparing values.
+        seconds_val = timevals[2]
+        if timevals[2][-1].lower() == 'z':
+            seconds_val = timevals[2][0:-1]
+        if (float(seconds_val) < 0. or float(seconds_val) > 60.):
+            logstring = ('third part of "TIME-OBS" does not look like a valid' +
+                         ' seconds field.')
+            write_log(this_file, logstring, 'error', log_message_counts)
 
 #--------------------
 
