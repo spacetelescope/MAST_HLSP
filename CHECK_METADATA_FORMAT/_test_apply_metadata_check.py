@@ -7,6 +7,7 @@
 """
 
 import io
+import itertools
 import logging
 import sys
 import unittest
@@ -14,10 +15,13 @@ from astropy.io import fits
 from apply_metadata_check import validate_date, validate_time, check_date_obs
 from apply_metadata_check import apply_check
 
+sys.path.append("../")
+from lib import FitsKeyword
+
 LOGGER = logging.getLogger()
 
 #--------------------
-
+@unittest.skip('Skip ValidateDate')
 class TestValidateDate(unittest.TestCase):
     """
     Test class for the validate_date() method.
@@ -114,7 +118,7 @@ class TestValidateDate(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-
+@unittest.skip('Skip ValidateTime')
 class TestValidateTime(unittest.TestCase):
     """
     Test class for the validate_time() method.
@@ -264,7 +268,7 @@ class TestValidateTime(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-
+@unittest.skip('Skip ValidateDate')
 class TestCheckDateObs(unittest.TestCase):
     """
     Test class for the check_date_obs() method.
@@ -391,8 +395,124 @@ class TestCheckDateObs(unittest.TestCase):
 class TestApplyCheck(unittest.TestCase):
     """
     Test class for the apply_check() method.
+      There are multiple combinations tested, which inolve combinations of:
+      - required, recommened
+      - in header, missing in header
+      - no alternate, with alternate
+      - no default, with default
+      - header < 0, header >= 0
+      - hlsp, caom (for required/recommended)
     """
-    pass
+    simulated_fits_file = '_test_apply_check.fits'
+    primary_keyword = 'PriHdrKy'
+    alternate_keyword = 'AltHdrKy'
+    hlsp_status_vals = ["required", "recommended"]
+    caom_status_vals = ["required", "recommended"]
+    # This defines whether the primary keyword is in the header or not.
+    pri_in_header_vals = [True, False]
+    # This defines whether the primary keyword is in the header or not.
+    alt_in_header_vals = [True, False]
+    # This sets up an alternate keyword to check for, or none.
+    alternate_vals = [None, alternate_keyword]
+    # This sets up a default value to fall back to, or none.
+    default_vals = [None, 'Kepler']
+    # This determines whether a valid header extension is there to check, or not.
+    exten_vals = [-999, 1]
+
+    def make_template(self, trial_params):
+        """
+        Creates a trial template to use based on a combination of parameters.
+
+        :param trial_params: The combination of parameters to use.
+
+        :type trial_params: dict
+
+        returns: lib.FitsKeyword.FitsKeywordList -- the simulated template based
+            on these parameters
+        """
+
+        return_template = {self.primary_keyword: {
+            'header': trial_params['exten_val'],
+            'hlsp_status': trial_params['hlsp_stat'],
+            'caom_status': trial_params['caom_stat'],
+            'caom_keyword': 'instrument_keywords',
+            'xml_parent': 'metadataList',
+            'multiple': False}}
+        if trial_params['alt_val']:
+            return_template[self.primary_keyword]['alternates'] = (
+                trial_params['alt_val'])
+        if trial_params['def_val']:
+            return_template[self.primary_keyword]['default'] = (
+                trial_params['def_val'])
+        return FitsKeyword.FitsKeywordList('timeseries', 'k2', return_template)
+
+    def make_header(self, trial_params):
+        """
+        Creates a trial header to use based on a combination of parameters.
+
+        :param trial_params: The combination of parameters to use.
+
+        :type trial_params: dict
+
+        returns: astropy.io.fits.hdu.hdulist.HDUList -- the simulated header
+            based on these parameters
+        """
+        return_header_list = [fits.PrimaryHDU()]
+        # If the extension is >=0 add the primary/alt header if it's expected.
+        if trial_params['exten_val'] >= 0:
+            # Add extension headers to the HDUList if needed.
+            if trial_params['exten_val'] > 0:
+                for i in range(1, trial_params['exten_val'] + 1):
+                    return_header_list.append(fits.ImageHDU())
+            # Create the HDUList object.
+            hdu = fits.HDUList(return_header_list)
+            if trial_params['pri_in_hdr']:
+                hdu[trial_params['exten_val']].header.set(
+                    self.primary_keyword, 4., 'A primary keyword.')
+            if (trial_params['alt_in_hdr'] and trial_params['alt_val'] is
+                    not None):
+                hdu[trial_params['exten_val']].header.set(
+                    trial_params['alt_val'], 4., 'An alternate keyword.')
+        else:
+            # There there is no need to add anything to the header, since
+            # we are not checking it anyways, so just return an empty header.
+            hdu = fits.HDUList(return_header_list)
+        return hdu
+
+    # This loops over every combination of the above options, sets up a template
+    # and constructs a header to test, and tests the output.
+    def test_apply_check(self):
+        """
+        Tests the logic behind header checking based on combaintions of
+          template parameters.
+        """
+        for combo in itertools.product(*[self.hlsp_status_vals,
+                                         self.caom_status_vals,
+                                         self.pri_in_header_vals,
+                                         self.alt_in_header_vals,
+                                         self.alternate_vals,
+                                         self.default_vals, self.exten_vals]):
+            trial_params = {'hlsp_stat': combo[0],
+                            'caom_stat': combo[1],
+                            'pri_in_hdr': combo[2],
+                            'alt_in_hdr': combo[3],
+                            'alt_val': combo[4],
+                            'def_val': combo[5],
+                            'exten_val': combo[6]}
+            # Construct the template to pass to apply_check().
+            trial_template = self.make_template(trial_params)
+            # Construct the header object to pass to apply_check().
+            trial_header = self.make_header(trial_params)
+            # Run apply_check().
+            apply_check('', trial_template, trial_header, {})
+
+
+    @unittest.skip('Skip ValidateDate')
+    def test_multi(self):
+        """
+        Tests apply_check() when dealing with a 'multi' keyword(s).
+        """
+        pass
 
 #--------------------
 

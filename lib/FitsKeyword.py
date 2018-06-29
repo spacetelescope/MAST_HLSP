@@ -26,15 +26,14 @@ class FitsKeyword(object):
 
     def __init__(self, kw, parameters=None):
         self.fits_keyword = kw
-        self.alternates = "null"
-        self.caom_keyword = "null"
+        self.alternates = "None"
+        self.caom_keyword = "None"
         self.caom_status = "required"
         self.default = "None"
         self.header = 0
         self.hlsp_status = "required"
         self.multiple = False
         self.xml_parent = "metadataList"
-
         if parameters:
             [setattr(self, key, val) for key, val in parameters.items()]
 
