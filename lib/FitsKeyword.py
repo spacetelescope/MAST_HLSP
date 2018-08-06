@@ -201,12 +201,14 @@ class FitsKeywordList(object):
         return None
 
     def to_dataframe(self):
-        pdframe = pd.DataFrame()
+        row_list = []
         for member in self.keywords:
             keys = member.as_dict().keys()
             vals = member.as_dict().values()
             row = pd.DataFrame(data=[vals], columns=keys)
-            pdframe = pd.concat([pdframe, row])
+            row_list.append(row)
+
+        pdframe = pd.concat(row_list)
         return pdframe
 
 # --------------------

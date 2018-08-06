@@ -2,20 +2,26 @@
 
 class FileType(object):
 
+    valid_cpt = ["auxiliary", "preview", "science", "thumbnail"]
+    valid_ft = ["fits", "graphic", "none", "text"]
+    valid_pt = ["catalog", "image", "spectrum", "timeseries"]
+
     def __init__(self, ftype, param_dict=None):
         self.ftype = ftype
         self.caom_product_type = "science"
         self.file_type = "none"
         self.mrp_check = True
         self.product_type = "image"
-        self.run_check = False
+        self.run_check = (True if ftype.endswith(".fits") else False)
         self.standard = None
 
         if param_dict:
             [setattr(self, key, val) for key, val in param_dict.items()]
 
     def __repr__(self):
-        return "<FileType({0.ftype}: {0.__dict__})>".format(self)
+        public_dict = {k: v for k, v in self.__dict__.items()
+                       if not k[0] == '_'}
+        return "<FileType({0}: {1})>".format(self.ftype, public_dict)
 
     def __lt__(self, another):
         return (self.ftype < another.ftype)
@@ -26,10 +32,13 @@ class FileType(object):
 
     @caom_product_type.setter
     def caom_product_type(self, caom_type):
-        ct = ["auxiliary", "preview", "science", "thumbnail"]
+        # ct = ["auxiliary", "preview", "science", "thumbnail"]
         new_type = caom_type.lower()
-        assert new_type in ct
-        self._caom_product_type = new_type
+        if new_type in self.valid_cpt:
+            self._caom_product_type = new_type
+        else:
+            raise ValueError("'{0}' is not a valid FileType.caom_product_type!"
+                             " (valid={1})".format(caom_type, ct))
 
     @property
     def file_type(self):
@@ -37,10 +46,13 @@ class FileType(object):
 
     @file_type.setter
     def file_type(self, ftype):
-        ft = ["fits", "graphic", "none", "text"]
+        # ft = ["fits", "graphic", "none", "text"]
         new_type = ftype.lower()
-        assert new_type in ft
-        self._file_type = new_type
+        if new_type in self.valid_ft:
+            self._file_type = new_type
+        else:
+            raise ValueError("'{0}' is not a valid FileType.file_type! "
+                             "(valid={1})".format(ftype, ft))
 
     @property
     def mrp_check(self):
@@ -60,14 +72,13 @@ class FileType(object):
 
     @product_type.setter
     def product_type(self, ptype):
-        pt = ["catalog", "image", "spectrum", "timeseries"]
+        # pt = ["catalog", "image", "spectrum", "timeseries"]
         new_type = ptype.lower()
-        if new_type in pt:
+        if new_type in self.valid_pt:
             self._product_type = new_type
         else:
-            err = "{0} is not a valid value for FileType.product_type.".format(
-                ptype)
-            raise ValueError(err)
+            raise ValueError("'{0}' is not a valid FileType.product_type! "
+                             "(valid={1})".format(ptype, pt))
 
     @property
     def run_check(self):
@@ -88,6 +99,17 @@ class FileType(object):
     @standard.setter
     def standard(self, std):
         self._standard = std
+
+    def as_dict(self):
+        key = self.ftype
+        params = {}
+        for k in sorted(self.__dict__.keys()):
+            if k == "ftype":
+                continue
+            name = k.split("_")
+            name = "".join([n.capitalize() for n in name])
+            params[name] = getattr(self, k)
+        return {key: params}
 
 
 def __test__():

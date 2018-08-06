@@ -46,7 +46,9 @@ class HLSPGUI(QTabWidget):
 
         path_label = QLabel("HLSP Data Path: ")
         self.hlsp_path_edit = QLineEdit()
-        self.hlsp_path_edit.insert(os.getcwd())
+        # self.hlsp_path_edit.insert(os.getcwd())
+        self.hlsp_path_edit.insert(
+            "/Users/pforshay/Documents/1709_hlsp/hlsp_data")
 
         name_label = QLabel("HLSP Name: ")
         self.hlsp_name_edit = QLineEdit()
@@ -102,8 +104,8 @@ class HLSPGUI(QTabWidget):
         """
 
     def save_hlsp(self):
-        filename = "test_gui_results"
-        self.hlsp.save(filename)
+        name = "test_gui_results"
+        self.hlsp.save(filename=name)
 
     def update_hlsp_path(self):
 
