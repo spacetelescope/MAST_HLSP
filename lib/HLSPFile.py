@@ -15,7 +15,11 @@ class HLSPFile(object):
     def __init__(self, path=None):
         super().__init__()
 
-        steps = ["filenames_checked", "metadata_checked", "files_selected"]
+        steps = ["00_filenames_checked",
+                 "01_metadata_prechecked",
+                 "02_metadata_checked",
+                 "03_files_selected",
+                 ]
         self._prep_level = 0
         self._updated = False
 
@@ -31,7 +35,7 @@ class HLSPFile(object):
 
     def add_filetype(self, ftype):
 
-        self.file_types.append(ftype.as_dict())
+        self.file_types.append(ftype)
 
     def add_keyword_update(self, keyword):
 
@@ -48,6 +52,10 @@ class HLSPFile(object):
                 continue
             key = key.split("_")
             key = "".join([k.capitalize() for k in key])
+            if key == "FileTypes":
+                val = list()
+                for ft in self.file_types:
+                    val.append(ft.as_dict())
             file_formatted_dict[key] = val
 
         return file_formatted_dict

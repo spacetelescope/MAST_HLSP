@@ -18,9 +18,34 @@ from apply_metadata_check import apply_metadata_check
 sys.path.append("../")
 from lib import FitsKeyword
 
-#--------------------
+# --------------------
 
-def check_metadata_format(paramfile):
+
+def _read_from_file(paramfile):
+    """
+    Code to load parameter data from a YAML file, moved out of
+    check_metadata_format to allow different inputs to that function.
+
+    :param paramfile: The parameter file created by 'precheck_data_format' and
+        'select_data_templates'.
+
+    :type paramfile: str
+    """
+
+    # Read in the parameter file.
+    if os.path.isfile(paramfile):
+        with open(paramfile, 'r') as istream:
+            param_data = yaml.load(istream)
+    else:
+        raise OSError('Input parameter file not found.  Looking for "' +
+                      paramfile + '".')
+
+    return param_data
+
+# --------------------
+
+
+def check_metadata_format(paramfile, is_file=True):
     """
     Checks HLSP files for compliance.  Logs errors and warnings to log file.
 
@@ -40,6 +65,9 @@ def check_metadata_format(paramfile):
     # standard, but can have any part overwritten by the .hlsp file.
     all_standards = numpy.asarray([])
     for ttr in templates_to_read:
+        this_file = os.path.realpath(__file__)
+        this_dir = "/".join(this_file.split("/")[:-1])
+        ttr = os.path.join(this_dir, ttr)
         if os.path.isfile(ttr):
             with open(ttr, 'r') as istream:
                 yaml_data = yaml.load(istream)
@@ -58,13 +86,10 @@ def check_metadata_format(paramfile):
                         level=logging.DEBUG, filemode='w')
     logging.info('Started at %s', datetime.datetime.now().isoformat())
 
-    # Read in the parameter file.
-    if os.path.isfile(paramfile):
-        with open(paramfile, 'r') as istream:
-            param_data = yaml.load(istream)
-    else:
-        raise OSError('Input parameter file not found.  Looking for "' +
-                      paramfile + '".')
+    # This will allow us to support running via script by default with a
+    # previously saved metadata precheck file, or live via the GUI with an
+    # HLSP class object.
+    param_data = (_read_from_file(paramfile) if is_file else paramfile)
 
     # The root directory of the HLSP files is stored in the parameter file.
     if 'InputDir' in param_data['FilePaths']:
@@ -100,7 +125,8 @@ def check_metadata_format(paramfile):
         ologfile.write('# ------------------------------\n')
         ologfile.write(all_log_messages)
 
-#--------------------
+# --------------------
+
 
 def setup_args():
     """
@@ -117,7 +143,8 @@ def setup_args():
 
     return parser
 
-#--------------------
+# --------------------
+
 
 if __name__ == "__main__":
 
@@ -127,4 +154,4 @@ if __name__ == "__main__":
     # Call main function.
     check_metadata_format(INPUT_ARGS.paramfile)
 
-#--------------------
+# --------------------
