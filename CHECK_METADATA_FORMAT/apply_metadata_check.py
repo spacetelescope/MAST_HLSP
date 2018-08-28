@@ -224,28 +224,28 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
     for kw in template_standard.keywords:
         if kw.header >= 0:
             kw_checked = kw.fits_keyword
-            is_in_hdr = kw_checked in hdulist[kw.header].header.keys()
+            is_in_hdr = kw_checked.upper() in hdulist[kw.header].header.keys()
             # If this keyword is missing from the header, try the alternate
             # keyword(s) instead, if one exists.
             # The alternates are stored as a comma-separated string.
             if not is_in_hdr:
-                if kw.alternates is not None:
+                if kw.alternates != 'None':
                     for kwa in kw.alternates.strip().split(','):
                         kw_checked = kwa
-                        is_in_hdr = kw_checked in (
+                        is_in_hdr = kw_checked.upper() in (
                             hdulist[kw.header].header.keys())
                         if is_in_hdr:
                             break
         else:
             #### ---------------------------------
             #### If header is negative value need to make sure a default is
-            #### specified here if HLSP/CAOM is required/recommended ....
+            #### specified here if CAOM is required/recommended ....
             #### ---------------------------------
-            # Define the is_in_hdr variable to None since we haven't checked.
-            is_in_hdr = None
+            # Define the is_in_hdr variable to 'None' since we haven't checked.
+            is_in_hdr = 'None'
             kw_checked = kw.fits_keyword
-            if kw.default is None:
-                kw_checked = None
+            if kw.default == 'None':
+                kw_checked = 'None'
                 if kw.caom_status == 'required':
                     logstring = ("Missing CAOM required" +
                                  " keyword: {0}".format(kw.fits_keyword) +
@@ -260,21 +260,23 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                                  ' specififed.')
                     write_log(this_file, logstring, 'warning',
                               log_message_counts)
-                if kw.hlsp_status == 'required':
-                    logstring = ("Missing HLSP required" +
-                                 " keyword: {0}".format(kw.fits_keyword) +
-                                 ', and no default value is' +
-                                 ' specififed.')
-                    write_log(this_file, logstring, 'error',
-                              log_message_counts)
-                elif kw.hlsp_status == 'recommended':
-                    logstring = ("Missing HLSP recommended" +
-                                 " keyword: {0}".format(kw.fits_keyword) +
-                                 ', and no default value is' +
-                                 ' specififed.')
-                    write_log(this_file, logstring, 'warning',
-                              log_message_counts)
-        if (not is_in_hdr and is_in_hdr is not None) and kw_checked is not None:
+            # This scenario is an HLSP requirement error regardless, since
+            # even if a default is provided, it's not in the file headers.
+            if kw.hlsp_status == 'required':
+                logstring = ("Missing HLSP required" +
+                             " keyword: {0}".format(kw.fits_keyword) +
+                             ', and no default value is' +
+                             ' specififed.')
+                write_log(this_file, logstring, 'error',
+                          log_message_counts)
+            elif kw.hlsp_status == 'recommended':
+                logstring = ("Missing HLSP recommended" +
+                             " keyword: {0}".format(kw.fits_keyword) +
+                             ', and no default value is' +
+                             ' specififed.')
+                write_log(this_file, logstring, 'warning',
+                          log_message_counts)
+        if (not is_in_hdr and is_in_hdr != 'None') and kw_checked != 'None':
             # Check required/recommended HLSP keywords.
             if kw.hlsp_status == "required":
                 logstring = ("Missing HLSP required keyword: " +
@@ -293,7 +295,7 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                 # If a required CAOM keyword is missing, but a default
                 # value is present, inform the user a fallback default
                 # is being used.
-                if kw.default is not None:
+                if kw.default != 'None':
                     logstring = ("Using default" +
                                  ' value of "{0}"'.format(str(kw.default)) +
                                  " for CAOM required " +
@@ -308,7 +310,7 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                 # If a recommended CAOM keyword is missing, but a default
                 # value is present, inform the user a fallback default
                 # is being used.
-                if kw.default is not None:
+                if kw.default != 'None':
                     logstring = ('Using default value' +
                                  ' of "{0}"'.format(str(kw.default)) +
                                  ' for CAOM recommended ' +
@@ -316,7 +318,7 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                     write_log(this_file, logstring, 'info',
                               log_message_counts)
         # Now do some sanity checking of keywords if present.
-        if is_in_hdr and kw_checked is not None:
+        if is_in_hdr and kw_checked != 'None':
             if kw_checked == "DATE-OBS":
                 # Check DATE-OBS keyword is correct format, if not,
                 # try TIME-OBS.
