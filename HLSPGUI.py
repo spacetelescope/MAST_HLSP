@@ -15,6 +15,7 @@ from gui.CheckFilenamesGUI import CheckFilenamesGUI
 from gui.metadata import CheckMetadataGUI
 from gui.ClearConfirm import ClearConfirm
 from gui.MyError import MyError
+from gui.UpdateKeywordsGUI import UpdateKeywordsGUI
 from lib.HLSPFile import HLSPFile
 
 try:
@@ -59,8 +60,10 @@ class HLSPGUI(QTabWidget):
         self.tabs = QTabWidget()
         self.step1 = CheckFilenamesGUI(parent=self)
         self.step2 = CheckMetadataGUI(parent=self)
+        self.step3 = UpdateKeywordsGUI(parent=self)
         self.tabs.addTab(self.step1, "1: Check Filenames")
         self.tabs.addTab(self.step2, "2: Check Metadata")
+        self.tabs.addTab(self.step3, "3: Update FITS Keywords")
         self.tbar = self.tabs.tabBar()
         #self.tbar.setTabTextColor(0, Qt.red)
 
@@ -106,6 +109,7 @@ class HLSPGUI(QTabWidget):
     def save_hlsp(self):
         name = "test_gui_results"
         self.step2.update_hlsp_file()
+        self.step3.update_hlsp_file()
         self.hlsp.save(filename=name)
 
     def update_hlsp_path(self):

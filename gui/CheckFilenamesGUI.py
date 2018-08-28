@@ -97,7 +97,8 @@ class CheckFilenamesGUI(QWidget):
             self.approve_label.setText(self.approved_text)
             self.approve_button.set_style(gb.RedButton)
             self.approve_button.setText("Unapprove")
-        self.master.hlsp.ingest["filenames_checked"] = self.approved
+        self.master.hlsp.ingest["00_filenames_checked"] = self.approved
+        self.master.hlsp.save()
 
     def toggle_run(self):
         current_path, current_name = self.current_input()

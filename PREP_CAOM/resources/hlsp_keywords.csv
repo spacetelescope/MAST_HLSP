@@ -13,7 +13,7 @@
 "target_name","PRIMARY","metadataList","TARGNAME","OBJECT","TARGNAME",""
 "targetPosition_coordinates_cval1","PRIMARY","metadataList","RA_TARG","RA_OBJ","RA_TARG",""
 "targetPosition_coordinates_cval2","PRIMARY","metadataList","DEC_TARG","DEC_OBJ","DEC_TARG",""
-"targetPosition_coordsys","PRIMARY","metadataList","RADESYS","RADESYS","",""
+"targetPosition_coordsys","PRIMARY","metadataList","RADESYS","RADESYS","RADESYS",""
 "targetPosition_equinox","PRIMARY","metadataList","EQUINOX","EQUINOX","EQUINOX",""
 "telescope_name","PRIMARY","metadataList","TELESCOP","TELESCOP","TELESCOP","MISSION"
 "type","PRIMARY","metadataList","OBSTYPE","OBSMODE","OBSTYPE",""

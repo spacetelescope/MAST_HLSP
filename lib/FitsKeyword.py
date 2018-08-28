@@ -105,8 +105,12 @@ class FitsKeyword(object):
         if isinstance(head, int):
             self._header = head
         else:
-            err = "'header' must be of type <int>"
-            raise TypeError(err)
+            try:
+                head = int(head)
+                self._header = head
+            except ValueError:
+                err = "'header' must be of type <int>"
+                raise TypeError(err)
 
     @property
     def hlsp_status(self):
@@ -148,11 +152,50 @@ class FitsKeyword(object):
         for key, val in self.__dict__.items():
             if key[0] == "_":
                 key = key[1:]
-            key = key.split("_")
-            key = "".join([k.capitalize() for k in key])
+            if key == "fits_keyword":
+                continue
             file_formatted_dict[key] = val
 
-        return file_formatted_dict
+        return {self.fits_keyword: file_formatted_dict}
+
+    def compare(self, another):
+
+        if not isinstance(another, FitsKeyword):
+            raise TypeError("FitsKeyword.compare() given a non-FitsKeyword "
+                            "object!")
+
+        another_dict = another.as_dict()
+        for key, val in self.as_dict().items():
+            if another_dict[key] != val:
+                return False
+        else:
+            return True
+
+    def update(self, new_dict):
+
+        print("FitsKeyword.update({0})".format(new_dict))
+        if not isinstance(new_dict, dict):
+            raise TypeError("FitsKeyword.update() requires a dict obj arg!")
+
+        updated = False
+        for key, val in new_dict.items():
+
+            try:
+                current = getattr(self, key)
+            except AttributeError:
+                setattr(self, key, val)
+                updated = True
+                continue
+
+            print("current={0}, val={1}".format(str(current), str(val)))
+            if str(current) == str(val):
+                continue
+            else:
+                setattr(self, key, val)
+                updated = True
+
+        return updated
+
 
 # --------------------
 
@@ -235,6 +278,8 @@ def __test__():
     kw2 = FitsKeyword("there", parameters=dict2)
     print("--- kw2 ---")
     [print("{0}: {1}".format(key, val)) for key, val in kw2.__dict__.items()]
+
+    print(kw1.as_dict())
 
     kd = {"here2": dict1, "there2": dict2}
     mylist = FitsKeywordList("thing", "HST9000", kd)

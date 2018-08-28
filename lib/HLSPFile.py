@@ -1,6 +1,6 @@
 from bin.read_yaml import read_yaml
 from FileType import FileType
-from FitsKeyword import FitsKeyword
+from FitsKeyword import FitsKeyword, FitsKeywordList
 import re
 import yaml
 
@@ -35,13 +35,15 @@ class HLSPFile(object):
 
     def add_filetype(self, ftype):
 
+        # print("<<<adding to HLSPFile obj>>>{0}".format(ftype.as_dict()))
         self.file_types.append(ftype)
 
     def add_keyword_update(self, keyword):
 
-        if isinstance(keyword, FitsKeyword):
+        try:
+            k = keyword.fits_keyword
             self.keyword_updates.append(keyword)
-        else:
+        except AttributeError:
             raise TypeError("Only FitsKeyword objects should be added.")
 
     def as_dict(self):
@@ -55,7 +57,14 @@ class HLSPFile(object):
             if key == "FileTypes":
                 val = list()
                 for ft in self.file_types:
+                    # print("<<<HLSPFile contains>>>{0}".format(ft.as_dict()))
                     val.append(ft.as_dict())
+            elif key == "KeywordUpdates":
+                print("adding KeywordUpdates to dict...")
+                val = list()
+                for kw in self.keyword_updates:
+                    val.append(kw.as_dict())
+                print("val= {0}".format(val))
             file_formatted_dict[key] = val
 
         return file_formatted_dict
@@ -68,8 +77,27 @@ class HLSPFile(object):
             attr = "_".join([k.lower() for k in key])
             setattr(self, attr, val)
 
+    def member_fits_standards(self):
+
+        if len(self.file_types) == 0:
+            return None
+
+        standards = []
+        for ft in self.file_types:
+            if not (ft.standard and ft.product_type and ft.run_check):
+                continue
+            std = "_".join([ft.product_type, ft.standard])
+            if std not in standards:
+                standards.append(std)
+
+        if len(standards) > 0:
+            return standards
+        else:
+            return None
+
     def save(self, filename=None):
 
+        print("HLSPFile.keyword_updates={0}".format(self.keyword_updates))
         if filename:
             if not filename.endswith(".hlsp"):
                 filename = ".".join([filename, "hlsp"])
@@ -78,6 +106,7 @@ class HLSPFile(object):
 
         with open(filename, 'w') as yamlfile:
             yaml.dump(self.as_dict(), yamlfile, default_flow_style=False)
+            print("...saving {0}...".format(filename))
 
     def toggle_updated(self, flag):
         self.updated = flag
