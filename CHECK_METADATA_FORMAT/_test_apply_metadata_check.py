@@ -21,7 +21,7 @@ from lib import FitsKeyword
 LOGGER = logging.getLogger()
 
 #--------------------
-@unittest.skip('Skip ValidateDate')
+#@unittest.skip('Skip TestValidateDate')
 class TestValidateDate(unittest.TestCase):
     """
     Test class for the validate_date() method.
@@ -118,7 +118,7 @@ class TestValidateDate(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-@unittest.skip('Skip ValidateTime')
+#@unittest.skip('Skip TestValidateTime')
 class TestValidateTime(unittest.TestCase):
     """
     Test class for the validate_time() method.
@@ -268,7 +268,7 @@ class TestValidateTime(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-@unittest.skip('Skip ValidateDate')
+#@unittest.skip('Skip TestCheckDateObs')
 class TestCheckDateObs(unittest.TestCase):
     """
     Test class for the check_date_obs() method.
@@ -391,7 +391,7 @@ class TestCheckDateObs(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-
+#@unittest.skip('Skip TestApplyCheck')
 class TestApplyCheck(unittest.TestCase):
     """
     Test class for the apply_check() method.
@@ -567,7 +567,7 @@ class TestApplyCheck(unittest.TestCase):
                 self.assertEqual(actual_str_len, expected_str_len)
                 LOGGER.removeHandler(stream_handler)
 
-    @unittest.skip('Skip ValidateDate')
+    @unittest.skip('Skip TestMulti')
     def test_multi(self):
         """
         Tests apply_check() when dealing with a 'multi' keyword(s).
