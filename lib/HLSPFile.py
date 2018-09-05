@@ -42,9 +42,23 @@ class HLSPFile(object):
 
         try:
             k = keyword.fits_keyword
-            self.keyword_updates.append(keyword)
         except AttributeError:
             raise TypeError("Only FitsKeyword objects should be added.")
+
+        if len(self.keyword_updates) == 0:
+            print(
+                "Adding {0} with len(self.keyword_updates)==0".format(keyword))
+            self.keyword_updates.append(keyword)
+            return
+
+        for existing_update in self.keyword_updates:
+            if existing_update.fits_keyword == k:
+                updated_parameters = keyword.as_dict()[k]
+                existing_update.update(updated_parameters)
+                return
+        else:
+            print("Adding {0} after not finding a match".format(keyword))
+            self.keyword_updates.append(keyword)
 
     def as_dict(self):
 
@@ -60,11 +74,9 @@ class HLSPFile(object):
                     # print("<<<HLSPFile contains>>>{0}".format(ft.as_dict()))
                     val.append(ft.as_dict())
             elif key == "KeywordUpdates":
-                print("adding KeywordUpdates to dict...")
                 val = list()
                 for kw in self.keyword_updates:
                     val.append(kw.as_dict())
-                print("val= {0}".format(val))
             file_formatted_dict[key] = val
 
         return file_formatted_dict

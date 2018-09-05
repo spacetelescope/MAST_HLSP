@@ -110,7 +110,7 @@ class HLSPGUI(QTabWidget):
         name = "test_gui_results"
         self.step2.update_hlsp_file()
         self.step3.update_hlsp_file()
-        self.hlsp.save(filename=name)
+        self.hlsp.save()
 
     def update_hlsp_path(self):
 

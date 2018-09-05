@@ -50,7 +50,17 @@ class FileType(object):
 
     @staticmethod
     def _format_attr_name(var):
+        """
+        Change a capitalized ExampleKey used by the YAML format into a lower-
+        case example_key used by the class attributes.
+        """
+
+        # Split the string along captial letters into a list.
         var = re.findall('[A-Z][^A-Z]*', var)
+
+        # Detect series of capital letters from an acronym and group those
+        # into a single word (ex: ['C', 'A', 'O', 'M', 'Product'] ->
+        # ['CAOM', 'Product'])
         acronym = -1
         tmp = ""
         for n in range(len(var)):
@@ -72,6 +82,11 @@ class FileType(object):
 
     @staticmethod
     def _format_dict_name(var):
+        """
+        Change a lower-case example_key used by the class attributes into a
+        capitalized ExampleKey used by the YAML format.
+        """
+
         var = var.split("_")
         var = "".join([v.capitalize() for v in var])
         return var

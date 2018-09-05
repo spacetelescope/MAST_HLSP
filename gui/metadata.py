@@ -10,6 +10,7 @@ from lib.FileType import FileType
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
+    from PyQt5.QtGui import *
 except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
@@ -36,22 +37,62 @@ class CheckMetadataGUI(QWidget):
         self.precheck_grid = QGridLayout()
         self.precheck_grid.addWidget(precheck_button, 0, 0)
 
+        bold = QFont()
+        bold.setBold(True)
         file_ending_head = QLabel("File Ending:")
+        file_ending_head.setFont(bold)
         standard_head = QLabel("Standard:")
+        standard_head.setFont(bold)
         data_type_head = QLabel("Data Type:")
+        data_type_head.setFont(bold)
         file_type_head = QLabel("File Type:")
+        file_type_head.setFont(bold)
         product_type_head = QLabel("Product Type:")
+        product_type_head.setFont(bold)
         check_meta_head = QLabel("Check Metadata?")
+        check_meta_head.setFont(bold)
         mrp_head = QLabel("MRP?")
+        mrp_head.setFont(bold)
+
+        head_row = 0
+        self._first_file = self._next_file = (head_row+1)
+        self._file_end_col = 0
+        self._standard_col = 1
+        self._data_type_col = 2
+        self._file_type_col = 3
+        self._product_type_col = 4
+        self._check_meta_col = 5
+        self._mrp_col = 6
+
         self.files_grid = QGridLayout()
-        self.files_grid.addWidget(file_ending_head, 0, 0)
-        self.files_grid.addWidget(standard_head, 0, 1)
-        self.files_grid.addWidget(data_type_head, 0, 2)
-        self.files_grid.addWidget(file_type_head, 0, 3)
-        self.files_grid.addWidget(product_type_head, 0, 4)
-        self.files_grid.addWidget(check_meta_head, 0, 5)
-        self.files_grid.addWidget(mrp_head, 0, 6)
-        self._first_file = self._next_file = 1
+        self.files_grid.addWidget(file_ending_head,
+                                  head_row,
+                                  self._file_end_col
+                                  )
+        self.files_grid.addWidget(standard_head,
+                                  head_row,
+                                  self._standard_col
+                                  )
+        self.files_grid.addWidget(data_type_head,
+                                  head_row,
+                                  self._data_type_col
+                                  )
+        self.files_grid.addWidget(file_type_head,
+                                  head_row,
+                                  self._file_type_col
+                                  )
+        self.files_grid.addWidget(product_type_head,
+                                  head_row,
+                                  self._product_type_col
+                                  )
+        self.files_grid.addWidget(check_meta_head,
+                                  head_row,
+                                  self._check_meta_col
+                                  )
+        self.files_grid.addWidget(mrp_head,
+                                  head_row,
+                                  self._mrp_col
+                                  )
 
         self.metacheck_button = gb.GreenButton(
             "Check Metadata of Selected File(s)", 70)
@@ -106,13 +147,34 @@ class CheckMetadataGUI(QWidget):
         toggle_mrp = QCheckBox()
         toggle_mrp.setChecked(new_file.mrp_check)
 
-        self.files_grid.addWidget(ft, self._next_file, 0)
-        self.files_grid.addWidget(standard, self._next_file, 1)
-        self.files_grid.addWidget(data_type, self._next_file, 2)
-        self.files_grid.addWidget(file_type, self._next_file, 3)
-        self.files_grid.addWidget(product_type, self._next_file, 4)
-        self.files_grid.addWidget(toggle_meta, self._next_file, 5)
-        self.files_grid.addWidget(toggle_mrp, self._next_file, 6)
+        self.files_grid.addWidget(ft,
+                                  self._next_file,
+                                  self._file_end_col
+                                  )
+        self.files_grid.addWidget(standard,
+                                  self._next_file,
+                                  self._standard_col
+                                  )
+        self.files_grid.addWidget(data_type,
+                                  self._next_file,
+                                  self._data_type_col
+                                  )
+        self.files_grid.addWidget(file_type,
+                                  self._next_file,
+                                  self._file_type_col
+                                  )
+        self.files_grid.addWidget(product_type,
+                                  self._next_file,
+                                  self._product_type_col
+                                  )
+        self.files_grid.addWidget(toggle_meta,
+                                  self._next_file,
+                                  self._check_meta_col
+                                  )
+        self.files_grid.addWidget(toggle_mrp,
+                                  self._next_file,
+                                  self._mrp_col
+                                  )
 
         self._next_file += 1
 
@@ -155,10 +217,10 @@ class CheckMetadataGUI(QWidget):
 
         if self._next_file == self._first_file or self.selected_count == 0:
             self.metacheck_button.setEnabled(False)
-            self.master.hlsp.ingest["metadata_prechecked"] = False
+            self.master.hlsp.ingest["01_metadata_prechecked"] = False
         else:
             self.metacheck_button.setEnabled(True)
-            self.master.hlsp.ingest["metadata_prechecked"] = True
+            self.master.hlsp.ingest["01_metadata_prechecked"] = True
 
     def _update_selected(self, state):
         """
@@ -203,6 +265,7 @@ class CheckMetadataGUI(QWidget):
 
     def metacheck_clicked(self):
 
+        self.master.hlsp.ingest["02_metadata_checked"] = True
         self.update_hlsp_file()
         check_metadata_format(self.master.hlsp.as_dict(), is_file=False)
 
@@ -218,6 +281,7 @@ class CheckMetadataGUI(QWidget):
         # print("<<<metadata GUI found>>> {0}".format(types_found))
         self.clear_files()
         self.display_files(types_found)
+        self.update_hlsp_file()
 
     def update_hlsp_file(self):
 

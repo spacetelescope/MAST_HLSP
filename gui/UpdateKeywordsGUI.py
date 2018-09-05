@@ -11,6 +11,7 @@ from lib.FitsKeyword import FitsKeyword
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
+    from PyQt5.QtGui import *
 except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
@@ -34,11 +35,18 @@ class UpdateKeywordsGUI(QWidget):
 
         self.display_grid = QGridLayout()
 
+        bold = QFont()
+        bold.setBold(True)
         standard_fits_label = QLabel("Standard FITS Keyword")
+        standard_fits_label.setFont(bold)
         caom_keyword_label = QLabel("CAOM Keyword")
+        caom_keyword_label.setFont(bold)
         alternate_fits_label = QLabel("Alternate FITS Keyword")
+        alternate_fits_label.setFont(bold)
         header_num_label = QLabel("Header #")
+        header_num_label.setFont(bold)
         default_val_label = QLabel("Default")
+        default_val_label.setFont(bold)
 
         self._keywords = []
         self._standard_fits_col = 0
@@ -71,14 +79,18 @@ class UpdateKeywordsGUI(QWidget):
                                     self._default_val_col
                                     )
 
+        self.new_keyword_button = gb.GreyButton("+ add a new keyword", 30)
+        self.new_keyword_button.clicked.connect(self._add_new_keyword_row)
+
         self.meta_grid = QGridLayout()
         self.meta_grid.addWidget(update_button, 0, 0)
         self.meta_grid.addLayout(self.display_grid, 1, 0)
+        self.meta_grid.addWidget(self.new_keyword_button, 2, 0)
 
         self.setLayout(self.meta_grid)
         self.show()
 
-    def _add_filetype_row(self, fits_key=None, info=None):
+    def _add_keyword_row(self, fits_key=None, info=None):
 
         fits_kw = QLabel()
         caom_kw = QLabel()
@@ -122,6 +134,11 @@ class UpdateKeywordsGUI(QWidget):
         self._next_filetype += 1
         self.display_grid.setRowStretch(self._next_filetype, 1)
 
+    def _add_new_keyword_row(self):
+
+        empty_standard = QLabel()
+        # caom_kw =
+
     def _get_current_standard(self):
 
         standards = self.master.hlsp.member_fits_standards()
@@ -145,9 +162,9 @@ class UpdateKeywordsGUI(QWidget):
         keywords = template["KEYWORDS"]
 
         for key, info in keywords.items():
-            self._add_filetype_row(key, info)
+            self._add_keyword_row(key, info)
 
-    def _read_filetype_row(self, row_num):
+    def _read_keyword_row(self, row_num):
 
         std_fits = self.display_grid.itemAtPosition(row_num,
                                                     self._standard_fits_col
@@ -184,10 +201,11 @@ class UpdateKeywordsGUI(QWidget):
                     self.master.hlsp.add_keyword_update(kw_obj)
 
     def load_current_fits(self):
+
         self._get_current_standard()
         self._load_standard_template()
 
     def update_hlsp_file(self):
 
         for row in range(self._first_filetype, self._next_filetype):
-            self._read_filetype_row(row)
+            self._read_keyword_row(row)

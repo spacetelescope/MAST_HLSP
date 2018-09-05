@@ -147,18 +147,35 @@ class FitsKeyword(object):
         self._xml_parent = parent
 
     def as_dict(self):
+        """
+        Convert the attributes of a FitsKeyword object into a dictionary for
+        writing to YAML.
+        """
 
         file_formatted_dict = {}
         for key, val in self.__dict__.items():
+
+            # Remove any prepending underscores.  These are left over from the
+            # setter functions.
             if key[0] == "_":
                 key = key[1:]
+
+            # Skip the 'fits_keyword' attribute, since that will be the
+            # key for the final dict product.
             if key == "fits_keyword":
                 continue
+
+            # Add the key / val pair to the dict product.
             file_formatted_dict[key] = val
 
         return {self.fits_keyword: file_formatted_dict}
 
     def compare(self, another):
+        """
+        Compares the attributes of two FitsKeyword objects, but the intended
+        functionality is taken over by "self.update()".  Not currently used
+        anywhere.
+        """
 
         if not isinstance(another, FitsKeyword):
             raise TypeError("FitsKeyword.compare() given a non-FitsKeyword "
@@ -172,14 +189,24 @@ class FitsKeyword(object):
             return True
 
     def update(self, new_dict):
+        """
+        Accepts a dictionary of {attribute: vlaue} pairs and attempts to update
+        existing FitsKeyword obj attributes.  If the attribute does not exist,
+        a new attribute is added.  Returns a boolean flag for whether any
+        changes were made to self, which allows detection of any changes a
+        user enters in a keyword-updating GUI.
+        """
 
-        print("FitsKeyword.update({0})".format(new_dict))
+        # print("FitsKeyword.update({0})".format(new_dict))
         if not isinstance(new_dict, dict):
             raise TypeError("FitsKeyword.update() requires a dict obj arg!")
 
+        # Initialize the boolean flag to False
         updated = False
         for key, val in new_dict.items():
 
+            # If 'key' is not currently an attribute, add it as a new attribute
+            # and set the 'updated' flag.
             try:
                 current = getattr(self, key)
             except AttributeError:
@@ -187,7 +214,8 @@ class FitsKeyword(object):
                 updated = True
                 continue
 
-            print("current={0}, val={1}".format(str(current), str(val)))
+            # If the new value is equal to the current value, do nothing.
+            # Otherwise, update the attribute and set the 'updated' flag.
             if str(current) == str(val):
                 continue
             else:
