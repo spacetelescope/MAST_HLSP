@@ -21,7 +21,7 @@ from lib import FitsKeyword
 LOGGER = logging.getLogger()
 
 #--------------------
-@unittest.skip('Skip ValidateDate')
+#@unittest.skip('Skip TestValidateDate')
 class TestValidateDate(unittest.TestCase):
     """
     Test class for the validate_date() method.
@@ -118,7 +118,7 @@ class TestValidateDate(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-@unittest.skip('Skip ValidateTime')
+#@unittest.skip('Skip TestValidateTime')
 class TestValidateTime(unittest.TestCase):
     """
     Test class for the validate_time() method.
@@ -268,7 +268,7 @@ class TestValidateTime(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-@unittest.skip('Skip ValidateDate')
+#@unittest.skip('Skip TestCheckDateObs')
 class TestCheckDateObs(unittest.TestCase):
     """
     Test class for the check_date_obs() method.
@@ -391,7 +391,7 @@ class TestCheckDateObs(unittest.TestCase):
         LOGGER.removeHandler(stream_handler)
 
 #--------------------
-
+#@unittest.skip('Skip TestApplyCheck')
 class TestApplyCheck(unittest.TestCase):
     """
     Test class for the apply_check() method.
@@ -404,8 +404,8 @@ class TestApplyCheck(unittest.TestCase):
       - hlsp, caom (for required/recommended)
     """
     simulated_fits_file = '_test_apply_check.fits'
-    primary_keyword = 'PriHdrKy'
-    alternate_keyword = 'AltHdrKy'
+    primary_keyword = 'PRIHDRKY'
+    alternate_keyword = 'ALTHDRKY'
     hlsp_status_vals = ["required", "recommended"]
     caom_status_vals = ["required", "recommended"]
     # This defines whether the primary keyword is in the header or not.
@@ -413,9 +413,9 @@ class TestApplyCheck(unittest.TestCase):
     # This defines whether the primary keyword is in the header or not.
     alt_in_header_vals = [True, False]
     # This sets up an alternate keyword to check for, or none.
-    alternate_vals = [None, alternate_keyword]
+    alternate_vals = ['None', alternate_keyword]
     # This sets up a default value to fall back to, or none.
-    default_vals = [None, 'Kepler']
+    default_vals = ['None', 'Kepler']
     # This determines whether a valid header extension is there to check, or not.
     exten_vals = [-999, 1]
 
@@ -446,6 +446,54 @@ class TestApplyCheck(unittest.TestCase):
                 trial_params['def_val'])
         return FitsKeyword.FitsKeywordList('timeseries', 'k2', return_template)
 
+    def get_expected_str_len(self, trial_params):
+        """
+        Generates the expected string length given the parameter set.  If no
+            errors, then expect a zero-length string from STDOUT.
+
+        :param trial_params: The combination of parameters to use.
+
+        :type trial_params: dict
+
+        returns: int -- the expected string length to see in STDOUT
+        """
+        # Assume a zero length string, make this non-zero for any parameter
+        # combination that would result in a failure.  Any non-zero length
+        # counts as an error message in the unit test when checking (check is
+        # zero or not).
+        expected_str_len = 0
+        # Everything fails HLSP requirements if the extension is less than 0 for
+        # the keyword.
+        if trial_params['exten_val'] < 0:
+            expected_str_len = 1
+        # If the primary keyword is missing, and the alternate keyword is
+        # missing, and there is no default, it's a fail.
+        if (not trial_params['pri_in_hdr'] and
+                not trial_params['alt_in_hdr'] and
+                trial_params['def_val'] == 'None'):
+            expected_str_len = 1
+        # If the primary keyword is missing, the alternate is supposed to be
+        # there but no actual alternate value was given, and there is no default
+        # to fall back to, that's a fail.
+        if (not trial_params['pri_in_hdr'] and
+                trial_params['alt_in_hdr'] and
+                trial_params['alt_val'] == 'None' and
+                trial_params['def_val'] == 'None'):
+            expected_str_len = 1
+        # For an HLSP required/recommended keyword, if the primary is missing,
+        # and the alternate is missing or not given, but there is a default, it
+        # is still a failure since the default satisfies the CAOM requirement but
+        # not the HLSP requirement.
+        if ((trial_params['hlsp_stat'] == 'required' or
+             trial_params['hlsp_stat'] == 'recommended') and
+                not trial_params['pri_in_hdr'] and
+                (not trial_params['alt_in_hdr'] or
+                 (trial_params['alt_in_hdr'] and
+                  trial_params['alt_val'] == 'None')) and
+                trial_params['def_val'] != 'None'):
+            expected_str_len = 1
+        return expected_str_len
+
     def make_header(self, trial_params):
         """
         Creates a trial header to use based on a combination of parameters.
@@ -469,8 +517,8 @@ class TestApplyCheck(unittest.TestCase):
             if trial_params['pri_in_hdr']:
                 hdu[trial_params['exten_val']].header.set(
                     self.primary_keyword, 4., 'A primary keyword.')
-            if (trial_params['alt_in_hdr'] and trial_params['alt_val'] is
-                    not None):
+            if (trial_params['alt_in_hdr'] and
+                    trial_params['alt_val'] != 'None'):
                 hdu[trial_params['exten_val']].header.set(
                     trial_params['alt_val'], 4., 'An alternate keyword.')
         else:
@@ -499,15 +547,27 @@ class TestApplyCheck(unittest.TestCase):
                             'alt_val': combo[4],
                             'def_val': combo[5],
                             'exten_val': combo[6]}
-            # Construct the template to pass to apply_check().
-            trial_template = self.make_template(trial_params)
-            # Construct the header object to pass to apply_check().
-            trial_header = self.make_header(trial_params)
-            # Run apply_check().
-            apply_check('', trial_template, trial_header, {})
+            with self.subTest(trial_params=trial_params):
+                # Construct the template to pass to apply_check().
+                trial_template = self.make_template(trial_params)
+                # Determine the expected error string length.
+                expected_str_len = self.get_expected_str_len(trial_params)
+                # Construct the header object to pass to apply_check().
+                trial_header = self.make_header(trial_params)
+                sys.stdout = io.StringIO()
+                stream_handler = logging.StreamHandler(sys.stdout)
+                LOGGER.addHandler(stream_handler)
+                # Run apply_check().
+                apply_check('', trial_template, trial_header, {})
+                output = sys.stdout.getvalue().strip()
+                if output:
+                    actual_str_len = 1
+                else:
+                    actual_str_len = 0
+                self.assertEqual(actual_str_len, expected_str_len)
+                LOGGER.removeHandler(stream_handler)
 
-
-    @unittest.skip('Skip ValidateDate')
+    @unittest.skip('Skip TestMulti')
     def test_multi(self):
         """
         Tests apply_check() when dealing with a 'multi' keyword(s).
