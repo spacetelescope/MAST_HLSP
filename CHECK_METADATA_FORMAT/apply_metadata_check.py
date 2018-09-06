@@ -12,7 +12,8 @@ import numpy
 
 from get_filetypes_keys import get_filetypes_keys
 
-#--------------------
+# --------------------
+
 
 def write_log(fname, logstring, logtype, log_message_counts):
     """
@@ -56,7 +57,8 @@ def write_log(fname, logstring, logtype, log_message_counts):
         log_message_counts[logstring]['count'] = (
             log_message_counts[logstring]['count'] + 1)
 
-#--------------------
+# --------------------
+
 
 def validate_date(datevals, this_file, log_message_counts):
     """
@@ -91,7 +93,8 @@ def validate_date(datevals, this_file, log_message_counts):
                      ' day.')
         write_log(this_file, logstring, 'error', log_message_counts)
 
-#--------------------
+# --------------------
+
 
 def validate_time(timevals, this_file, log_message_counts):
     """
@@ -136,7 +139,8 @@ def validate_time(timevals, this_file, log_message_counts):
                          ' seconds field.')
             write_log(this_file, logstring, 'error', log_message_counts)
 
-#--------------------
+# --------------------
+
 
 def check_date_obs(header, this_file, log_message_counts):
     """
@@ -197,7 +201,8 @@ def check_date_obs(header, this_file, log_message_counts):
                      ' "YYYY-MM-DDThh:mm:ss.ss" format.')
         write_log(this_file, logstring, 'error', log_message_counts)
 
-#--------------------
+# --------------------
+
 
 def apply_check(this_file, template_standard, hdulist, log_message_counts):
     """
@@ -229,18 +234,20 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
             # keyword(s) instead, if one exists.
             # The alternates are stored as a comma-separated string.
             if not is_in_hdr:
-                if kw.alternates != 'None':
-                    for kwa in kw.alternates.strip().split(','):
+                if kw.alternates:
+                    print("kw_checked={0}, type={1}".format(
+                        kw_checked, type(kw.alternates)))
+                    for kwa in kw.alternates:
                         kw_checked = kwa
                         is_in_hdr = kw_checked.upper() in (
                             hdulist[kw.header].header.keys())
                         if is_in_hdr:
                             break
         else:
-            #### ---------------------------------
-            #### If header is negative value need to make sure a default is
-            #### specified here if CAOM is required/recommended ....
-            #### ---------------------------------
+            # ---------------------------------
+            # If header is negative value need to make sure a default is
+            # specified here if CAOM is required/recommended ....
+            # ---------------------------------
             # Define the is_in_hdr variable to 'None' since we haven't checked.
             is_in_hdr = 'None'
             kw_checked = kw.fits_keyword
@@ -347,7 +354,8 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                     write_log(this_file, logstring, 'error',
                               log_message_counts)
 
-#--------------------
+# --------------------
+
 
 def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
     """

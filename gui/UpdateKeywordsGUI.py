@@ -186,7 +186,7 @@ class UpdateKeywordsGUI(QWidget):
         alternates = new_fits.widget().text()
         alternates = [a.strip() for a in alternates.split(",")]
         if len(alternates) == 1 and alternates[0] == "":
-            alternates = None
+            alternates = 'None'
         row_info_dict["alternates"] = alternates
         row_info_dict["header"] = hdr_num.widget().text()
         row_info_dict["default"] = default.widget().text()

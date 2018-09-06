@@ -16,7 +16,8 @@ KEYWORDS:
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
-        alternates: TIME-OBS
+        alternates: 
+        - TIME-OBS
     DATE-END:
         header: 1
         hlsp_status: required
@@ -24,7 +25,7 @@ KEYWORDS:
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
     DEC_OBJ:
         header: 0
         hlsp_status: required
@@ -32,7 +33,7 @@ KEYWORDS:
         caom_keyword: targetPosition_coordinates_cval2
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
     EQUINOX:
         header: 1
         hlsp_status: required
@@ -40,7 +41,7 @@ KEYWORDS:
         caom_keyword: targetPosition_equinox
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
     EXPTIME:
         header: -999
         hlsp_status: omitted
@@ -48,7 +49,7 @@ KEYWORDS:
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
         default: 1765.463013
     FILTER:
         header: 1
@@ -57,7 +58,7 @@ KEYWORDS:
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
         default: Kepler
     INSTRUME:
         header: 1
@@ -66,7 +67,7 @@ KEYWORDS:
         caom_keyword: instrument_name
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
     OBJECT:
         header: 0
         hlsp_status: required
@@ -74,7 +75,7 @@ KEYWORDS:
         caom_keyword: target_name
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
     RA_OBJ:
         header: 0
         hlsp_status: required
@@ -82,7 +83,7 @@ KEYWORDS:
         caom_keyword: targetPosition_coordinates_cval1
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
     TELESCOP:
         header: 0
         hlsp_status: required
@@ -90,7 +91,7 @@ KEYWORDS:
         caom_keyword: telescope_name
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []
     TIMEDEL:
         header: 1
         hlsp_status: required
@@ -98,4 +99,4 @@ KEYWORDS:
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
-        alternates: null
+        alternates: []

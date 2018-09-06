@@ -20,8 +20,10 @@ from lib import FitsKeyword
 
 LOGGER = logging.getLogger()
 
-#--------------------
-#@unittest.skip('Skip TestValidateDate')
+# --------------------
+# @unittest.skip('Skip TestValidateDate')
+
+
 class TestValidateDate(unittest.TestCase):
     """
     Test class for the validate_date() method.
@@ -117,8 +119,10 @@ class TestValidateDate(unittest.TestCase):
         self.assertEqual(output, expected_str)
         LOGGER.removeHandler(stream_handler)
 
-#--------------------
-#@unittest.skip('Skip TestValidateTime')
+# --------------------
+# @unittest.skip('Skip TestValidateTime')
+
+
 class TestValidateTime(unittest.TestCase):
     """
     Test class for the validate_time() method.
@@ -205,7 +209,6 @@ class TestValidateTime(unittest.TestCase):
         self.assertEqual(output, expected_str)
         LOGGER.removeHandler(stream_handler)
 
-
     def test_bad_time_minute(self):
         """
         Test of a bad time because the minutes value is only a single digit.
@@ -267,8 +270,10 @@ class TestValidateTime(unittest.TestCase):
         self.assertEqual(output, expected_str)
         LOGGER.removeHandler(stream_handler)
 
-#--------------------
-#@unittest.skip('Skip TestCheckDateObs')
+# --------------------
+# @unittest.skip('Skip TestCheckDateObs')
+
+
 class TestCheckDateObs(unittest.TestCase):
     """
     Test class for the check_date_obs() method.
@@ -390,8 +395,10 @@ class TestCheckDateObs(unittest.TestCase):
         self.assertEqual(output, expected_str)
         LOGGER.removeHandler(stream_handler)
 
-#--------------------
-#@unittest.skip('Skip TestApplyCheck')
+# --------------------
+# @unittest.skip('Skip TestApplyCheck')
+
+
 class TestApplyCheck(unittest.TestCase):
     """
     Test class for the apply_check() method.
@@ -410,10 +417,10 @@ class TestApplyCheck(unittest.TestCase):
     caom_status_vals = ["required", "recommended"]
     # This defines whether the primary keyword is in the header or not.
     pri_in_header_vals = [True, False]
-    # This defines whether the primary keyword is in the header or not.
+    # This defines whether the alternate keyword is in the header or not.
     alt_in_header_vals = [True, False]
     # This sets up an alternate keyword to check for, or none.
-    alternate_vals = ['None', alternate_keyword]
+    alternate_vals = [[], [alternate_keyword]]
     # This sets up a default value to fall back to, or none.
     default_vals = ['None', 'Kepler']
     # This determines whether a valid header extension is there to check, or not.
@@ -476,8 +483,8 @@ class TestApplyCheck(unittest.TestCase):
         # there but no actual alternate value was given, and there is no default
         # to fall back to, that's a fail.
         if (not trial_params['pri_in_hdr'] and
-                trial_params['alt_in_hdr'] and
-                trial_params['alt_val'] == 'None' and
+                trial_params['alt_in_hdr'] and not
+                trial_params['alt_val'] and
                 trial_params['def_val'] == 'None'):
             expected_str_len = 1
         # For an HLSP required/recommended keyword, if the primary is missing,
@@ -488,8 +495,8 @@ class TestApplyCheck(unittest.TestCase):
              trial_params['hlsp_stat'] == 'recommended') and
                 not trial_params['pri_in_hdr'] and
                 (not trial_params['alt_in_hdr'] or
-                 (trial_params['alt_in_hdr'] and
-                  trial_params['alt_val'] == 'None')) and
+                 (trial_params['alt_in_hdr'] and not
+                  trial_params['alt_val'])) and
                 trial_params['def_val'] != 'None'):
             expected_str_len = 1
         return expected_str_len
@@ -518,9 +525,9 @@ class TestApplyCheck(unittest.TestCase):
                 hdu[trial_params['exten_val']].header.set(
                     self.primary_keyword, 4., 'A primary keyword.')
             if (trial_params['alt_in_hdr'] and
-                    trial_params['alt_val'] != 'None'):
+                    trial_params['alt_val']):
                 hdu[trial_params['exten_val']].header.set(
-                    trial_params['alt_val'], 4., 'An alternate keyword.')
+                    trial_params['alt_val'][0], 4., 'An alternate keyword.')
         else:
             # There there is no need to add anything to the header, since
             # we are not checking it anyways, so just return an empty header.
@@ -574,7 +581,8 @@ class TestApplyCheck(unittest.TestCase):
         """
         pass
 
-#--------------------
+# --------------------
+
 
 if __name__ == "__main__":
     unittest.main()
