@@ -59,7 +59,6 @@ def write_log(fname, logstring, logtype, log_message_counts):
 
 # --------------------
 
-
 def validate_date(datevals, this_file, log_message_counts):
     """
     Given an list of dates in [YYYY, MM, DD] order, checks to make sure they
@@ -94,7 +93,6 @@ def validate_date(datevals, this_file, log_message_counts):
         write_log(this_file, logstring, 'error', log_message_counts)
 
 # --------------------
-
 
 def validate_time(timevals, this_file, log_message_counts):
     """
@@ -140,7 +138,6 @@ def validate_time(timevals, this_file, log_message_counts):
             write_log(this_file, logstring, 'error', log_message_counts)
 
 # --------------------
-
 
 def check_date_obs(header, this_file, log_message_counts):
     """
@@ -203,7 +200,6 @@ def check_date_obs(header, this_file, log_message_counts):
 
 # --------------------
 
-
 def apply_check(this_file, template_standard, hdulist, log_message_counts):
     """
     Conducts the standard verification on the given file.
@@ -235,8 +231,6 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
             # The alternates are stored as a comma-separated string.
             if not is_in_hdr:
                 if kw.alternates:
-                    print("kw_checked={0}, type={1}".format(
-                        kw_checked, type(kw.alternates)))
                     for kwa in kw.alternates:
                         kw_checked = kwa
                         is_in_hdr = kw_checked.upper() in (
