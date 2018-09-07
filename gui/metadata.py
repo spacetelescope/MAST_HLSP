@@ -51,8 +51,8 @@ class CheckMetadataGUI(QWidget):
         product_type_head.setFont(bold)
         check_meta_head = QLabel("Check Metadata?")
         check_meta_head.setFont(bold)
-        mrp_head = QLabel("MRP?")
-        mrp_head.setFont(bold)
+        inc_head = QLabel("Include in Observation?")
+        inc_head.setFont(bold)
 
         head_row = 0
         self._first_file = self._next_file = (head_row+1)
@@ -62,7 +62,7 @@ class CheckMetadataGUI(QWidget):
         self._file_type_col = 3
         self._product_type_col = 4
         self._check_meta_col = 5
-        self._mrp_col = 6
+        self._inc_col = 6
 
         self.files_grid = QGridLayout()
         self.files_grid.addWidget(file_ending_head,
@@ -89,9 +89,9 @@ class CheckMetadataGUI(QWidget):
                                   head_row,
                                   self._check_meta_col
                                   )
-        self.files_grid.addWidget(mrp_head,
+        self.files_grid.addWidget(inc_head,
                                   head_row,
-                                  self._mrp_col
+                                  self._inc_col
                                   )
 
         self.metacheck_button = gb.GreenButton(
@@ -144,8 +144,8 @@ class CheckMetadataGUI(QWidget):
             self.selected_count += 1
         toggle_meta.stateChanged.connect(self._update_selected)
 
-        toggle_mrp = QCheckBox()
-        toggle_mrp.setChecked(new_file.mrp_check)
+        toggle_inc = QCheckBox()
+        toggle_inc.setChecked(True)
 
         self.files_grid.addWidget(ft,
                                   self._next_file,
@@ -171,9 +171,9 @@ class CheckMetadataGUI(QWidget):
                                   self._next_file,
                                   self._check_meta_col
                                   )
-        self.files_grid.addWidget(toggle_mrp,
+        self.files_grid.addWidget(toggle_inc,
                                   self._next_file,
-                                  self._mrp_col
+                                  self._inc_col
                                   )
 
         self._next_file += 1
@@ -194,7 +194,7 @@ class CheckMetadataGUI(QWidget):
         ft = self.files_grid.itemAtPosition(row_num, 3).widget()
         pt = self.files_grid.itemAtPosition(row_num, 4).widget()
         chk = self.files_grid.itemAtPosition(row_num, 5).widget().checkState()
-        mrp = self.files_grid.itemAtPosition(row_num, 6).widget().checkState()
+        inc = self.files_grid.itemAtPosition(row_num, 6).widget().checkState()
 
         for ft_obj in self.master.hlsp.file_types:
             if ft_obj.ftype == ending.text():
@@ -203,7 +203,8 @@ class CheckMetadataGUI(QWidget):
                 ft_obj.file_type = ft.currentText()
                 ft_obj.caom_product_type = pt.currentText()
                 ft_obj.run_check = (True if chk == Qt.Checked else False)
-                ft_obj.mrp_check = (True if mrp == Qt.Checked else False)
+                if inc != Qt.Checked:
+                    self.master.hlsp.remove_filetype(ft_obj)
 
     def _set_data_types(self):
 

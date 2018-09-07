@@ -26,7 +26,7 @@ class FitsKeyword(object):
 
     def __init__(self, kw, parameters=None):
         self.fits_keyword = kw
-        self.alternates = "None"
+        self.alternates = []
         self.caom_keyword = "None"
         self.caom_status = "required"
         self.default = "None"

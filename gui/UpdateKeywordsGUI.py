@@ -5,6 +5,7 @@ import sys
 from bin.read_yaml import read_yaml
 from CHECK_METADATA_FORMAT.check_metadata_format import check_metadata_format
 from CHECK_METADATA_FORMAT.precheck_data_format import precheck_data_format
+from lib.CAOMKeywordBox import CAOMKeywordBox
 from lib.FileType import FileType
 from lib.FitsKeyword import FitsKeyword
 
@@ -56,7 +57,7 @@ class UpdateKeywordsGUI(QWidget):
         self._default_val_col = 4
 
         label_row = 1
-        self._first_filetype = self._next_filetype = (label_row+1)
+        self._first_keyword = self._next_keyword = (label_row+1)
 
         self.display_grid.addWidget(standard_fits_label,
                                     label_row,
@@ -103,6 +104,7 @@ class UpdateKeywordsGUI(QWidget):
             self._keywords.append(new_keyword_obj)
             fits_kw.setText(fits_key)
             caom_kw.setText(info["caom_keyword"])
+            alt_fits_kw.setText(", ".join(info["alternates"]))
             hdr_num.setText(str(info["header"]))
             try:
                 def_val.setText(str(info["default"]))
@@ -110,34 +112,71 @@ class UpdateKeywordsGUI(QWidget):
                 pass
 
         self.display_grid.addWidget(fits_kw,
-                                    self._next_filetype,
+                                    self._next_keyword,
                                     self._standard_fits_col
                                     )
         self.display_grid.addWidget(caom_kw,
-                                    self._next_filetype,
+                                    self._next_keyword,
                                     self._caom_keyword_col
                                     )
         self.display_grid.addWidget(alt_fits_kw,
-                                    self._next_filetype,
+                                    self._next_keyword,
                                     self._alternate_fits_col
                                     )
         self.display_grid.addWidget(hdr_num,
-                                    self._next_filetype,
+                                    self._next_keyword,
                                     self._header_num_col
                                     )
         self.display_grid.addWidget(def_val,
-                                    self._next_filetype,
+                                    self._next_keyword,
                                     self._default_val_col
                                     )
 
-        self.display_grid.setRowStretch(self._next_filetype, 0)
-        self._next_filetype += 1
-        self.display_grid.setRowStretch(self._next_filetype, 1)
+        self.display_grid.setRowStretch(self._next_keyword, 0)
+        self._next_keyword += 1
+        self.display_grid.setRowStretch(self._next_keyword, 1)
 
     def _add_new_keyword_row(self):
 
-        empty_standard = QLabel()
-        # caom_kw =
+        new_fits = QLineEdit()
+        new_caom = CAOMKeywordBox()
+        new_alternates = QLineEdit()
+        new_header = QLineEdit()
+        new_default = QLineEdit()
+
+        self.display_grid.addWidget(new_fits,
+                                    self._next_keyword,
+                                    self._standard_fits_col
+                                    )
+        self.display_grid.addWidget(new_caom,
+                                    self._next_keyword,
+                                    self._caom_keyword_col
+                                    )
+        self.display_grid.addWidget(new_alternates,
+                                    self._next_keyword,
+                                    self._alternate_fits_col
+                                    )
+        self.display_grid.addWidget(new_header,
+                                    self._next_keyword,
+                                    self._header_num_col
+                                    )
+        self.display_grid.addWidget(new_default,
+                                    self._next_keyword,
+                                    self._default_val_col
+                                    )
+
+        self.display_grid.setRowStretch(self._next_keyword, 0)
+        self._next_keyword += 1
+        self.display_grid.setRowStretch(self._next_keyword, 1)
+
+    def _del_last_keyword_row(self):
+
+        self._next_keyword -= 1
+        n_elements = self.display_grid.columnCount()
+        for n in range(n_elements):
+            x = self.display_grid.itemAtPosition(self._next_keyword, n)
+            x = x.widget()
+            x.setParent(None)
 
     def _get_current_standard(self):
 
@@ -183,29 +222,46 @@ class UpdateKeywordsGUI(QWidget):
                                                    )
 
         row_info_dict = {}
+        caom_kw = caom_kw.widget()
+        if isinstance(caom_kw, CAOMKeywordBox):
+            k = caom_kw.currentText().lower()
+            row_info_dict["caom_keyword"] = k
+            row_info_dict["xml_parent"] = caom_kw.getXMLParent(k)
+            row_info_dict["hlsp_status"] = "recommended"
         alternates = new_fits.widget().text()
-        alternates = [a.strip() for a in alternates.split(",")]
+        alternates = [a.strip().upper() for a in alternates.split(",")]
         if len(alternates) == 1 and alternates[0] == "":
-            alternates = 'None'
+            alternates = []
         row_info_dict["alternates"] = alternates
         row_info_dict["header"] = hdr_num.widget().text()
         row_info_dict["default"] = default.widget().text()
         if row_info_dict["default"] == "":
             row_info_dict["default"] = None
 
+        this_kw = std_fits.widget().text().upper()
+        found = False
         for kw_obj in self._keywords:
-            if kw_obj.fits_keyword == std_fits.widget().text():
+            if kw_obj.fits_keyword == this_kw:
+                found = True
                 update_flag = kw_obj.update(row_info_dict)
                 if update_flag:
-                    print("UpdateKeywordsGUI found update")
                     self.master.hlsp.add_keyword_update(kw_obj)
+        if not found:
+            new_kw = FitsKeyword(this_kw, parameters=row_info_dict)
+            self.master.hlsp.add_keyword_update(new_kw)
+
+    def clear_keywords(self):
+
+        while self._next_keyword > self._first_keyword:
+            self._del_last_keyword_row()
 
     def load_current_fits(self):
 
+        self.clear_keywords()
         self._get_current_standard()
         self._load_standard_template()
 
     def update_hlsp_file(self):
 
-        for row in range(self._first_filetype, self._next_filetype):
+        for row in range(self._first_keyword, self._next_keyword):
             self._read_keyword_row(row)

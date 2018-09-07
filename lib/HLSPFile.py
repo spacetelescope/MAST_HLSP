@@ -33,10 +33,18 @@ class HLSPFile(object):
         if path:
             self.load_hlsp(path)
 
-    def add_filetype(self, ftype):
+    def add_filetype(self, new_filetype):
 
         # print("<<<adding to HLSPFile obj>>>{0}".format(ftype.as_dict()))
-        self.file_types.append(ftype)
+        try:
+            ft = new_filetype.ftype
+        except AttributeError:
+            err = ("Only FileType objects should be added to "
+                   "HLSPFile.file_types!"
+                   )
+            raise TypeError(err)
+
+        self.file_types.append(new_filetype)
 
     def add_keyword_update(self, keyword):
 
@@ -59,6 +67,14 @@ class HLSPFile(object):
         else:
             print("Adding {0} after not finding a match".format(keyword))
             self.keyword_updates.append(keyword)
+
+    def add_unique_parameter(self, caom, parent, value):
+
+        current_parents = self.unique_parameters.keys()
+        if parent not in current_parents:
+            self.unique_parameters[parent] = {}
+
+        self.unique_parameters[parent].update({caom: value})
 
     def as_dict(self):
 
@@ -106,6 +122,14 @@ class HLSPFile(object):
             return standards
         else:
             return None
+
+    def remove_filetype(self, filetype_obj):
+
+        type_to_remove = filetype_obj.ftype
+        for ft in self.file_types:
+            if ft.ftype == type_to_remove:
+                self.file_types.remove(ft)
+                break
 
     def save(self, filename=None):
 

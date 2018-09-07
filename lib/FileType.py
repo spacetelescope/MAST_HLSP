@@ -11,6 +11,7 @@ class FileType(object):
         self.ftype = ftype.lower()
         self.caom_product_type = "science"
         self.file_type = "none"
+        self.include = True
         self.mrp_check = True
         self.product_type = "image"
         self.run_check = (True if ftype.endswith(".fits") else False)
