@@ -226,7 +226,7 @@ class UpdateKeywordsGUI(QWidget):
         if isinstance(caom_kw, CAOMKeywordBox):
             k = caom_kw.currentText().lower()
             row_info_dict["caom_keyword"] = k
-            row_info_dict["xml_parent"] = caom_kw.getXMLParent(k)
+            row_info_dict["xml_parent"] = caom_kw.getXMLParent(keyword=k)
             row_info_dict["hlsp_status"] = "recommended"
         alternates = new_fits.widget().text()
         alternates = [a.strip().upper() for a in alternates.split(",")]

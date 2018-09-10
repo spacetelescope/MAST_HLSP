@@ -1,6 +1,8 @@
+import bin.check_paths as cp
 from bin.read_yaml import read_yaml
 from FileType import FileType
 from FitsKeyword import FitsKeyword, FitsKeywordList
+from lxml import etree
 import re
 import yaml
 
@@ -8,6 +10,8 @@ try:
     from PyQt5.QtCore import pyqtSignal
 except ImportError:
     from PyQt4.QtCore import pyqtSignal
+
+FITS_TEMPLATES_DIR = "CHECK_METADATA_FORMAT/TEMPLATES"
 
 
 class HLSPFile(object):
@@ -20,6 +24,7 @@ class HLSPFile(object):
                  "02_metadata_checked",
                  "03_files_selected",
                  ]
+        self._fits_keywords = []
         self._prep_level = 0
         self._updated = False
 
@@ -32,6 +37,62 @@ class HLSPFile(object):
 
         if path:
             self.load_hlsp(path)
+
+    def _add_fits_keyword(self, keyword_obj):
+
+        try:
+            caom = keyword_obj.caom_keyword
+        except AttributeError:
+            err = "HLSPFile expected a <FitsKeyword> type object"
+            raise TypeError(err)
+
+        found = False
+        for kw in self._fits_keywords:
+            if kw.fits_keyword == keyword_obj.fits_keyword:
+                found = True
+                new_vals = keyword_obj.as_dict()
+                kw.update(new_vals[keyword_obj.fits_keyword])
+
+        if not found:
+            self._fits_keywords.append(keyword_obj)
+
+    @staticmethod
+    def _add_xml_value_pairs(parent, parameters):
+
+        for key, val in parameters.items():
+            new_entry = etree.SubElement(parent, key)
+            value_dict = {"source": "VALUE",
+                          "value": val}
+            for line, txt in value_dict.items():
+                new_line = etree.SubElement(new_entry, line)
+                new_line.text = txt
+
+        return parent
+
+    def _implement_keyword_updates(self):
+
+        for kw_obj in self.keyword_updates:
+            self._add_fits_keyword(kw_obj)
+
+    def _get_standard_fits_keywords(self):
+
+        all_standards = self.member_fits_standards()
+        if all_standards:
+            for std in all_standards:
+                filename = ".".join([std, "yml"])
+                filename = "/".join([FITS_TEMPLATES_DIR, filename])
+                standard_fits = read_yaml(filename)["KEYWORDS"]
+                for kw, info in standard_fits.items():
+                    kw_obj = FitsKeyword(kw, parameters=info)
+                    self._add_fits_keyword(kw_obj)
+
+    @staticmethod
+    def _make_value_xml_dict(val):
+
+        value_dict = {"source": "VALUE",
+                      "value": val}
+
+        return value_dict
 
     def add_filetype(self, new_filetype):
 
@@ -54,8 +115,6 @@ class HLSPFile(object):
             raise TypeError("Only FitsKeyword objects should be added.")
 
         if len(self.keyword_updates) == 0:
-            print(
-                "Adding {0} with len(self.keyword_updates)==0".format(keyword))
             self.keyword_updates.append(keyword)
             return
 
@@ -65,7 +124,6 @@ class HLSPFile(object):
                 existing_update.update(updated_parameters)
                 return
         else:
-            print("Adding {0} after not finding a match".format(keyword))
             self.keyword_updates.append(keyword)
 
     def add_unique_parameter(self, caom, parent, value):
@@ -96,6 +154,13 @@ class HLSPFile(object):
             file_formatted_dict[key] = val
 
         return file_formatted_dict
+
+    def fits_keywords(self):
+
+        self._get_standard_fits_keywords()
+        self._implement_keyword_updates()
+
+        return self._fits_keywords
 
     def load_hlsp(self, filename):
 
@@ -157,6 +222,35 @@ class HLSPFile(object):
             new_paths["Output"] = output
 
         self.file_paths.update(new_paths)
+
+    def write_xml_template(self, output=None):
+
+        if not output:
+            output = self.file_paths["Output"]
+
+        output = cp.check_new_file(output)
+
+        composite = etree.Element("CompositeObservation")
+        xmltree = etree.ElementTree(composite)
+        metadata = etree.SubElement(composite, "metadataList")
+        provenance = etree.SubElement(composite, "provenance")
+        products = etree.SubElement(composite, "productList")
+
+        for ft in sorted(self.file_types):
+            xmltree = ft.add_to_xml(xmltree)
+
+        for kw in sorted(self.fits_keywords()):
+            xmltree = kw.add_to_xml(xmltree)
+
+        for parent, parameters in self.unique_parameters.items():
+            parent = xmltree.find(parent)
+            parent = self._add_xml_value_pairs(parent, parameters)
+
+        xmltree.write(output,
+                      encoding="utf-8",
+                      xml_declaration=True,
+                      pretty_print=True,
+                      )
 
 
 def __test__():

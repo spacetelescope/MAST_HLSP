@@ -15,11 +15,13 @@
 import logging
 import os
 
-#--------------------
+# --------------------
+
 
 def log_and_print_msg(msg):
     logging.error(msg)
     print("*** {0}".format(msg))
+
 
 def check_existing_dir(path):
     """ Check a user-provided directory that should already exist (such
@@ -41,7 +43,8 @@ def check_existing_dir(path):
         log_and_print_msg("{0} does not exist!".format(fullpath))
         return None
 
-#--------------------
+# --------------------
+
 
 def check_existing_file(path):
     """ Check a file that should already exist (such as the header keyword
@@ -63,9 +66,10 @@ def check_existing_file(path):
         log_and_print_msg("{0} does not exist!".format(fullpath))
         return None
 
-#--------------------
+# --------------------
 
-def check_new_file(path):
+
+def check_new_file(path, overwrite=True):
     """
     Check a new file path that is being created.  Get the full path and create
     any directories along the way that don't already exist.
@@ -87,4 +91,11 @@ def check_new_file(path):
             print("Creating new directories for {0}".format(directory))
         except FileExistsError:
             pass
+
+    if overwrite and os.path.isfile(fullpath):
+        os.remove(fullpath)
+        open(fullpath, 'w').close()
+    elif not os.path.isfile(fullpath):
+        open(fullpath, 'w').close()
+
     return fullpath

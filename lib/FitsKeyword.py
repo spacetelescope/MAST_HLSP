@@ -12,6 +12,7 @@ neatly-packaged objects.
     to add a new object, find an object, or sort the list.
 """
 
+from lxml import etree
 import pandas as pd
 
 # --------------------
@@ -39,7 +40,7 @@ class FitsKeyword(object):
 
     def __lt__(self, another):
         if isinstance(another, FitsKeyword):
-            return (self.fits_keyword < another.fits_keyword)
+            return (self.caom_keyword < another.caom_keyword)
         else:
             raise TypeError("FitsKeyword object comparison attempted with "
                             "<{0}> ".format(type(another)))
@@ -145,6 +146,29 @@ class FitsKeyword(object):
     @xml_parent.setter
     def xml_parent(self, parent):
         self._xml_parent = parent
+
+    def _get_xml_dict(self):
+
+        xml_dict = {"source": "HEADER",
+                    "headerName": self.header,
+                    "headerKeyword": self.fits_keyword.upper(),
+                    "headerDefaultValue": self.default,
+                    }
+
+        return xml_dict
+
+    def add_to_xml(self, xmltree):
+
+        xml_dict = self._get_xml_dict()
+
+        parent = xmltree.find(self.xml_parent)
+        new_entry = etree.SubElement(parent, self.caom_keyword)
+
+        for key, val in xml_dict.items():
+            parameter = etree.SubElement(new_entry, key)
+            parameter.text = str(val)
+
+        return xmltree
 
     def as_dict(self):
         """

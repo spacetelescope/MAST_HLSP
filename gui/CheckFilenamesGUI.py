@@ -102,7 +102,8 @@ class CheckFilenamesGUI(QWidget):
 
     def toggle_run(self):
         current_path, current_name = self.current_input()
-        self.master.hlsp.update_filepaths(input=current_path)
+        out_file = "_".join([current_name, "template.xml"])
+        self.master.hlsp.update_filepaths(input=current_path, output=out_file)
         self.master.hlsp.hlsp_name = current_name
         if current_path == "" or current_name == "":
             self.run_button.setEnabled(False)

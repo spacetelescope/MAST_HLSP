@@ -82,11 +82,14 @@ class ValueParametersGUI(QWidget):
         refresh_button.clicked.connect(self.refresh_parameters)
         add_button = gb.GreyButton("+ add a new parameter", 40)
         add_button.clicked.connect(self._add_value)
+        template_button = gb.GreenButton("Generate an XML Template file", 40)
+        template_button.clicked.connect(self.generate_xml_clicked)
 
         self.meta_grid = QGridLayout()
         self.meta_grid.addWidget(refresh_button, 0, 0)
         self.meta_grid.addWidget(add_button, 0, 1)
         self.meta_grid.addLayout(self.values_grid, 1, 0, 1, -1)
+        self.meta_grid.addWidget(template_button, 2, 0, 1, -1)
 
         self.setLayout(self.meta_grid)
         self.show()
@@ -94,13 +97,9 @@ class ValueParametersGUI(QWidget):
     def _add_value(self, obj=None):
 
         new_caom = CAOMKeywordBox()
+        new_caom.currentIndexChanged.connect(self._fill_default_xml)
         new_xml = QLineEdit()
         new_value = QLineEdit()
-
-        if obj:
-            new_caom.setTo(obj.label)
-            new_xml.setText(obj.parent)
-            new_value.setText(obj.value)
 
         self.values_grid.addWidget(new_caom,
                                    self._next_value,
@@ -115,6 +114,11 @@ class ValueParametersGUI(QWidget):
                                    self._value_col
                                    )
 
+        if obj:
+            new_caom.setTo(obj.label)
+            new_xml.setText(obj.parent)
+            new_value.setText(obj.value)
+
         self.values_grid.setRowStretch(self._next_value, 0)
         self._next_value += 1
         self.values_grid.setRowStretch(self._next_value, 1)
@@ -126,6 +130,21 @@ class ValueParametersGUI(QWidget):
         for n in range(n_elements):
             x = self.values_grid.itemAtPosition(self._next_value, n).widget()
             x.setParent(None)
+
+    def _fill_default_xml(self):
+
+        sender = self.sender()
+        ind = self.values_grid.indexOf(sender)
+        pos = self.values_grid.getItemPosition(ind)
+        row = pos[0]
+
+        caom_box = self.values_grid.itemAtPosition(row, self._caom_col)
+        caom_box = caom_box.widget()
+        xml_edit = self.values_grid.itemAtPosition(row, self._xml_col)
+        xml_edit = xml_edit.widget()
+
+        xml = caom_box.getXMLParent()
+        xml_edit.setText(xml)
 
     def _read_row_to_hlsp(self, row_num):
 
@@ -164,6 +183,11 @@ class ValueParametersGUI(QWidget):
                 as_obj.parent = parent
                 as_obj.value = val
                 self._add_value(obj=as_obj)
+
+    def generate_xml_clicked(self):
+
+        self.master.save_hlsp()
+        self.master.hlsp.write_xml_template()
 
     def refresh_parameters(self):
 

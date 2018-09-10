@@ -1,8 +1,13 @@
+from lxml import etree
 import re
 
 
 class FileType(object):
 
+    every_filetype = {"calibrationLevel": "HLSP",
+                      "fileNameDescriptor": "FILEROOTSUFFIX",
+                      "planeNumber": 1,
+                      "releaseType": "DATA"}
     valid_cpt = ["auxiliary", "preview", "science", "thumbnail"]
     valid_ft = ["fits", "graphic", "none", "text"]
     valid_pt = ["catalog", "image", "spectrum", "timeseries"]
@@ -92,8 +97,21 @@ class FileType(object):
         var = "".join([v.capitalize() for v in var])
         return var
 
+    def _get_caom_filetype(self):
+        return self.ftype.split(".")[0]
+
     def _get_ext(self):
         return ".".join(self.ftype.split(".")[1:])
+
+    def _get_xml_dict(self):
+
+        xml_dict = {"contentType": self.ext.upper(),
+                    "dataProductType": self.product_type.upper(),
+                    "fileType": self._get_caom_filetype().upper(),
+                    "productType": self.caom_product_type.upper(),
+                    }
+
+        return xml_dict
 
     @property
     def caom_product_type(self):
@@ -176,6 +194,26 @@ class FileType(object):
     @standard.setter
     def standard(self, std):
         self._standard = std
+
+    def add_to_xml(self, xmltree):
+
+        xml_dict = self._get_xml_dict()
+        xml_dict.update(self.every_filetype)
+
+        if self.ext.upper() == "FITS":
+            xml_dict["fileStatus"] = "REQUIRED"
+            xml_dict["statusAction"] = "ERROR"
+        else:
+            xml_dict["fileStatus"] = "OPTIONAL"
+            xml_dict["statusAction"] = "WARNING"
+
+        pl = xmltree.find("productList")
+        product = etree.SubElement(pl, "product")
+        for key in sorted(xml_dict.keys()):
+            parameter = etree.SubElement(product, key)
+            parameter.text = str(xml_dict[key])
+
+        return xmltree
 
     def as_dict(self):
         key = self.ftype

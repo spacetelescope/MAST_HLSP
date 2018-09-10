@@ -89,10 +89,13 @@ class CAOMKeywordBox(QComboBox):
         else:
             self.setCurrentIndex(0)
 
-    def getXMLParent(self, keyword):
+    def getXMLParent(self, keyword=None):
         """ Retrieve the XML parent value for a given CAOM keyword from the
         dictionary.
         """
+
+        if not keyword:
+            keyword = self.currentText()
 
         if keyword in self.allvalues.keys():
             return self.allvalues[keyword]
