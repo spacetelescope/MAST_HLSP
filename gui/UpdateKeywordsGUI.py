@@ -81,7 +81,7 @@ class UpdateKeywordsGUI(QWidget):
                                     )
 
         self.new_keyword_button = gb.GreyButton("+ add a new keyword", 30)
-        self.new_keyword_button.clicked.connect(self._add_new_keyword_row)
+        self.new_keyword_button.clicked.connect(self._add_keyword_row)
 
         self.meta_grid = QGridLayout()
         self.meta_grid.addWidget(update_button, 0, 0)
@@ -93,13 +93,13 @@ class UpdateKeywordsGUI(QWidget):
 
     def _add_keyword_row(self, fits_key=None, info=None):
 
-        fits_kw = QLabel()
-        caom_kw = QLabel()
         alt_fits_kw = QLineEdit()
         hdr_num = QLineEdit()
         def_val = QLineEdit()
 
         if fits_key and info:
+            fits_kw = QLabel()
+            caom_kw = QLabel()
             new_keyword_obj = FitsKeyword(fits_key, parameters=info)
             self._keywords.append(new_keyword_obj)
             fits_kw.setText(fits_key)
@@ -110,6 +110,9 @@ class UpdateKeywordsGUI(QWidget):
                 def_val.setText(str(info["default"]))
             except KeyError:
                 pass
+        else:
+            fits_kw = QLineEdit()
+            caom_kw = CAOMKeywordBox()
 
         self.display_grid.addWidget(fits_kw,
                                     self._next_keyword,
@@ -201,7 +204,7 @@ class UpdateKeywordsGUI(QWidget):
         keywords = template["KEYWORDS"]
 
         for key, info in keywords.items():
-            self._add_keyword_row(key, info)
+            self._add_keyword_row(fits_key=key, info=info)
 
     def _read_keyword_row(self, row_num):
 
@@ -224,7 +227,7 @@ class UpdateKeywordsGUI(QWidget):
         row_info_dict = {}
         caom_kw = caom_kw.widget()
         if isinstance(caom_kw, CAOMKeywordBox):
-            k = caom_kw.currentText().lower()
+            k = caom_kw.currentText()
             row_info_dict["caom_keyword"] = k
             row_info_dict["xml_parent"] = caom_kw.getXMLParent(keyword=k)
             row_info_dict["hlsp_status"] = "recommended"

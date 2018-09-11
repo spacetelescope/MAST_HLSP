@@ -39,9 +39,10 @@ class FitsKeyword(object):
             [setattr(self, key, val) for key, val in parameters.items()]
 
     def __lt__(self, another):
-        if isinstance(another, FitsKeyword):
+        try:
+            test = another.caom_keyword
             return (self.caom_keyword < another.caom_keyword)
-        else:
+        except AttributeError:
             raise TypeError("FitsKeyword object comparison attempted with "
                             "<{0}> ".format(type(another)))
 
