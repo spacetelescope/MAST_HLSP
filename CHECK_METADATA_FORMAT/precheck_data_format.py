@@ -10,7 +10,10 @@
 import argparse
 import datetime
 import logging
+import sys
 
+sys.path.append("../")
+from bin.new_logger import new_logger
 from get_all_file_endings import get_all_file_endings
 from make_parameter_file import make_parameter_file
 
@@ -31,10 +34,14 @@ def precheck_data_format(idir, hlsp_name):
     """
 
     # Start logging to an output file.
+    """
     logging.basicConfig(filename="precheck_data_format.log",
                         format='%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
-    logging.info('Started at ' + datetime.datetime.now().isoformat())
+    """
+    logname = "precheck_data_format.log"
+    precheck_log = new_logger(logname)
+    precheck_log.info('Started at ' + datetime.datetime.now().isoformat())
 
     # Get unique set of file endings.
     all_file_endings = get_all_file_endings(idir)
@@ -47,7 +54,7 @@ def precheck_data_format(idir, hlsp_name):
         hlsp_name.strip().lower())
     make_parameter_file(filename, file_endings, all_file_endings, idir)
 
-    logging.info('Finished at ' + datetime.datetime.now().isoformat())
+    precheck_log.info('Finished at ' + datetime.datetime.now().isoformat())
 
     return filename
 

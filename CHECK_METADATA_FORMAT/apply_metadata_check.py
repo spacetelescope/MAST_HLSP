@@ -37,15 +37,16 @@ def write_log(fname, logstring, logtype, log_message_counts):
     :type log_message_counts: dict
     """
 
+    metadata_log = logging.getLogger('check_metadata_format')
     if logtype == 'error':
-        logging.error('File: {0}'.format(fname) +
-                      '; ' + logstring)
+        metadata_log.error('File: {0}'.format(fname) +
+                           '; ' + logstring)
     elif logtype == 'warning':
-        logging.warning('File: {0}'.format(fname) +
-                        '; ' + logstring)
+        metadata_log.warning('File: {0}'.format(fname) +
+                             '; ' + logstring)
     elif logtype == "info":
-        logging.info('File: {0}'.format(fname) +
-                     '; ' + logstring)
+        metadata_log.info('File: {0}'.format(fname) +
+                          '; ' + logstring)
     else:
         raise ValueError("Type of log message not understood, passed a" +
                          " value of " + logtype + ".")
@@ -58,6 +59,7 @@ def write_log(fname, logstring, logtype, log_message_counts):
             log_message_counts[logstring]['count'] + 1)
 
 # --------------------
+
 
 def validate_date(datevals, this_file, log_message_counts):
     """
@@ -93,6 +95,7 @@ def validate_date(datevals, this_file, log_message_counts):
         write_log(this_file, logstring, 'error', log_message_counts)
 
 # --------------------
+
 
 def validate_time(timevals, this_file, log_message_counts):
     """
@@ -138,6 +141,7 @@ def validate_time(timevals, this_file, log_message_counts):
             write_log(this_file, logstring, 'error', log_message_counts)
 
 # --------------------
+
 
 def check_date_obs(header, this_file, log_message_counts):
     """
@@ -199,6 +203,7 @@ def check_date_obs(header, this_file, log_message_counts):
         write_log(this_file, logstring, 'error', log_message_counts)
 
 # --------------------
+
 
 def apply_check(this_file, template_standard, hdulist, log_message_counts):
     """

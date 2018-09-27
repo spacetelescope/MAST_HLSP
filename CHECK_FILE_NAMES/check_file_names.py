@@ -13,7 +13,10 @@ import argparse
 import datetime
 import logging
 import os
+import sys
 
+sys.path.append("../")
+from bin.new_logger import new_logger
 from check_dirpath_lower import check_dirpath_lower
 from check_file_compliance import check_file_compliance
 from get_all_files import get_all_files
@@ -86,10 +89,13 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
 
     # Start logging to an output file.
     logfile = "check_file_names.log"
+    """
     logging.basicConfig(filename=logfile,
                         format='%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
-    logging.info('Started at ' + datetime.datetime.now().isoformat())
+    """
+    filenames_log = new_logger(logfile)
+    filenames_log.info('Started at ' + datetime.datetime.now().isoformat())
 
     # Read in list of known missions from reference file.
     known_missions = read_known_missions()
@@ -100,16 +106,17 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     # Get list of all files.
     all_file_list = get_all_files(idir)
     # Record the total number of files found, in case user needs to confirm.
-    logging.info('Total files found: ' + str(len(all_file_list)))
+    filenames_log.info('Total files found: ' + str(len(all_file_list)))
 
     # Make sure all sub-directories are lowercase.
     check_dirpath_lower(all_file_list, root_dir)
 
     # Check file names for compliance.
     check_file_compliance(all_file_list, hlsp_name, known_missions,
-                          known_filters, exclude_missions, exclude_filters)
+                          known_filters, exclude_missions, exclude_filters,
+                          logfile)
 
-    logging.info('Finished at ' + datetime.datetime.now().isoformat())
+    filenames_log.info('Finished at ' + datetime.datetime.now().isoformat())
 
     return logfile
 

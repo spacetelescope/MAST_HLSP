@@ -65,7 +65,7 @@ class CheckFilenamesGUI(QWidget):
 
     def current_input(self):
         current_path = self.master.hlsp_path_edit.text()
-        current_name = self.master.hlsp_name_edit.text()
+        current_name = self.master.hlsp_name_edit.text().lower()
         return current_path, current_name
 
     def run(self):

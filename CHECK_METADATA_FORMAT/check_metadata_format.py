@@ -16,6 +16,7 @@ import yaml
 from apply_metadata_check import apply_metadata_check
 
 sys.path.append("../")
+from bin.new_logger import new_logger
 from lib import FitsKeyword
 
 # --------------------
@@ -81,10 +82,13 @@ def check_metadata_format(paramfile, is_file=True):
 
     # Start logging to an output file.
     log_file_name = "check_metadata_format.log"
+    """
     logging.basicConfig(filename=log_file_name,
                         format='%(levelname)s from %(module)s: %(message)s',
                         level=logging.DEBUG, filemode='w')
-    logging.info('Started at %s', datetime.datetime.now().isoformat())
+    """
+    metadata_log = new_logger(log_file_name)
+    metadata_log.info('Started at ' + datetime.datetime.now().isoformat())
 
     # This will allow us to support running via script by default with a
     # previously saved metadata precheck file, or live via the GUI with an
@@ -110,7 +114,7 @@ def check_metadata_format(paramfile, is_file=True):
     log_message_counts = apply_metadata_check(file_base_dir, endings_to_check,
                                               all_standards)
 
-    logging.info('Finished at %s', datetime.datetime.now().isoformat())
+    metadata_log.info('Finished at %s', datetime.datetime.now().isoformat())
 
     # Add a summary of the number of log messages to the top of the log file.
     with open(log_file_name, 'r') as ilogfile:
