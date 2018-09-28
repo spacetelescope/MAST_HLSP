@@ -17,7 +17,7 @@ from check_is_version_string import check_is_version_string
 
 
 def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
-                          exclude_missions, exclude_filters, logname):
+                          exclude_missions, exclude_filters):
     """
     Checks if file names satisfy MAST HLSP requirements.
 
@@ -54,34 +54,32 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
     # expected.
     n_fields_expected = 8
 
-    log = logging.getLogger(logname)
-
     for ifile in file_list:
         ifile_base = os.path.basename(ifile)
 
         # Check that the file name is all lowercase.
         if not ifile_base.islower():
-            log.warning("File is not all lowercase: " + ifile)
+            logging.warning("File is not all lowercase: " + ifile)
 
         # Check that this file has the corret number of fields.
         splits = ifile_base.split('_')
         if len(splits) != n_fields_expected:
-            log.warning("File does not have " + str(n_fields_expected) +
-                        " parts: " + ifile)
+            logging.warning("File does not have " + str(n_fields_expected) +
+                            " parts: " + ifile)
         else:
             # Check the first field is "hlsp"
             if splits[0] != "hlsp":
-                log.warning('Field 1 is not "hlsp": ' + ifile)
+                logging.warning('Field 1 is not "hlsp": ' + ifile)
 
             # Check that the second field matches the HLSP name.
             if splits[1] != hlsp_name:
-                log.warning('Field 2 is not "' + hlsp_name + '": ' + ifile)
+                logging.warning('Field 2 is not "' + hlsp_name + '": ' + ifile)
 
             # Check that the third field is in the list of known missions.
             if not check_in_known_missions(splits[2], known_missions,
                                            exclude_missions):
-                log.warning('Field 3 ("' + splits[2] + '") is not in list of'
-                            ' known missions: ' + ifile)
+                logging.warning('Field 3 ("' + splits[2] + '") is not in list '
+                                'of known missions: ' + ifile)
 
             # The fourth field is the instrument part, but can also include other
             # data like "resolution", etc.  No specific checks for this.
@@ -92,13 +90,13 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
             # Check that the sixth field is in the list of known filters.
             if not check_in_known_filters(splits[5], known_filters,
                                           exclude_filters):
-                log.warning('Field 6 ("' + splits[5] + '") is not in list of'
-                            ' known filters: ' + ifile)
+                logging.warning('Field 6 ("' + splits[5] + '") is not in list '
+                                'of known filters: ' + ifile)
 
             # Check that the seventh field looks like a version number.
             if not check_is_version_string(splits[6]):
-                log.warning('Field 7 does not appear to be a valid version'
-                            ' string: ' + ifile)
+                logging.warning('Field 7 does not appear to be a valid version'
+                                ' string: ' + ifile)
 
             # The eighth field is a product and extension piece.  This is fairly
             # free-form, but generally must be <x>.<y>.  An exception is if a
@@ -108,7 +106,7 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
                 prod_ext_str = prod_ext_str.strip('.gz')
             product_extension_splits = prod_ext_str.split('.')
             if len(product_extension_splits) != 2:
-                log.warning('Field 8 does not have <product>.<extension> '
-                            'format: ' + ifile)
+                logging.warning('Field 8 does not have <product>.<extension> '
+                                'format: ' + ifile)
 
 # --------------------

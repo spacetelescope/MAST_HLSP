@@ -37,16 +37,15 @@ def write_log(fname, logstring, logtype, log_message_counts):
     :type log_message_counts: dict
     """
 
-    metadata_log = logging.getLogger('check_metadata_format')
     if logtype == 'error':
-        metadata_log.error('File: {0}'.format(fname) +
-                           '; ' + logstring)
+        logging.error('File: {0}'.format(fname) +
+                      '; ' + logstring)
     elif logtype == 'warning':
-        metadata_log.warning('File: {0}'.format(fname) +
-                             '; ' + logstring)
+        logging.warning('File: {0}'.format(fname) +
+                        '; ' + logstring)
     elif logtype == "info":
-        metadata_log.info('File: {0}'.format(fname) +
-                          '; ' + logstring)
+        logging.info('File: {0}'.format(fname) +
+                     '; ' + logstring)
     else:
         raise ValueError("Type of log message not understood, passed a" +
                          " value of " + logtype + ".")

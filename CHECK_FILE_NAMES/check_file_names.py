@@ -113,8 +113,7 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
 
     # Check file names for compliance.
     check_file_compliance(all_file_list, hlsp_name, known_missions,
-                          known_filters, exclude_missions, exclude_filters,
-                          logfile)
+                          known_filters, exclude_missions, exclude_filters)
 
     filenames_log.info('Finished at ' + datetime.datetime.now().isoformat())
 
