@@ -91,23 +91,21 @@ class UpdateKeywordsGUI(QWidget):
         self.setLayout(self.meta_grid)
         self.show()
 
-    def _add_keyword_row(self, fits_key=None, info=None):
+    def _add_keyword_row(self, kw_obj=None):
 
         alt_fits_kw = QLineEdit()
         hdr_num = QLineEdit()
         def_val = QLineEdit()
 
-        if fits_key and info:
+        if kw_obj:
             fits_kw = QLabel()
+            fits_kw.setText(kw_obj.fits_keyword)
             caom_kw = QLabel()
-            new_keyword_obj = FitsKeyword(fits_key, parameters=info)
-            self._keywords.append(new_keyword_obj)
-            fits_kw.setText(fits_key)
-            caom_kw.setText(info["caom_keyword"])
-            alt_fits_kw.setText(", ".join(info["alternates"]))
-            hdr_num.setText(str(info["header"]))
+            caom_kw.setText(kw_obj.caom_keyword)
+            alt_fits_kw.setText(", ".join(kw_obj.alternates))
+            hdr_num.setText(str(kw_obj.header))
             try:
-                def_val.setText(str(info["default"]))
+                def_val.setText(str(kw_obj.default))
             except KeyError:
                 pass
         else:
@@ -139,39 +137,6 @@ class UpdateKeywordsGUI(QWidget):
         self._next_keyword += 1
         self.display_grid.setRowStretch(self._next_keyword, 1)
 
-    def _add_new_keyword_row(self):
-
-        new_fits = QLineEdit()
-        new_caom = CAOMKeywordBox()
-        new_alternates = QLineEdit()
-        new_header = QLineEdit()
-        new_default = QLineEdit()
-
-        self.display_grid.addWidget(new_fits,
-                                    self._next_keyword,
-                                    self._standard_fits_col
-                                    )
-        self.display_grid.addWidget(new_caom,
-                                    self._next_keyword,
-                                    self._caom_keyword_col
-                                    )
-        self.display_grid.addWidget(new_alternates,
-                                    self._next_keyword,
-                                    self._alternate_fits_col
-                                    )
-        self.display_grid.addWidget(new_header,
-                                    self._next_keyword,
-                                    self._header_num_col
-                                    )
-        self.display_grid.addWidget(new_default,
-                                    self._next_keyword,
-                                    self._default_val_col
-                                    )
-
-        self.display_grid.setRowStretch(self._next_keyword, 0)
-        self._next_keyword += 1
-        self.display_grid.setRowStretch(self._next_keyword, 1)
-
     def _del_last_keyword_row(self):
 
         self._next_keyword -= 1
@@ -180,6 +145,21 @@ class UpdateKeywordsGUI(QWidget):
             x = self.display_grid.itemAtPosition(self._next_keyword, n)
             x = x.widget()
             x.setParent(None)
+
+    def _display_current_keywords(self):
+
+        self.clear_keywords()
+
+        for kw in self._keywords:
+            self._add_keyword_row(kw_obj=kw)
+
+    def _find_in_keywords(self, target_kw):
+
+        for kw_obj in self._keywords:
+            if kw_obj.fits_keyword == target_kw:
+                return kw_obj
+
+        return None
 
     def _get_current_standard(self):
 
@@ -204,7 +184,8 @@ class UpdateKeywordsGUI(QWidget):
         keywords = template["KEYWORDS"]
 
         for key, info in keywords.items():
-            self._add_keyword_row(fits_key=key, info=info)
+            kw = FitsKeyword(key, parameters=info)
+            self._keywords.append(kw)
 
     def _read_keyword_row(self, row_num):
 
@@ -242,6 +223,17 @@ class UpdateKeywordsGUI(QWidget):
             row_info_dict["default"] = None
 
         this_kw = std_fits.widget().text().upper()
+        existing_kw = self._find_in_keywords(this_kw)
+        if existing_kw:
+            update_flag = existing_kw.update(row_info_dict)
+            if update_flag:
+                self.master.hlsp.add_keyword_update(existing_kw)
+        else:
+            new_kw = FitsKeyword(this_kw, parameters=row_info_dict)
+            self._keywords.append(new_kw)
+            self.master.hlsp.add_keyword_update(new_kw)
+
+        """
         found = False
         for kw_obj in self._keywords:
             if kw_obj.fits_keyword == this_kw:
@@ -252,6 +244,7 @@ class UpdateKeywordsGUI(QWidget):
         if not found:
             new_kw = FitsKeyword(this_kw, parameters=row_info_dict)
             self.master.hlsp.add_keyword_update(new_kw)
+        """
 
     def clear_keywords(self):
 
@@ -264,7 +257,18 @@ class UpdateKeywordsGUI(QWidget):
         self._get_current_standard()
         self._load_standard_template()
 
+        for kw in self.master.hlsp.keyword_updates:
+            existing_kw = self._find_in_keywords(kw.fits_keyword)
+            if existing_kw:
+                new_values = kw.as_dict()[kw.fits_keyword]
+                existing_kw.update(new_values)
+            else:
+                self._keywords.append(kw)
+
+        self._display_current_keywords()
+
     def update_hlsp_file(self):
 
         for row in range(self._first_keyword, self._next_keyword):
             self._read_keyword_row(row)
+        self.master.hlsp.ingest["03_fits_keywords_set"] = True

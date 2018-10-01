@@ -22,7 +22,7 @@ class HLSPFile(object):
         steps = ["00_filenames_checked",
                  "01_metadata_prechecked",
                  "02_metadata_checked",
-                 "03_files_selected",
+                 "03_fits_keywords_set",
                  ]
         self._fits_keywords = []
         self._prep_level = 0
@@ -94,6 +94,15 @@ class HLSPFile(object):
 
         return value_dict
 
+    @staticmethod
+    def _split_name_from_params(entry):
+
+        name = list(entry.keys())
+        if len(name) > 1:
+            return None
+        else:
+            return name[0], entry[name[0]]
+
     def add_filetype(self, new_filetype):
 
         # print("<<<adding to HLSPFile obj>>>{0}".format(ftype.as_dict()))
@@ -162,13 +171,48 @@ class HLSPFile(object):
 
         return self._fits_keywords
 
+    def in_hlsp_format(self):
+
+        try:
+            test_fp = self.file_paths
+            test_ft = self.file_types
+            test_hn = self.hlsp_name
+            test_in = self.ingest
+            test_ku = self.keyword_updates
+            test_up = self.unique_parameters
+        except AttributeError:
+            return False
+
     def load_hlsp(self, filename):
 
         load_dict = read_yaml(filename)
         for key, val in load_dict.items():
+
             key = re.findall('[A-Z][^A-Z]*', key)
             attr = "_".join([k.lower() for k in key])
-            setattr(self, attr, val)
+
+            try:
+                getattr(self, attr)
+            except AttributeError:
+                err = "{0} is not a properly formatted .hlsp file!".format(
+                    filename)
+                self = HLSPFile()
+                raise IOError(err)
+
+            if attr == "file_types":
+                for ftype in val:
+                    name, parameters = self._split_name_from_params(ftype)
+                    as_obj = FileType(name, param_dict=parameters)
+                    self.add_filetype(as_obj)
+            elif attr == "keyword_updates":
+                for kw in val:
+                    keyword, parameters = self._split_name_from_params(kw)
+                    as_obj = FitsKeyword(keyword, parameters=parameters)
+                    self.add_keyword_update(as_obj)
+            else:
+                setattr(self, attr, val)
+
+        print("Loaded information for {0}".format(self.hlsp_name))
 
     def member_fits_standards(self):
 
@@ -198,7 +242,6 @@ class HLSPFile(object):
 
     def save(self, filename=None):
 
-        print("HLSPFile.keyword_updates={0}".format(self.keyword_updates))
         if filename:
             if not filename.endswith(".hlsp"):
                 filename = ".".join([filename, "hlsp"])
@@ -210,7 +253,8 @@ class HLSPFile(object):
             print("...saving {0}...".format(filename))
 
     def toggle_updated(self, flag):
-        self.updated = flag
+        #self.updated = flag
+        pass
 
     def update_filepaths(self, input=None, output=None):
 

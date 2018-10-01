@@ -242,13 +242,7 @@ class CheckMetadataGUI(QWidget):
 
         self._toggle_prechecked()
 
-    def clear_files(self):
-
-        while self._next_file > self._first_file:
-            self._del_file_row()
-        self.selected_count = 0
-
-    def display_files(self, types_list):
+    def add_found_files(self, types_list):
 
         for ftype in types_list:
             name = list(ftype.keys())
@@ -260,7 +254,21 @@ class CheckMetadataGUI(QWidget):
             as_obj = FileType(name, param_dict=ftype[name])
             # print("<<<as_obj>>>{0}".format(as_obj.as_dict()))
             self.master.hlsp.add_filetype(as_obj)
-            self._add_file_row(as_obj)
+
+        self.load_hlsp()
+
+    def clear_files(self):
+
+        while self._next_file > self._first_file:
+            self._del_file_row()
+        self.selected_count = 0
+
+    def load_hlsp(self):
+
+        self.clear_files()
+
+        for ft in self.master.hlsp.file_types:
+            self._add_file_row(ft)
 
         self._toggle_prechecked()
 
@@ -281,7 +289,7 @@ class CheckMetadataGUI(QWidget):
             "...found {0} file types".format(len(types_found)))
         # print("<<<metadata GUI found>>> {0}".format(types_found))
         self.clear_files()
-        self.display_files(types_found)
+        self.add_found_files(types_found)
         self.update_hlsp_file()
 
     def update_hlsp_file(self):

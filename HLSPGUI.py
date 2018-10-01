@@ -29,12 +29,6 @@ except ImportError:
 # --------------------
 
 
-def read_hlsp_file(path):
-    hlsp_file = read_yaml(path)
-
-# --------------------
-
-
 class HLSPGUI(QTabWidget):
     """ Create a tab widget to contain widgets from /gui/ext_generator.py and
     /gui/config_generator.py.  Provide options to quit or open a help dialog.
@@ -44,18 +38,21 @@ class HLSPGUI(QTabWidget):
         super().__init__()
         self.hlsp = HLSPFile()
 
-        load_hlsp = GreyButton("Load an .hlsp File", 70, min_width=150)
+        load_button = GreyButton("Load an .hlsp File", 70, min_width=150)
+        load_button.clicked.connect(self.load_hlsp)
 
         path_label = QLabel("HLSP Data Path: ")
         self.hlsp_path_edit = QLineEdit()
         # self.hlsp_path_edit.insert(os.getcwd())
         self.hlsp_path_edit.insert(
             "/Users/pforshay/Documents/1709_hlsp/hlsp_data")
+        self.hlsp_path_edit.textEdited.connect(self.update_hlsp_path)
 
         name_label = QLabel("HLSP Name: ")
         self.hlsp_name_edit = QLineEdit()
 
         save_hlsp_button = GreyButton("Save to .hlsp File", 70, min_width=150)
+        save_hlsp_button.clicked.connect(self.save_hlsp)
 
         # Set up the tabs contained in this widget
         self.tabs = QTabWidget()
@@ -70,11 +67,8 @@ class HLSPGUI(QTabWidget):
         self.tbar = self.tabs.tabBar()
         #self.tbar.setTabTextColor(0, Qt.red)
 
-        save_hlsp_button.clicked.connect(self.save_hlsp)
-        self.hlsp_path_edit.textEdited.connect(self.update_hlsp_path)
-
         self.meta_grid = QGridLayout()
-        self.meta_grid.addWidget(load_hlsp, 0, 0, 2, 1)
+        self.meta_grid.addWidget(load_button, 0, 0, 2, 1)
         self.meta_grid.addWidget(path_label, 0, 1)
         self.meta_grid.addWidget(self.hlsp_path_edit, 0, 2)
         self.meta_grid.addWidget(save_hlsp_button, 0, 3, 2, 1)
@@ -109,6 +103,31 @@ class HLSPGUI(QTabWidget):
             event.ignore()
         """
 
+    def load_hlsp(self):
+
+        prompt = "Select an .hlsp file to load:"
+        filename = get_file_to_load(self, prompt)
+
+        if not filename:
+            return
+
+        self.hlsp = HLSPFile(path=filename)
+
+        self.hlsp_name_edit.clear()
+        self.hlsp_name_edit.insert(self.hlsp.hlsp_name)
+        self.hlsp_path_edit.clear()
+        self.hlsp_path_edit.insert(self.hlsp.file_paths["InputDir"])
+
+        for step, done in self.hlsp.ingest.items():
+            if not done:
+                break
+            elif step.startswith("00"):
+                self.step1.load_hlsp(done)
+            elif step.startswith("01"):
+                self.step2.load_hlsp()
+            elif step.startswith("03"):
+                self.step3.load_current_fits()
+
     def save_hlsp(self):
         name = "test_gui_results"
         self.step2.update_hlsp_file()
@@ -121,6 +140,25 @@ class HLSPGUI(QTabWidget):
         current_path = self.hlsp_path_edit.text()
         self.hlsp.update_filepaths(input=current_path)
         self.hlsp.toggle_updated(True)
+
+# --------------------
+
+
+def get_file_to_load(parent, prompt):
+    """ Use a file dialog pop up to get a user-determined filename for file
+    creation and saving.
+
+    :param prompt:  The text to use in the dialog pop up window.
+    :type prompt:  str
+    """
+
+    loadit = QFileDialog.getOpenFileName(parent, prompt, ".")
+    filename = loadit[0]
+
+    if filename == "":
+        return None
+    else:
+        return filename
 
 # --------------------
 

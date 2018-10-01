@@ -63,10 +63,28 @@ class CheckFilenamesGUI(QWidget):
         self.setLayout(self.grid)
         self.show()
 
+    def _update_button_state(self):
+
+        if self.approved:
+            self.approve_label.setText(self.approved_text)
+            self.approve_button.set_style(gb.RedButton)
+            self.approve_button.setText("Unapprove")
+            self.approve_button.setEnabled(True)
+        else:
+            self.approve_label.setText(self.unapproved_text)
+            self.approve_button.set_style(gb.GreenButton)
+            self.approve_button.setText("Approve")
+            self.approve_button.setEnabled(False)
+
     def current_input(self):
         current_path = self.master.hlsp_path_edit.text()
         current_name = self.master.hlsp_name_edit.text().lower()
         return current_path, current_name
+
+    def load_hlsp(self, new_approved):
+
+        self.approved = new_approved
+        self._update_button_state()
 
     def run(self):
         current_path, current_name = self.current_input()
@@ -86,17 +104,8 @@ class CheckFilenamesGUI(QWidget):
         self.approve_button.setEnabled(True)
 
     def toggle_approve(self):
-        if self.approved:
-            self.approved = False
-            self.approve_label.setText(self.unapproved_text)
-            self.approve_button.set_style(gb.GreenButton)
-            self.approve_button.setText("Approve")
-            self.approve_button.setEnabled(False)
-        else:
-            self.approved = True
-            self.approve_label.setText(self.approved_text)
-            self.approve_button.set_style(gb.RedButton)
-            self.approve_button.setText("Unapprove")
+        self.approved = (not self.approved)
+        self._update_button_state()
         self.master.hlsp.ingest["00_filenames_checked"] = self.approved
         self.master.hlsp.save()
 
