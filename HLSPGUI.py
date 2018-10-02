@@ -14,6 +14,7 @@ from gui.GUIbuttons import BlueButton, GreenButton, GreyButton, RedButton
 from gui.CheckFilenamesGUI import CheckFilenamesGUI
 from gui.metadata import CheckMetadataGUI
 from gui.ClearConfirm import ClearConfirm
+from gui.FilenameConfirm import FilenameConfirm
 from gui.MyError import MyError
 from gui.UpdateKeywordsGUI import UpdateKeywordsGUI
 from gui.ValueParametersGUI import ValueParametersGUI
@@ -30,17 +31,41 @@ except ImportError:
 
 
 class HLSPGUI(QTabWidget):
-    """ Create a tab widget to contain widgets from /gui/ext_generator.py and
-    /gui/config_generator.py.  Provide options to quit or open a help dialog.
+    """
+    This class creates a master GUI for HLSP software execution.  It uses a
+    tab widget to incorporate different GUI's for different steps of the
+    ingest process.  It also includes some over-arching functionality, such
+    as specifiying the HLSP data directory, and load/save execution.
+
+    ..module::  closeEvent
+    ..synopsis::  Intercepting the closeEvent signal allows us to prompt the
+                  user to save the .hlsp file in progress.
+
+    ..module::  load_hlsp
+    ..synopsis::  Read data from an existing .hlsp file and update all the tab
+                  GUI's.
+
+    ..module::  save_hlsp
+    ..synopsis::  Update the current HLSPFile object and then save that to a
+                  specified file.
+
+    ..module::  update_hlsp_path
+    ..synopsis::  Update the appropriate HLSPFile attribute when the user
+                  updates the HLSP data path.
     """
 
     def __init__(self):
+
         super().__init__()
+
+        # Begin with an empty HLSPFile object in memory.
         self.hlsp = HLSPFile()
 
+        # Elements to launch loading a pre-existing .hlsp file.
         load_button = GreyButton("Load an .hlsp File", 70, min_width=150)
         load_button.clicked.connect(self.load_hlsp)
 
+        # Elements to change the file path to find HLSP data.
         path_label = QLabel("HLSP Data Path: ")
         self.hlsp_path_edit = QLineEdit()
         # self.hlsp_path_edit.insert(os.getcwd())
@@ -48,9 +73,13 @@ class HLSPGUI(QTabWidget):
             "/Users/pforshay/Documents/1709_hlsp/hlsp_data")
         self.hlsp_path_edit.textEdited.connect(self.update_hlsp_path)
 
+        # Elements to change HLSP name and file name values.
         name_label = QLabel("HLSP Name: ")
         self.hlsp_name_edit = QLineEdit()
+        file_label = QLabel("Save As: ")
+        self.file_name_edit = QLineEdit()
 
+        # Elements to launch saving the HLSPFile object to a YAML file.
         save_hlsp_button = GreyButton("Save to .hlsp File", 70, min_width=150)
         save_hlsp_button.clicked.connect(self.save_hlsp)
 
@@ -67,15 +96,19 @@ class HLSPGUI(QTabWidget):
         self.tbar = self.tabs.tabBar()
         #self.tbar.setTabTextColor(0, Qt.red)
 
+        # Create a grid layout and add all the elements.
         self.meta_grid = QGridLayout()
         self.meta_grid.addWidget(load_button, 0, 0, 2, 1)
         self.meta_grid.addWidget(path_label, 0, 1)
-        self.meta_grid.addWidget(self.hlsp_path_edit, 0, 2)
-        self.meta_grid.addWidget(save_hlsp_button, 0, 3, 2, 1)
+        self.meta_grid.addWidget(self.hlsp_path_edit, 0, 2, 1, 3)
+        self.meta_grid.addWidget(save_hlsp_button, 0, 5, 2, 1)
         self.meta_grid.addWidget(name_label, 1, 1)
         self.meta_grid.addWidget(self.hlsp_name_edit, 1, 2)
+        self.meta_grid.addWidget(file_label, 1, 3)
+        self.meta_grid.addWidget(self.file_name_edit, 1, 4)
         self.meta_grid.addWidget(self.tabs, 2, 0, 1, -1)
 
+        # Set the layout and size properties.
         self.setLayout(self.meta_grid)
         self.resize(1100, 500)
 
@@ -91,7 +124,9 @@ class HLSPGUI(QTabWidget):
         self.show()
 
     def closeEvent(self, event):
-        """Reset the stdout variable and print a close statement to confirm."""
+        """
+        Prompt the user to save the HLSPFile object before closing the GUI.
+        """
 
         event.accept()
         """
@@ -104,20 +139,32 @@ class HLSPGUI(QTabWidget):
         """
 
     def load_hlsp(self):
+        """
+        Load data from an existing .hlsp file into an HLSPFile object, then
+        update the GUI's with this new data.
+        """
 
+        # Launch the file selection dialog to locate an .hlsp file.
         prompt = "Select an .hlsp file to load:"
         filename = get_file_to_load(self, prompt)
 
+        # Leave the module if the user cancels.
         if not filename:
             return
 
+        # Set self.hlsp to a new HLSPFile object using the user-selected file.
         self.hlsp = HLSPFile(path=filename)
 
+        # Update the line edit elements in the master GUI using the new
+        # HLSPFile parameters.
         self.hlsp_name_edit.clear()
         self.hlsp_name_edit.insert(self.hlsp.hlsp_name)
         self.hlsp_path_edit.clear()
         self.hlsp_path_edit.insert(self.hlsp.file_paths["InputDir"])
+        self.file_name_edit.clear()
+        self.file_name_edit.insert(filename.split("/")[-1])
 
+        # Launch the load modules for each GUI in the tabs.
         for step, done in self.hlsp.ingest.items():
             if not done:
                 break
@@ -127,15 +174,46 @@ class HLSPGUI(QTabWidget):
                 self.step2.load_hlsp()
             elif step.startswith("03"):
                 self.step3.load_current_fits()
+            elif step.startswith("04"):
+                self.step4.refresh_parameters()
 
     def save_hlsp(self):
-        name = "test_gui_results"
+        """
+        Make sure the HLSPFile object has all the current GUI data, then save
+        it to a file.
+        """
+
+        # Launch the update modules for each GUI in the tabs.
         self.step2.update_hlsp_file()
         self.step3.update_hlsp_file()
         self.step4.update_hlsp_file()
-        self.hlsp.save()
+
+        # If the "Save As:" line edit has an entry, use this as the file name.
+        save_as = self.file_name_edit.text()
+        if save_as:
+            self.hlsp.save(filename=save_as)
+
+        # If the "Save As:" line edit is empty, launch a FilenameConfirm dialog
+        # window.
+        else:
+            name_dialog = FilenameConfirm(self.hlsp.hlsp_name)
+            name_dialog.exec_()
+
+            # If the FilenameConfirm dialog has a valid string, use this to
+            # save the HLSPFile, and insert that into the "Save As:" line.
+            if name_dialog.file:
+                new_file = self.hlsp.save(filename=name_dialog.file)
+                self.file_name_edit.insert(new_file)
+
+            # If the FilenameConfirm dialog is empty, the user hit 'Cancel'.
+            else:
+                return
 
     def update_hlsp_path(self):
+        """
+        Update the HLSPFile object filepaths data.  Don't think this is
+        actually used...
+        """
 
         current_path = self.hlsp_path_edit.text()
         self.hlsp.update_filepaths(input=current_path)

@@ -201,3 +201,5 @@ class ValueParametersGUI(QWidget):
 
         for row in range(self._first_value, self._next_value):
             self._read_row_to_hlsp(row)
+
+        self.master.hlsp.ingest["04_value_parameters_added"] = True

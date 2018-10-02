@@ -23,6 +23,7 @@ class HLSPFile(object):
                  "01_metadata_prechecked",
                  "02_metadata_checked",
                  "03_fits_keywords_set",
+                 "04_value_parameters_added"
                  ]
         self._fits_keywords = []
         self._prep_level = 0
@@ -69,11 +70,6 @@ class HLSPFile(object):
 
         return parent
 
-    def _implement_keyword_updates(self):
-
-        for kw_obj in self.keyword_updates:
-            self._add_fits_keyword(kw_obj)
-
     def _get_standard_fits_keywords(self):
 
         all_standards = self.member_fits_standards()
@@ -85,6 +81,11 @@ class HLSPFile(object):
                 for kw, info in standard_fits.items():
                     kw_obj = FitsKeyword(kw, parameters=info)
                     self._add_fits_keyword(kw_obj)
+
+    def _implement_keyword_updates(self):
+
+        for kw_obj in self.keyword_updates:
+            self._add_fits_keyword(kw_obj)
 
     @staticmethod
     def _make_value_xml_dict(val):
@@ -163,6 +164,14 @@ class HLSPFile(object):
             file_formatted_dict[key] = val
 
         return file_formatted_dict
+
+    def find_file_type(self, target_ending):
+
+        for ft in self.file_types:
+            if ft.ftype.lower() == target_ending.lower():
+                return ft
+
+        return None
 
     def fits_keywords(self):
 
@@ -251,6 +260,8 @@ class HLSPFile(object):
         with open(filename, 'w') as yamlfile:
             yaml.dump(self.as_dict(), yamlfile, default_flow_style=False)
             print("...saving {0}...".format(filename))
+
+        return filename
 
     def toggle_updated(self, flag):
         #self.updated = flag

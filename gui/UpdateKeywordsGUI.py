@@ -156,7 +156,7 @@ class UpdateKeywordsGUI(QWidget):
     def _find_in_keywords(self, target_kw):
 
         for kw_obj in self._keywords:
-            if kw_obj.fits_keyword == target_kw:
+            if kw_obj.fits_keyword.upper() == target_kw:
                 return kw_obj
 
         return None
@@ -223,6 +223,10 @@ class UpdateKeywordsGUI(QWidget):
             row_info_dict["default"] = None
 
         this_kw = std_fits.widget().text().upper()
+
+        return this_kw, row_info_dict
+
+        """
         existing_kw = self._find_in_keywords(this_kw)
         if existing_kw:
             update_flag = existing_kw.update(row_info_dict)
@@ -233,7 +237,6 @@ class UpdateKeywordsGUI(QWidget):
             self._keywords.append(new_kw)
             self.master.hlsp.add_keyword_update(new_kw)
 
-        """
         found = False
         for kw_obj in self._keywords:
             if kw_obj.fits_keyword == this_kw:
@@ -253,7 +256,8 @@ class UpdateKeywordsGUI(QWidget):
 
     def load_current_fits(self):
 
-        self.clear_keywords()
+        self._keywords = self.master.hlsp.fits_keywords()
+        """
         self._get_current_standard()
         self._load_standard_template()
 
@@ -264,11 +268,22 @@ class UpdateKeywordsGUI(QWidget):
                 existing_kw.update(new_values)
             else:
                 self._keywords.append(kw)
+        """
 
         self._display_current_keywords()
 
     def update_hlsp_file(self):
 
         for row in range(self._first_keyword, self._next_keyword):
-            self._read_keyword_row(row)
+            kw, row_info = self._read_keyword_row(row)
+            existing_kw = self._find_in_keywords(kw)
+            if existing_kw:
+                update_flag = existing_kw.update(row_info)
+                if update_flag:
+                    self.master.hlsp.add_keyword_update(existing_kw)
+            else:
+                new_kw = FitsKeyword(kw, parameters=row_info)
+                self._keywords.append(new_kw)
+                self.master.hlsp.add_keyword_update(new_kw)
+
         self.master.hlsp.ingest["03_fits_keywords_set"] = True
