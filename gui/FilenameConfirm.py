@@ -26,7 +26,8 @@ class FilenameConfirm(QDialog):
 
         super().__init__()
 
-        self.file = ".".join([hlsp_name, "hlsp"])
+        self.default_val = ".".join([hlsp_name, "hlsp"])
+        self.file = None
         prompt = QLabel("Select a file name to use:")
         self.default_button = QRadioButton("Default Name: ")
         self.default_button.setChecked(True)
@@ -59,6 +60,7 @@ class FilenameConfirm(QDialog):
     def save_clicked(self):
 
         if self.default_button.isChecked():
+            self.file = self.default_val
             self.close()
         else:
             self.file = self.custom_edit.text()

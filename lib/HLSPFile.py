@@ -15,6 +15,15 @@ FITS_TEMPLATES_DIR = "CHECK_METADATA_FORMAT/TEMPLATES"
 
 
 class HLSPFile(object):
+    """
+    This file constructs an object to organize information needed for HLSP data
+    file ingestion to MAST and CAOM.  The class provides methods to access and
+    modify that information, as well as read or write that information from/to
+    YAML-formatted files.
+
+    ..module::  _add_fits_keyword
+    ..synopsis::
+    """
 
     def __init__(self, path=None):
         super().__init__()
@@ -48,13 +57,14 @@ class HLSPFile(object):
             raise TypeError(err)
 
         found = False
+        updated = False
         for kw in self._fits_keywords:
             if kw.fits_keyword == keyword_obj.fits_keyword:
                 found = True
                 new_vals = keyword_obj.as_dict()
-                kw.update(new_vals[keyword_obj.fits_keyword])
+                updated = kw.update(new_vals[keyword_obj.fits_keyword])
 
-        if not found:
+        if updated or not found:
             self._fits_keywords.append(keyword_obj)
 
     @staticmethod

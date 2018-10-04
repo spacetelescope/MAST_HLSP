@@ -37,9 +37,8 @@ class CheckMetadataGUI(QWidget):
                   a FileType object in the parent HLSPFile object.
 
     ..module::  _set_data_types
-    ..synopsis::  Update all "Data Type" dropboxes when any new standard is
-                  selected.  Currently, we only handle a single data type at
-                  a time.
+    ..synopsis::  Update "Data Type" dropboxes when a new standard value is
+                  selected.
 
     ..module::  _toggle_prechecked
     ..synopsis::  Check whether a metadata precheck has been executed, and
@@ -253,7 +252,6 @@ class CheckMetadataGUI(QWidget):
                                   self._inc_col
                                   )
 
-        # Increment self._next_file.
         self._next_file += 1
 
     def _del_file_row(self):
@@ -320,17 +318,25 @@ class CheckMetadataGUI(QWidget):
                 self.master.hlsp.remove_filetype(ft_obj)
 
     def _set_data_types(self):
+        """
+        Upon changing a row's 'Standard' value, update the 'Data Type' value
+        as well.  Currently, we can only handle one data type for a given
+        observation, so changing any standard value will update all data types.
+        """
 
+        # Identify the position of the signal sender.
         sender = self.sender()
         ind = self.files_grid.indexOf(sender)
         pos = self.files_grid.getItemPosition(ind)
         row = pos[0]
 
+        # Get the new standard value.
         std = self.files_grid.itemAtPosition(row,
                                              self._standard_col
                                              )
         dt = std.widget().currentText().split("_")[0]
 
+        # Update all data type boxes with the new standard value.
         for row in range(self._first_file, self._next_file):
             data_type = self.files_grid.itemAtPosition(row,
                                                        self._data_type_col
@@ -338,88 +344,144 @@ class CheckMetadataGUI(QWidget):
             data_type.widget().setCurrentText(dt)
 
     def _toggle_prechecked(self):
+        """
+        Update button and status states based on whether file types have been
+        found.
+        """
 
+        # If there are no file type rows or none have been selected, disable
+        # the check_metadata_format button and set the HLSPFile flag.
         if self._next_file == self._first_file or self.selected_count == 0:
             self.metacheck_button.setEnabled(False)
             self.master.hlsp.ingest["01_metadata_prechecked"] = False
+
+        # Otherwise, enable the check_metadata_format button.
         else:
             self.metacheck_button.setEnabled(True)
             self.master.hlsp.ingest["01_metadata_prechecked"] = True
 
     def _update_selected(self, state):
         """
-        sender = self.sender()
-        ind = self.files_grid.indexOf(sender)
-        pos = self.files_grid.getItemPosition(ind)
-        row = pos[0]
-        standard_col = 1
-        std = self.files_grid.itemAtPosition(row, standard_col).widget()
+        Track the number of file types the user has selected for metadata
+        checking.
         """
 
+        # Update the self.selected_count counter.
         if state == Qt.Checked:
             self.selected_count += 1
-            # std.setVisible(True)
         else:
             self.selected_count -= 1
-            # std.setVisible(False)
 
+        # Trigger necessary GUI updates.
         self._toggle_prechecked()
 
     def add_found_files(self, types_list):
+        """
+        Use a list of file types returned from a precheck to create FileType
+        objects and add them to the HLSPFile.
 
+        :param types_list:  A list of file type dictionaries found by the
+                            precheck_data_format script.
+        :type types_list:  list
+        """
+
+        # Expecting a list of single-key dictionaries:
+        # e.g. [{type: {key: val, key: val, ...}}, ...]
         for ftype in types_list:
             name = list(ftype.keys())
+
+            # If a single dict lists multiple file types, ignore (this is
+            # unexpected).
             if len(name) > 1:
                 continue
             else:
                 name = name[0]
-            # print("<<<metadata sending>>>{0}".format(ftype[name]))
+
+            # Create a FileType class object.
             as_obj = FileType(name, param_dict=ftype[name])
-            # print("<<<as_obj>>>{0}".format(as_obj.as_dict()))
+
+            # Add the FileType object to the parent HLSPFile.
             self.master.hlsp.add_filetype(as_obj)
 
+        # Load the newly-updated HLSPFile into the GUI.
         self.load_hlsp()
 
     def clear_files(self):
+        """
+        Remove all file type rows from the GUI and reset the counter.
+        """
 
+        # Remove the last row until _next_file points to _first_file.
         while self._next_file > self._first_file:
             self._del_file_row()
+
         self.selected_count = 0
 
     def load_hlsp(self):
+        """
+        Display the contents of the parent HLSPFile.file_types in the GUI.
+        """
 
+        # Clear anything currently displayed.
         self.clear_files()
 
+        # Add a file type row for each FileType object in the HLSPFile.
         for ft in self.master.hlsp.file_types:
             self._add_file_row(ft)
 
+        # Trigger additional GUI updates.
         self._toggle_prechecked()
 
     def metacheck_clicked(self):
+        """
+        Launch the check_metadata_format script to examine FITS keywords in
+        the selected data files.
+        """
 
+        # Launch check_metadata_format with the current contents of the parent
+        # HLSPFile as a dict.
         check_metadata_format(self.master.hlsp.as_dict(), is_file=False)
+
+        # Set the metadata checked flag (may wish to incorporate some sort of
+        # approval here as well).
         self.master.hlsp.ingest["02_metadata_checked"] = True
+
+        # Save the HLSPFile.
         self.update_hlsp_file(save=True)
 
     def precheck_clicked(self):
+        """
+        Launch the precheck_data_format script and display any results.
+        """
 
-        hlsp_dir = self.master.hlsp.file_paths["InputDir"]
-        hlsp_name = self.master.hlsp.hlsp_name
+        # Read the current HLSP data path and name.
+        hlsp_dir, hlsp_name = self.master.current_config()
+
+        # Launch the precheck_data_format script.
         results = precheck_data_format(hlsp_dir, hlsp_name)
+
+        # Read the resulting log file.
         results_dict = read_yaml(results)
         types_found = results_dict["FileTypes"]
+
+        # Display the precheck results and save the HLSPFile.
         self.type_count_label.setText(
             "...found {0} file types".format(len(types_found)))
-        # print("<<<metadata GUI found>>> {0}".format(types_found))
         self.clear_files()
         self.add_found_files(types_found)
         self.update_hlsp_file(save=True)
 
     def update_hlsp_file(self, save=None):
+        """
+        Read the current GUI contents to the HLSPFile in memory, with an
+        option to save it.
+        """
 
+        # Read the current GUI contents.
         for n in range(self._first_file, self._next_file):
             self._read_file_row(n)
 
+        # Save the HLSPFile if selected.
         if save:
             self.master.hlsp.save()
 

@@ -153,7 +153,7 @@ class CheckFilenamesGUI(QWidget):
 
         # Retrieve and expand the current HLSP data path and name values from
         # the parent GUI.
-        current_path, current_name = self.current_input()
+        current_path, current_name = self.master.current_config()
         current_path = os.path.abspath(current_path)
 
         # Launch the check_file_names module.
@@ -194,7 +194,7 @@ class CheckFilenamesGUI(QWidget):
         """
 
         # Read the current HLSP data path and name values.
-        current_path, current_name = self.current_input()
+        current_path, current_name = self.master.current_config()
 
         # Set the XML template filename based on the HLSP name.
         out_file = "_".join([current_name, "template.xml"])

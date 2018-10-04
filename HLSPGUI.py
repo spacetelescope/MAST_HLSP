@@ -138,6 +138,10 @@ class HLSPGUI(QTabWidget):
             event.ignore()
         """
 
+    def current_config(self):
+
+        return self.hlsp_path_edit.text(), self.hlsp_name_edit.text().lower()
+
     def load_hlsp(self):
         """
         Load data from an existing .hlsp file into an HLSPFile object, then
