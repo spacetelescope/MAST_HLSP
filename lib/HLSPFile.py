@@ -118,7 +118,8 @@ class HLSPFile(object):
                  ]
 
         # Set private internal-use attributes.
-        self._fits_keywords = []
+        self._fits_keywords = FitsKeywordList.empty_list()
+        self._standard_keywords = FitsKeywordList.empty_list()
         self._updated = False
 
         # Initialize primary attributes.
@@ -165,8 +166,11 @@ class HLSPFile(object):
 
         # If keyword_obj updates an existing FitsKeyword or is a new
         # FitsKeyword, add it to self._fits_keywords.
-        if updated or not found:
+        if not found:
             self._fits_keywords.append(keyword_obj)
+        else:
+            print("_add_fits_keyword skipping {0}".format(
+                keyword_obj.fits_keyword))
 
     @staticmethod
     def _add_xml_value_pairs(parent, parameters):
@@ -191,6 +195,15 @@ class HLSPFile(object):
 
         return parent
 
+    def _get_keyword_updates(self):
+
+        self.keyword_updates = []
+        standard_kws = [x.fits_keyword for x in self._standard_keywords]
+
+        for kw in self._fits_keywords:
+            if kw.fits_keyword in standard_kws:
+                pass
+
     def _get_standard_fits_keywords(self):
         """
         Read a FITS template file based on the file types present, create
@@ -214,7 +227,7 @@ class HLSPFile(object):
                 # to add it to self._fits_keywords.
                 for kw, info in standard_fits.items():
                     kw_obj = FitsKeyword(kw, parameters=info)
-                    self._add_fits_keyword(kw_obj)
+                    self.add_fits_keyword(kw_obj, standard=True)
 
     def _implement_keyword_updates(self):
         """
@@ -278,7 +291,37 @@ class HLSPFile(object):
                    )
             raise TypeError(err)
 
-        self.file_types.append(new_filetype)
+        # If the new file ending is not already an ftype attribute of any
+        # self.file_types member, add new_filetype.
+        current_types = [x.ftype for x in self.file_types]
+        if ft not in current_types:
+            self.file_types.append(new_filetype)
+
+    def add_fits_keyword(self, keyword_obj, standard=None):
+        """
+        Add a new FitsKeyword object to the private _fits_keywords list.  Skip
+        if the keyword is already present.
+
+        :param keyword_obj:  The potentially new fits keyword to add.
+        :type keyword_obj:  FitsKeyword
+        """
+
+        # Check keyword_obj for a FitsKeyword attribute.
+        try:
+            fits = keyword_obj.fits_keyword
+        except AttributeError:
+            err = "HLSPFile expected a <FitsKeyword> type object"
+            raise TypeError(err)
+
+        # Assume the given FitsKeyword is already in self._fits_keywords.
+        found = False
+        updated = False
+
+        if standard:
+            print("HLSPFile is adding standard keywords")
+            self._standard_keywords.add(keyword_obj)
+
+        self._fits_keywords.add(keyword_obj)
 
     def add_keyword_update(self, keyword):
         """
@@ -348,6 +391,10 @@ class HLSPFile(object):
         """
 
         file_formatted_dict = {}
+        print(self._fits_keywords)
+        print(self._standard_keywords)
+        self.keyword_updates = self._fits_keywords.find_differences(
+            self._standard_keywords)
 
         # Iterate through all current attributes.
         for key, val in self.__dict__.items():
@@ -368,7 +415,7 @@ class HLSPFile(object):
                     val.append(ft.as_dict())
             elif key == "KeywordUpdates":
                 val = list()
-                for kw in self.keyword_updates:
+                for kw in self.keyword_updates.keywords:
                     val.append(kw.as_dict())
 
             file_formatted_dict[key] = val
@@ -397,9 +444,6 @@ class HLSPFile(object):
         updates and return a list of all FitsKeyword objects used by this
         HLSPFile.
         """
-
-        self._get_standard_fits_keywords()
-        self._implement_keyword_updates()
 
         return self._fits_keywords
 

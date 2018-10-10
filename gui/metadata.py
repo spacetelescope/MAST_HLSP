@@ -151,8 +151,8 @@ class CheckMetadataGUI(QWidget):
                                   )
 
         # GUI elements to launch check_metadata_format.
-        self.metacheck_button = gb.GreenButton(
-            "Check Metadata of Selected File(s)", 70)
+        meta_msg = "Check Metadata of Selected File(s)"
+        self.metacheck_button = gb.GreenButton(meta_msg, 70)
         self.metacheck_button.clicked.connect(self.metacheck_clicked)
         self.metacheck_button.setEnabled(False)
         self.check_grid = QGridLayout()
@@ -184,15 +184,17 @@ class CheckMetadataGUI(QWidget):
         """
 
         # GUI element to display file ending information.
-        ft = QLabel(new_file.ftype)
+        if self._next_file == self._first_file:
+            ft = QLabel("UPDATE ALL FILES")
+        else:
+            ft = QLabel(new_file.ftype)
 
         # GUI elements to display and select FITS standard information.
         standard = QComboBox()
         standard.addItems(sorted(self.standards))
         standard.setCurrentText("_".join([new_file.product_type,
-                                          new_file.standard
+                                          str(new_file.standard)
                                           ]))
-        standard.currentIndexChanged.connect(self._set_data_types)
 
         # GUI elements to display and select data type information.
         data_type = QComboBox()
@@ -214,9 +216,8 @@ class CheckMetadataGUI(QWidget):
         toggle_meta.setChecked(new_file.run_check)
 
         # Track the number of files included for metadata checking.
-        if new_file.run_check:
+        if new_file.run_check and self._next_file > self._first_file:
             self.selected_count += 1
-        toggle_meta.stateChanged.connect(self._update_selected)
 
         # GUI elements to toggle inclusion in this CAOM observation.
         toggle_inc = QCheckBox()
@@ -252,7 +253,24 @@ class CheckMetadataGUI(QWidget):
                                   self._inc_col
                                   )
 
-        self._next_file += 1
+        if self._next_file == self._first_file:
+            standard.setStyleSheet("background-color:#d6d6d6;")
+            data_type.setStyleSheet("background-color:#d6d6d6;")
+            file_type.setStyleSheet("background-color:#d6d6d6;")
+            product_type.setStyleSheet("background-color:#d6d6d6;")
+            toggle_meta.setStyleSheet("background-color:#d6d6d6;")
+            toggle_inc.setStyleSheet("background-color:#d6d6d6;")
+            standard.currentIndexChanged.connect(self._set_all_in_column)
+            data_type.currentIndexChanged.connect(self._set_all_in_column)
+            file_type.currentIndexChanged.connect(self._set_all_in_column)
+            product_type.currentIndexChanged.connect(self._set_all_in_column)
+            toggle_meta.stateChanged.connect(self._set_all_in_column)
+            toggle_inc.stateChanged.connect(self._set_all_in_column)
+            self._next_file += 1
+            self._add_file_row(new_file)
+        else:
+            toggle_meta.stateChanged.connect(self._update_selected)
+            self._next_file += 1
 
     def _del_file_row(self):
         """
@@ -317,6 +335,34 @@ class CheckMetadataGUI(QWidget):
             if inc.widget().checkState() != Qt.Checked:
                 self.master.hlsp.remove_filetype(ft_obj)
 
+    def _set_all_in_column(self):
+        """
+        Using the top row of selection widgets, propegate a choice in any of
+        these to all widgets below in the same column.
+        """
+
+        # Get the position of the signal sender.
+        sender = self.sender()
+        ind = self.files_grid.indexOf(sender)
+        pos = self.files_grid.getItemPosition(ind)
+        col = pos[1]
+
+        # Get the new selected value.
+        new = self.files_grid.itemAtPosition(self._first_file, col).widget()
+        if type(new) == QComboBox:
+            new_val = new.currentText()
+        elif type(new) == QCheckBox:
+            new_val = new.checkState()
+
+        # Update all widgets below with the new selected value.
+        for row in range(self._first_file, self._next_file):
+            current = self.files_grid.itemAtPosition(row, col).widget()
+
+            if type(new) == QComboBox:
+                current.setCurrentText(new_val)
+            elif type(new) == QCheckBox:
+                current.setChecked(new_val)
+
     def _set_data_types(self):
         """
         Upon changing a row's 'Standard' value, update the 'Data Type' value
@@ -324,14 +370,8 @@ class CheckMetadataGUI(QWidget):
         observation, so changing any standard value will update all data types.
         """
 
-        # Identify the position of the signal sender.
-        sender = self.sender()
-        ind = self.files_grid.indexOf(sender)
-        pos = self.files_grid.getItemPosition(ind)
-        row = pos[0]
-
         # Get the new standard value.
-        std = self.files_grid.itemAtPosition(row,
+        std = self.files_grid.itemAtPosition(self._first_file,
                                              self._standard_col
                                              )
         dt = std.widget().currentText().split("_")[0]
@@ -438,6 +478,8 @@ class CheckMetadataGUI(QWidget):
         the selected data files.
         """
 
+        self.update_hlsp_file()
+
         # Launch check_metadata_format with the current contents of the parent
         # HLSPFile as a dict.
         check_metadata_format(self.master.hlsp.as_dict(), is_file=False)
@@ -478,12 +520,14 @@ class CheckMetadataGUI(QWidget):
         """
 
         # Read the current GUI contents.
-        for n in range(self._first_file, self._next_file):
+        for n in range(self._first_file + 1, self._next_file):
             self._read_file_row(n)
 
         # Save the HLSPFile if selected.
         if save:
-            self.master.hlsp.save()
+            name = self.master.hlsp.hlsp_name
+            auto = self.master.auto_save
+            self.master.hlsp.save(filename="".join([name, auto]))
 
 # --------------------
 

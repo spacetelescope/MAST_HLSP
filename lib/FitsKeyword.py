@@ -29,11 +29,12 @@ class FitsKeyword(object):
         self.fits_keyword = kw
         self.alternates = []
         self.caom_keyword = "None"
-        self.caom_status = "required"
+        self.caom_status = "recommended"
         self.default = "None"
         self.header = 0
         self.hlsp_status = "required"
         self.multiple = False
+        self.updated = False
         self.xml_parent = "metadataList"
         if parameters:
             [setattr(self, key, val) for key, val in parameters.items()]
@@ -187,7 +188,7 @@ class FitsKeyword(object):
 
             # Skip the 'fits_keyword' attribute, since that will be the
             # key for the final dict product.
-            if key == "fits_keyword":
+            if key == "fits_keyword" or key == "updated":
                 continue
 
             # Add the key / val pair to the dict product.
@@ -235,6 +236,7 @@ class FitsKeyword(object):
             try:
                 current = getattr(self, key)
             except AttributeError:
+                print("Adding new attribute: {0}={1}".format(key, val))
                 setattr(self, key, val)
                 updated = True
                 continue
@@ -244,11 +246,14 @@ class FitsKeyword(object):
             if str(current) == str(val):
                 continue
             else:
+                print("Updating {0}: old={1} new={2}".format(key,
+                                                             str(current),
+                                                             str(val)))
                 setattr(self, key, val)
                 updated = True
 
+        self.updated = updated
         return updated
-
 
 # --------------------
 
@@ -281,8 +286,24 @@ class FitsKeywordList(object):
                 )
 
     def add(self, hk):
-        if isinstance(hk, FitsKeyword):
-            self.keywords.append(hk)
+        try:
+            key = hk.fits_keyword
+        except AttributeError:
+            err = "FitsKeywordList only accepts FitsKeyword objects."
+            raise TypeError(err)
+
+        existing = self.find_fits(key)
+        if existing:
+            self.keywords.remove(existing)
+
+        self.keywords.append(hk)
+
+    @classmethod
+    def empty_list(cls):
+        pt = None
+        st = None
+        kd = {}
+        return cls(pt, st, kd)
 
     def find_caom(self, target_keyword):
         for member in self.keywords:
@@ -290,11 +311,41 @@ class FitsKeywordList(object):
                 return member
         return None
 
+    def find_differences(self, another_list):
+        new_list = FitsKeywordList.empty_list()
+
+        for kw in self.keywords:
+            existing = another_list.find_fits(kw.fits_keyword)
+            if existing:
+                d = dict(existing.as_dict())[existing.fits_keyword]
+                copy = FitsKeyword(existing.fits_keyword, parameters=d)
+                updated = copy.update(kw.as_dict()[kw.fits_keyword])
+                if kw.as_dict() != existing.as_dict():
+                    new_list.add(kw)
+                else:
+                    print("{0} is the same".format(kw.fits_keyword))
+            else:
+                new_list.add(kw)
+
+        return new_list
+
     def find_fits(self, target_keyword):
         for member in self.keywords:
             if member.fits_keyword == target_keyword:
                 return member
         return None
+
+    def is_empty(self):
+        if len(self.keywords) == 0:
+            return True
+        else:
+            return False
+
+    def remove(self, fits_kw):
+
+        existing = self.find_fits(fits_kw)
+        if existing:
+            self.keywords.remove(existing)
 
     def to_dataframe(self):
         row_list = []
@@ -306,6 +357,19 @@ class FitsKeywordList(object):
 
         pdframe = pd.concat(row_list)
         return pdframe
+
+    def update_list(self, another_list):
+
+        if another_list.is_empty():
+            return
+
+        for kw in another_list:
+            existing = self.find_fits(kw.fits_keyword)
+            if existing:
+                new_params = kw.as_dict()[kw.fits_keyword]
+                existing.update(new_params)
+            else:
+                self.add(kw)
 
 # --------------------
 

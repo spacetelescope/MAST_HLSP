@@ -61,6 +61,9 @@ class HLSPGUI(QTabWidget):
         # Begin with an empty HLSPFile object in memory.
         self.hlsp = HLSPFile()
 
+        # Set up autosave variable to pass to child GUIs.
+        self.auto_save = "_autosave.hlsp"
+
         # Elements to launch loading a pre-existing .hlsp file.
         load_button = GreyButton("Load an .hlsp File", 70, min_width=150)
         load_button.clicked.connect(self.load_hlsp)

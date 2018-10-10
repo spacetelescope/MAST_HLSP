@@ -67,7 +67,7 @@ class UpdateKeywordsGUI(QWidget):
         super().__init__(parent)
 
         # Set necesssary attributes.
-        self._keywords = []
+        self._keywords = parent.hlsp.fits_keywords()
         self.master = parent
         cwd = os.getcwd()
         self.templates_dir = "/".join([cwd, TEMPLATES_DIR])
@@ -92,11 +92,12 @@ class UpdateKeywordsGUI(QWidget):
         default_val_label.setFont(bold)
 
         # Set up column order variables.
-        self._standard_fits_col = 0
-        self._caom_keyword_col = 1
-        self._alternate_fits_col = 2
-        self._header_num_col = 3
-        self._default_val_col = 4
+        self._select_col = 0
+        self._standard_fits_col = 1
+        self._caom_keyword_col = 2
+        self._alternate_fits_col = 3
+        self._header_num_col = 4
+        self._default_val_col = 5
 
         # Set up row pointers.
         label_row = 1
@@ -128,12 +129,15 @@ class UpdateKeywordsGUI(QWidget):
         # GUI elements for a button to add additional keyword rows.
         self.new_keyword_button = gb.GreyButton("+ add a new keyword", 30)
         self.new_keyword_button.clicked.connect(self._add_keyword_row)
+        self.remove_selected_button = gb.RedButton("- remove selected", 30)
+        self.remove_selected_button.clicked.connect(self._remove_selected)
 
         # Construct the overall layout.
         self.meta_grid = QGridLayout()
         self.meta_grid.addWidget(update_button, 0, 0)
         self.meta_grid.addLayout(self.display_grid, 1, 0)
         self.meta_grid.addWidget(self.new_keyword_button, 2, 0)
+        self.meta_grid.addWidget(self.remove_selected_button, 3, 0)
 
         # Display the GUI.
         self.setLayout(self.meta_grid)
@@ -150,6 +154,8 @@ class UpdateKeywordsGUI(QWidget):
 
         # GUI elements to edit alternate keywords, header numbers, and default
         # values.
+        select_box = QCheckBox()
+        select_box.setChecked(False)
         alt_fits_kw = QLineEdit()
         hdr_num = QLineEdit()
         def_val = QLineEdit()
@@ -157,6 +163,8 @@ class UpdateKeywordsGUI(QWidget):
         # If a FitsKeyword object was provided, populate the row with these
         # values.
         if kw_obj:
+            if kw_obj.caom_status == "required":
+                select_box.setEnabled(False)
             fits_kw = QLabel()
             fits_kw.setText(kw_obj.fits_keyword)
             caom_kw = QLabel()
@@ -175,6 +183,10 @@ class UpdateKeywordsGUI(QWidget):
             caom_kw = CAOMKeywordBox()
 
         # Construct the row in the GUI.
+        self.display_grid.addWidget(select_box,
+                                    self._next_keyword,
+                                    self._select_col
+                                    )
         self.display_grid.addWidget(fits_kw,
                                     self._next_keyword,
                                     self._standard_fits_col
@@ -226,7 +238,7 @@ class UpdateKeywordsGUI(QWidget):
         self.clear_keywords()
 
         # Make a new row for each entry in self._keywords.
-        for kw in self._keywords:
+        for kw in self._keywords.keywords:
             self._add_keyword_row(kw_obj=kw)
 
     def _find_in_keywords(self, target_kw):
@@ -236,7 +248,7 @@ class UpdateKeywordsGUI(QWidget):
 
         # Search self._keywords for target_kw and return the FitsKeyword
         # object if found.
-        for kw_obj in self._keywords:
+        for kw_obj in self._keywords.keywords:
             if kw_obj.fits_keyword.upper() == target_kw:
                 return kw_obj
 
@@ -283,7 +295,7 @@ class UpdateKeywordsGUI(QWidget):
         # add these to self._keywords.
         for key, info in keywords.items():
             kw = FitsKeyword(key, parameters=info)
-            self._keywords.append(kw)
+            self._keywords.add(kw)
 
     def _read_keyword_row(self, row_num):
         """
@@ -328,14 +340,36 @@ class UpdateKeywordsGUI(QWidget):
 
         # Read the remaining fields.
         row_info_dict["header"] = hdr_num.widget().text()
-        row_info_dict["default"] = default.widget().text()
-        if row_info_dict["default"] == "":
+
+        def_text = default.widget().text()
+
+        if (def_text == "" or def_text == "None"):
             row_info_dict["default"] = None
+        else:
+            row_info_dict["default"] = def_text
 
         this_kw = std_fits.widget().text().upper()
 
         # Return the keyword value and results dictionary.
         return this_kw, row_info_dict
+
+    def _remove_selected(self):
+        """
+        Find any selected keywords in the display area and remove them from
+        self._keywords, then reset the display.
+        """
+
+        for n in range(self._first_keyword, self._next_keyword):
+
+            selected = self.display_grid.itemAtPosition(n, self._select_col)
+            kw = self.display_grid.itemAtPosition(n, self._standard_fits_col)
+
+            if selected.widget().isChecked():
+
+                target = self._find_in_keywords(kw.widget().text())
+                self._keywords.remove(target)
+
+        self._display_current_keywords()
 
     def clear_keywords(self):
         """
@@ -354,6 +388,8 @@ class UpdateKeywordsGUI(QWidget):
         """
 
         self._keywords = self.master.hlsp.fits_keywords()
+        if self._keywords.is_empty():
+            self.master.hlsp._get_standard_fits_keywords()
         self._display_current_keywords()
 
     def update_hlsp_file(self):
@@ -361,29 +397,35 @@ class UpdateKeywordsGUI(QWidget):
         Update the parent HLSPFile with the values currently in the GUI.
         """
 
+        print("Updating HLSPFile from UpdateKeywordsGUI")
+        current_keywords = self.master.hlsp.fits_keywords()
+
         # Read each keyword row in the display area.
         for row in range(self._first_keyword, self._next_keyword):
             kw, row_info = self._read_keyword_row(row)
 
             # Look for this keyword in self._keywords.
-            existing_kw = self._find_in_keywords(kw)
+            existing_kw = current_keywords.find_fits(kw)
 
             # If already in self._keywords, try updating the FitsKeyword
             # object.
             if existing_kw:
                 update_flag = existing_kw.update(row_info)
+                if update_flag:
+                    print("GUI updated {0}".format(existing_kw))
 
+                """
                 # If it updates an existing FitsKeyword, add it to the
                 # HLSPFile.
                 if update_flag:
                     self.master.hlsp.add_keyword_update(existing_kw)
+                """
 
             # If it is not already in self._keywords, create a new FitsKeyword
             # object and add it to self._keywords and the HLSPFile.
             else:
                 new_kw = FitsKeyword(kw, parameters=row_info)
-                self._keywords.append(new_kw)
-                self.master.hlsp.add_keyword_update(new_kw)
+                self.master.hlsp.add_fits_keyword(new_kw)
 
         # Update the ingest step tracker.
         self.master.hlsp.ingest["03_fits_keywords_set"] = True

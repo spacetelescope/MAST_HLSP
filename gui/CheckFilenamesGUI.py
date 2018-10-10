@@ -183,9 +183,13 @@ class CheckFilenamesGUI(QWidget):
         self.approved = (not self.approved)
         self._update_button_state()
 
+        # Get the file name parameters from the parent GUI.
+        x, current_name = self.current_input()
+        auto = self.master.auto_save
+
         # Update the HLSPFile object accordingly.
         self.master.hlsp.ingest["00_filenames_checked"] = self.approved
-        self.master.hlsp.save()
+        self.master.hlsp.save(filename="".join([current_name, auto]))
 
     def toggle_run(self):
         """
