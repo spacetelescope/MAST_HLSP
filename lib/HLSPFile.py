@@ -317,9 +317,12 @@ class HLSPFile(object):
         found = False
         updated = False
 
+        # If standard is set, add a copy of this FitsKeyword object to the
+        # _standard_keywords list.
         if standard:
             print("HLSPFile is adding standard keywords")
-            self._standard_keywords.add(keyword_obj)
+            std_kw = keyword_obj.copy()
+            self._standard_keywords.add(std_kw)
 
         self._fits_keywords.add(keyword_obj)
 
@@ -502,10 +505,13 @@ class HLSPFile(object):
                     as_obj = FileType(name, param_dict=parameters)
                     self.add_filetype(as_obj)
             elif attr == "keyword_updates":
+                self._fits_keywords = FitsKeywordList.empty_list()
+                self._standard_keywords = FitsKeywordList.empty_list()
+                self._get_standard_fits_keywords()
                 for kw in val:
                     keyword, parameters = self._split_name_from_params(kw)
                     as_obj = FitsKeyword(keyword, parameters=parameters)
-                    self.add_keyword_update(as_obj)
+                    self.add_fits_keyword(as_obj)
 
             # Otherwise just set the attribute.
             else:
@@ -558,6 +564,16 @@ class HLSPFile(object):
                 self.file_types.remove(ft)
                 break
 
+    def reset_fits_keywords(self):
+        """
+        Empty the internal FitsKeywordList objects, and read the standard
+        FITS keywords back in.
+        """
+
+        self._fits_keywords = FitsKeywordList.empty_list()
+        self._standard_keywords = FitsKeywordList.empty_list()
+        self._get_standard_fits_keywords()
+
     def save(self, filename=None):
         """
         Write the current contents of self to a YAML-formatted .hlsp file.
@@ -565,6 +581,9 @@ class HLSPFile(object):
         :param filename:  Designate a file name to use for saving (optional).
         :type filename:  str
         """
+
+        print("<<<HLSPFile.save self._standard_keywords>>>")
+        [print(kw) for kw in self._standard_keywords.keywords]
 
         # Make sure a provided file name has an .hlsp extension.
         if filename:

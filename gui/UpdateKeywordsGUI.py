@@ -74,8 +74,11 @@ class UpdateKeywordsGUI(QWidget):
         self.standard_template = None
 
         # GUI elements to retrieve information from the current HLSPFile.
-        update_button = gb.GreenButton("Update from current .hlsp file", 70)
+        update_button = gb.GreenButton("Refresh Keywords", 70)
         update_button.clicked.connect(self.load_current_fits)
+
+        reset_button = gb.RedButton("Reset to Default Keywords", 70)
+        reset_button.clicked.connect(self.reset_to_defaults)
 
         # GUI elements for column headers in the display area.
         bold = QFont()
@@ -135,9 +138,10 @@ class UpdateKeywordsGUI(QWidget):
         # Construct the overall layout.
         self.meta_grid = QGridLayout()
         self.meta_grid.addWidget(update_button, 0, 0)
-        self.meta_grid.addLayout(self.display_grid, 1, 0)
+        self.meta_grid.addWidget(reset_button, 0, 1)
+        self.meta_grid.addLayout(self.display_grid, 1, 0, 1, -1)
         self.meta_grid.addWidget(self.new_keyword_button, 2, 0)
-        self.meta_grid.addWidget(self.remove_selected_button, 3, 0)
+        self.meta_grid.addWidget(self.remove_selected_button, 2, 1)
 
         # Display the GUI.
         self.setLayout(self.meta_grid)
@@ -238,7 +242,7 @@ class UpdateKeywordsGUI(QWidget):
         self.clear_keywords()
 
         # Make a new row for each entry in self._keywords.
-        for kw in self._keywords.keywords:
+        for kw in self.master.hlsp.fits_keywords().keywords:
             self._add_keyword_row(kw_obj=kw)
 
     def _find_in_keywords(self, target_kw):
@@ -390,6 +394,14 @@ class UpdateKeywordsGUI(QWidget):
         self._keywords = self.master.hlsp.fits_keywords()
         if self._keywords.is_empty():
             self.master.hlsp._get_standard_fits_keywords()
+        self._display_current_keywords()
+
+    def reset_to_defaults(self):
+        """
+        Revert the HLSPFile object to standard default FITS keywords.
+        """
+
+        self.master.hlsp.reset_fits_keywords()
         self._display_current_keywords()
 
     def update_hlsp_file(self):

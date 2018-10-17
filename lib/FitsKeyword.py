@@ -12,6 +12,7 @@ neatly-packaged objects.
     to add a new object, find an object, or sort the list.
 """
 
+from copy import deepcopy
 from lxml import etree
 import pandas as pd
 
@@ -214,6 +215,19 @@ class FitsKeyword(object):
         else:
             return True
 
+    def copy(self):
+
+        name = str(self.fits_keyword)
+        new_dict = {}
+
+        for key, val in self.__dict__.items():
+            if key == "fits_keyword":
+                continue
+            else:
+                new_dict[key] = deepcopy(val)
+
+        return FitsKeyword(name, parameters=new_dict)
+
     def update(self, new_dict):
         """
         Accepts a dictionary of {attribute: vlaue} pairs and attempts to update
@@ -261,7 +275,7 @@ class FitsKeyword(object):
 class FitsKeywordList(object):
     """
     Create a list of FitsKeyword objects and provide methods for list
-        manipulation.
+    manipulation.
     """
 
     def __init__(self, product_type, standard_type, keywords_dict):
@@ -286,12 +300,23 @@ class FitsKeywordList(object):
                 )
 
     def add(self, hk):
+        """
+        Add a FitsKeyword object to the self.keywords list.  If the list
+        already contains an object with the same FITS keyword remove the
+        existing one before adding.
+
+        :param hk:  The FitsKeyword object to add to self.keywords.
+        :type hk:  FitsKeyword
+        """
+
+        # Make sure hk is a FitsKeyword object.
         try:
             key = hk.fits_keyword
         except AttributeError:
             err = "FitsKeywordList only accepts FitsKeyword objects."
             raise TypeError(err)
 
+        # Look for an existing FitsKeyword and remove it.
         existing = self.find_fits(key)
         if existing:
             self.keywords.remove(existing)
@@ -300,36 +325,63 @@ class FitsKeywordList(object):
 
     @classmethod
     def empty_list(cls):
+        """
+        This offers an alternate constructor method for creating an empty
+        FitsKeywordList.  This is mostly used for GUI operations.
+        """
+
         pt = None
         st = None
         kd = {}
         return cls(pt, st, kd)
 
     def find_caom(self, target_keyword):
+        """
+        Search the list for a given CAOM keyword and return a matching
+        FitsKeyword object.
+
+        :param target_keyword:  The CAOM keyword to search for.
+        :type target_keyword:  str
+        """
+
         for member in self.keywords:
             if member.caom_keyword == target_keyword:
                 return member
         return None
 
     def find_differences(self, another_list):
+        """
+        Compare the contents of self to another FitsKeywordList and return
+        a new FitsKeywordList of the differences.
+
+        :param another_list:  The other list of keywords to compare to.
+        :type another_list:  FitsKeywordList
+        """
+
+        # Begin a new FitsKeywordList.
         new_list = FitsKeywordList.empty_list()
 
+        # Iterate through self.keywords and compare to another_list.  If it
+        # does not match content from another_list, add it to the new_list.
         for kw in self.keywords:
             existing = another_list.find_fits(kw.fits_keyword)
             if existing:
-                d = dict(existing.as_dict())[existing.fits_keyword]
-                copy = FitsKeyword(existing.fits_keyword, parameters=d)
-                updated = copy.update(kw.as_dict()[kw.fits_keyword])
                 if kw.as_dict() != existing.as_dict():
                     new_list.add(kw)
-                else:
-                    print("{0} is the same".format(kw.fits_keyword))
             else:
                 new_list.add(kw)
 
         return new_list
 
     def find_fits(self, target_keyword):
+        """
+        Search the list for a given FITS keyword and return the matching
+        FitsKeyword object.
+
+        :param target_keyword:  The FITS keyword to search for.
+        :type target_keyword:  str
+        """
+
         for member in self.keywords:
             if member.fits_keyword == target_keyword:
                 return member

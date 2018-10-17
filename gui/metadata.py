@@ -185,7 +185,7 @@ class CheckMetadataGUI(QWidget):
 
         # GUI element to display file ending information.
         if self._next_file == self._first_file:
-            ft = QLabel("UPDATE ALL FILES")
+            ft = QLabel("(UPDATE ALL FILES)")
         else:
             ft = QLabel(new_file.ftype)
 
