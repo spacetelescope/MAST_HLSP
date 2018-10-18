@@ -320,7 +320,6 @@ class HLSPFile(object):
         # If standard is set, add a copy of this FitsKeyword object to the
         # _standard_keywords list.
         if standard:
-            print("HLSPFile is adding standard keywords")
             std_kw = keyword_obj.copy()
             self._standard_keywords.add(std_kw)
 
