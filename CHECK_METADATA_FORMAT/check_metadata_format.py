@@ -17,7 +17,7 @@ from apply_metadata_check import apply_metadata_check
 
 sys.path.append("../")
 from bin.new_logger import new_logger
-from lib import FitsKeyword
+from lib.FitsKeyword import FitsKeyword, FitsKeywordList
 
 # --------------------
 
@@ -59,7 +59,9 @@ def check_metadata_format(paramfile, is_file=True):
     # Read in all the YAML standard template files once to pass along.
 #    templates_to_read = ["TEMPLATES/timeseries_mast.yml",
 #                         "TEMPLATES/timeseries_k2.yml"]
-    templates_to_read = ["TEMPLATES/timeseries_k2.yml"]
+    templates_to_read = ["TEMPLATES/timeseries_k2.yml",
+                         # "TEMPLATES/image_hst.yml"
+                         ]
 
     # Create FitsKeywordList object for each standard in all_standards array.
     # These are used to define the expected keywords for a given template
@@ -73,7 +75,7 @@ def check_metadata_format(paramfile, is_file=True):
             with open(ttr, 'r') as istream:
                 yaml_data = yaml.load(istream)
                 all_standards = numpy.append(all_standards,
-                                             FitsKeyword.FitsKeywordList(
+                                             FitsKeywordList(
                                                  yaml_data['PRODUCT'],
                                                  yaml_data['STANDARD'],
                                                  yaml_data['KEYWORDS']))
@@ -110,9 +112,25 @@ def check_metadata_format(paramfile, is_file=True):
         if ending[this_key]['RunCheck']:
             endings_to_check.append(ending)
 
+    # Pull any FITS keyword updates out of paramfile.  (this can be either the
+    # file created by precheck_data_format.py or the HLSPFile provided by
+    # running through the GUI)
+    try:
+        kw_updates = param_data['KeywordUpdates']
+    except KeyError:
+        kw_updates = None
+
+    if isinstance(kw_updates, list):
+        new_list = FitsKeywordList.empty_list()
+        new_list.fill_from_list(kw_updates)
+        kw_updates = new_list
+
     # Apply the metadata correction on the requested file endings.
-    log_message_counts = apply_metadata_check(file_base_dir, endings_to_check,
-                                              all_standards)
+    log_message_counts = apply_metadata_check(file_base_dir,
+                                              endings_to_check,
+                                              all_standards,
+                                              kw_updates
+                                              )
 
     metadata_log.info('Finished at %s', datetime.datetime.now().isoformat())
 

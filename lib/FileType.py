@@ -279,6 +279,29 @@ class FileType(object):
 
         return {key: params}
 
+    @classmethod
+    def from_list_item(cls, dict_from_list):
+        """
+        The 'FileTypes' section in an .hlsp file is populated by dictionaries
+        with a single key and a dictionary of parameters as the corresponding
+        value.  We want to natively create a FileType using this structure
+        and take the burden off GUI or other supporting code.
+
+        :param dict_from_list:  A dictionary describing a single file type.
+                                {ft:{'include':True, 'standard':None, ...}}
+        :type dict_from_list:  dict
+        """
+
+        # Should only be a single filetype:values pair.
+        ft, info = dict_from_list.popitem()
+
+        # Expecting ft to be a string (file type name) and info to be a
+        # dictionary containing parameters.
+        if (isinstance(ft, str) and isinstance(info, dict)):
+            return cls(ft, param_dict=info)
+        else:
+            return None
+
     @property
     def caom_product_type(self):
         return self._caom_product_type

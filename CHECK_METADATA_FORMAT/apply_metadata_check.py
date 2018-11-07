@@ -9,8 +9,12 @@ import logging
 import os
 from astropy.io import fits
 import numpy
+import sys
 
 from get_filetypes_keys import get_filetypes_keys
+
+sys.path.append("../")
+from lib.FitsKeyword import FitsKeyword, FitsKeywordList
 
 # --------------------
 
@@ -355,7 +359,8 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
 # --------------------
 
 
-def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
+def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
+                         keyword_updates):
     """
     Main module that applies metadata standards to files.
 
@@ -401,10 +406,15 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards):
                                 x.standard_type == standard)]
                         if len(all_standard_index) == 1:
                             fitsfile = os.path.join(froot, this_file)
+                            kw_list = all_standards[all_standard_index[0]]
+                            if keyword_updates:
+                                kw_list.update_list(keyword_updates)
                             with fits.open(fitsfile, mode="readonly") as hdulist:
                                 apply_check(fitsfile,
-                                            all_standards[all_standard_index[0]],
-                                            hdulist, log_message_counts)
+                                            kw_list,
+                                            hdulist,
+                                            log_message_counts
+                                            )
                         else:
                             raise ValueError("No template standard found "
                                              "for this combination of product "

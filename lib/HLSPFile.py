@@ -172,8 +172,7 @@ class HLSPFile(object):
             print("_add_fits_keyword skipping {0}".format(
                 keyword_obj.fits_keyword))
 
-    @staticmethod
-    def _add_xml_value_pairs(parent, parameters):
+    def _add_xml_value_pairs(self, parent, parameters):
         """
         Add a dictionary of keyword / value pairs to an lxml etree.
 
@@ -196,13 +195,15 @@ class HLSPFile(object):
         return parent
 
     def _get_keyword_updates(self):
+        """
+        Compare the _fits_keywords list to the _standard_keywords list to find
+        any differences and add these keywords to the keyword_updates list.
+        """
 
-        self.keyword_updates = []
-        standard_kws = [x.fits_keyword for x in self._standard_keywords]
-
-        for kw in self._fits_keywords:
-            if kw.fits_keyword in standard_kws:
-                pass
+        # Use the FitsKeywordList.diff() method to compare the two lists and
+        # update self.keyword_updates.
+        updates = self._fits_keywords.diff(self._standard_keywords)
+        self.keyword_updates = updates
 
     def _get_standard_fits_keywords(self):
         """
@@ -313,10 +314,6 @@ class HLSPFile(object):
             err = "HLSPFile expected a <FitsKeyword> type object"
             raise TypeError(err)
 
-        # Assume the given FitsKeyword is already in self._fits_keywords.
-        found = False
-        updated = False
-
         # If standard is set, add a copy of this FitsKeyword object to the
         # _standard_keywords list.
         if standard:
@@ -393,10 +390,7 @@ class HLSPFile(object):
         """
 
         file_formatted_dict = {}
-        print(self._fits_keywords)
-        print(self._standard_keywords)
-        self.keyword_updates = self._fits_keywords.find_differences(
-            self._standard_keywords)
+        self._get_keyword_updates()
 
         # Iterate through all current attributes.
         for key, val in self.__dict__.items():
@@ -500,16 +494,12 @@ class HLSPFile(object):
             # class methods to add the appropriate objects to self.
             if attr == "file_types":
                 for ftype in val:
-                    name, parameters = self._split_name_from_params(ftype)
-                    as_obj = FileType(name, param_dict=parameters)
+                    as_obj = FileType.from_list_item(ftype)
                     self.add_filetype(as_obj)
             elif attr == "keyword_updates":
-                self._fits_keywords = FitsKeywordList.empty_list()
-                self._standard_keywords = FitsKeywordList.empty_list()
-                self._get_standard_fits_keywords()
+                self.reset_fits_keywords()
                 for kw in val:
-                    keyword, parameters = self._split_name_from_params(kw)
-                    as_obj = FitsKeyword(keyword, parameters=parameters)
+                    as_obj = FitsKeyword.from_list_item(kw)
                     self.add_fits_keyword(as_obj)
 
             # Otherwise just set the attribute.
@@ -580,9 +570,6 @@ class HLSPFile(object):
         :param filename:  Designate a file name to use for saving (optional).
         :type filename:  str
         """
-
-        print("<<<HLSPFile.save self._standard_keywords>>>")
-        [print(kw) for kw in self._standard_keywords.keywords]
 
         # Make sure a provided file name has an .hlsp extension.
         if filename:

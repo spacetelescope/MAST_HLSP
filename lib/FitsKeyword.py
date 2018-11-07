@@ -151,6 +151,10 @@ class FitsKeyword(object):
         self._xml_parent = parent
 
     def _get_xml_dict(self):
+        """
+        Format a dictionary with information from self to be used in a CAOM XML
+        template file.
+        """
 
         xml_dict = {"source": "HEADER",
                     "headerName": self.header,
@@ -161,12 +165,23 @@ class FitsKeyword(object):
         return xml_dict
 
     def add_to_xml(self, xmltree):
+        """
+        Add self to an lxml element tree object that defines a CAOM XML
+        template file.
 
+        :param xmltree:  The current XML structure being created for CAOM.
+        :type xmltree:  lxml.etree
+        """
+
+        # Prepare the formatted dictionary containing current information from
+        # self.
         xml_dict = self._get_xml_dict()
 
+        # Find the designated XML parent and create a new subelement under it.
         parent = xmltree.find(self.xml_parent)
         new_entry = etree.SubElement(parent, self.caom_keyword)
 
+        # Add each item in the formatted dictionary to the subelement.
         for key, val in xml_dict.items():
             parameter = etree.SubElement(new_entry, key)
             parameter.text = str(val)
@@ -216,6 +231,10 @@ class FitsKeyword(object):
             return True
 
     def copy(self):
+        """
+        Return a separate copy of self.  Using this method can help to avoid
+        problems when trying to maintain multiple FitsKeywordLists.
+        """
 
         name = str(self.fits_keyword)
         new_dict = {}
@@ -228,6 +247,30 @@ class FitsKeyword(object):
 
         return FitsKeyword(name, parameters=new_dict)
 
+    @classmethod
+    def from_list_item(cls, dict_from_list):
+        """
+        Before it is translated to a FitsKeywordList, the 'KeywordUpdates'
+        section in an .hlsp file is populated by dictionaries with a single
+        key and a dictionary of parameters as the corresponding value.  We want
+        to natively create a FitsKeyword using this structure and take the
+        burden off GUI or other supporting code.
+
+        :param dict_from_list:  A dictionary describing a single FITS keyword.
+                                {kw:{'header':0, 'default':None, ...}}
+        :type dict_from_list:  dict
+        """
+
+        # Should only be a single keyword:values pair.
+        kw, info = dict_from_list.popitem()
+
+        # Expecting kw to be a string (keyword name) and info to be a
+        # dictionary containing parameters.
+        if (isinstance(kw, str) and isinstance(info, dict)):
+            return cls(kw, parameters=info)
+        else:
+            return None
+
     def update(self, new_dict):
         """
         Accepts a dictionary of {attribute: vlaue} pairs and attempts to update
@@ -235,22 +278,25 @@ class FitsKeyword(object):
         a new attribute is added.  Returns a boolean flag for whether any
         changes were made to self, which allows detection of any changes a
         user enters in a keyword-updating GUI.
+
+        :param new_dict:  A dictionary of new or updated attribute/value pairs.
+        :type new_dict:  dict
         """
 
-        # print("FitsKeyword.update({0})".format(new_dict))
+        # new_dict must be a dictionary.
         if not isinstance(new_dict, dict):
             raise TypeError("FitsKeyword.update() requires a dict obj arg!")
 
         # Initialize the boolean flag to False
         updated = False
+
         for key, val in new_dict.items():
 
-            # If 'key' is not currently an attribute, add it as a new attribute
+            # If key is not currently an attribute, add it as a new attribute
             # and set the 'updated' flag.
             try:
                 current = getattr(self, key)
             except AttributeError:
-                print("Adding new attribute: {0}={1}".format(key, val))
                 setattr(self, key, val)
                 updated = True
                 continue
@@ -260,9 +306,6 @@ class FitsKeyword(object):
             if str(current) == str(val):
                 continue
             else:
-                print("Updating {0}: old={1} new={2}".format(key,
-                                                             str(current),
-                                                             str(val)))
                 setattr(self, key, val)
                 updated = True
 
@@ -323,6 +366,30 @@ class FitsKeywordList(object):
 
         self.keywords.append(hk)
 
+    def diff(self, another_list):
+        """
+        Compare the contents of self to another FitsKeywordList and return
+        a new FitsKeywordList of the differences.
+
+        :param another_list:  The other list of keywords to compare to.
+        :type another_list:  FitsKeywordList
+        """
+
+        # Begin a new FitsKeywordList.
+        new_list = FitsKeywordList.empty_list()
+
+        # Iterate through self.keywords and compare to another_list.  If it
+        # does not match content from another_list, add it to the new_list.
+        for kw in self.keywords:
+            existing = another_list.find_fits(kw.fits_keyword)
+            if existing:
+                if kw.as_dict() != existing.as_dict():
+                    new_list.add(kw)
+            else:
+                new_list.add(kw)
+
+        return new_list
+
     @classmethod
     def empty_list(cls):
         """
@@ -349,30 +416,6 @@ class FitsKeywordList(object):
                 return member
         return None
 
-    def find_differences(self, another_list):
-        """
-        Compare the contents of self to another FitsKeywordList and return
-        a new FitsKeywordList of the differences.
-
-        :param another_list:  The other list of keywords to compare to.
-        :type another_list:  FitsKeywordList
-        """
-
-        # Begin a new FitsKeywordList.
-        new_list = FitsKeywordList.empty_list()
-
-        # Iterate through self.keywords and compare to another_list.  If it
-        # does not match content from another_list, add it to the new_list.
-        for kw in self.keywords:
-            existing = another_list.find_fits(kw.fits_keyword)
-            if existing:
-                if kw.as_dict() != existing.as_dict():
-                    new_list.add(kw)
-            else:
-                new_list.add(kw)
-
-        return new_list
-
     def find_fits(self, target_keyword):
         """
         Search the list for a given FITS keyword and return the matching
@@ -387,19 +430,57 @@ class FitsKeywordList(object):
                 return member
         return None
 
+    def fill_from_list(self, list_of_kw):
+        """
+        Populate self with newly-made FitsKeyword objects coming from an
+        unformatted list of dictionaries.  This is especially useful for
+        translating the 'KeywordUpdates' section of an .hlsp file into
+        a FitsKeywordList.
+
+        :param list_of_kw:  A list of dictionaries, each describing a new or
+                            updated FITS keyword.
+                            [{kw1:{'header':0, ...}}, {kw2:{'header':1, ...}}]
+        :type list_of_kw:  list
+        """
+
+        for kw in list_of_kw:
+
+            # Use the from_list_item constructor and add the new object to
+            # self.
+            as_obj = FitsKeyword.from_list_item(kw)
+            self.add(as_obj)
+
     def is_empty(self):
+        """
+        Return a boolean checking the length of the self.keywords list.
+        """
+
         if len(self.keywords) == 0:
             return True
         else:
             return False
 
     def remove(self, fits_kw):
+        """
+        Remove a FitsKeyword object from self.keywords if a match to fits_kw
+        is found.
 
+        :param fits_kw:  The FITS keyword to search for and remove if found.
+        :type fits_kw:  str
+        """
+
+        # find_fits will return the FitsKeyword object if a match is found.
         existing = self.find_fits(fits_kw)
+
         if existing:
             self.keywords.remove(existing)
 
     def to_dataframe(self):
+        """
+        Return a Pandas DataFrame containing the current contents of self.
+        """
+
+        # Collect individual DataFrames for each keyword.
         row_list = []
         for member in self.keywords:
             keys = member.as_dict().keys()
@@ -407,15 +488,38 @@ class FitsKeywordList(object):
             row = pd.DataFrame(data=[vals], columns=keys)
             row_list.append(row)
 
+        # Concat all individual DataFrames into one large frame.
         pdframe = pd.concat(row_list)
+
         return pdframe
 
     def update_list(self, another_list):
+        """
+        Update members of self.keywords using another FitsKeywordList.
 
+        :param another_list:  Additions or updates to incorporate into
+                              self.keywords.
+        :type another_list:  FitsKeywordList
+        """
+
+        # Make sure another_list has FitsKeywordList attributes.
+        try:
+            x = another_list.keywords
+        except AttributeError:
+            err = ("FitsKeywordList.update_list() requires another "
+                   "FitsKeywordList object (given {0})".format(
+                       type(another_list))
+                   )
+            raise TypeError(err)
+
+        # If an empty list was provided, do nothing.
         if another_list.is_empty():
             return
 
-        for kw in another_list:
+        # Look for each keyword in self.  If found, update the current
+        # FitsKeyword with the new one.  If not found, add the new
+        # FitsKeyword to self.
+        for kw in another_list.keywords:
             existing = self.find_fits(kw.fits_keyword)
             if existing:
                 new_params = kw.as_dict()[kw.fits_keyword]
