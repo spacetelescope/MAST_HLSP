@@ -246,7 +246,8 @@ class ValueParametersGUI(QWidget):
 
     def _read_row_to_hlsp(self, row_num):
         """
-        Read the current information from a keyword/value row in the GUI and add it to the parent's HLSPFile.
+        Read the current information from a keyword/value row in the GUI and
+        add it to the parent's HLSPFile.
 
         :param row_num:  The row to read information from.
         :type row_num:  int

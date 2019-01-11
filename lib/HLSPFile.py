@@ -1,8 +1,9 @@
 import bin.check_paths as cp
 from bin.read_yaml import read_yaml
-from FileType import FileType
-from FitsKeyword import FitsKeyword, FitsKeywordList
+from lib.FileType import FileType
+from lib.FitsKeyword import FitsKeyword, FitsKeywordList
 from lxml import etree
+import os
 import re
 import yaml
 
@@ -97,7 +98,15 @@ class HLSPFile(object):
                   template file for ingestion into CAOM.
     """
 
-    def __init__(self, path=None):
+    _check_file_names_dir = "CHECK_FILE_NAMES"
+    _check_file_names_out = "check_file_names_"
+    _check_metadata_format_dir = "CHECK_METADATA_FORMAT"
+    _check_metadata_format_out = "check_metadata_format_"
+    _precheck_metadata_format_out = "precheck_data_format_"
+    _file_ext = ".hlsp"
+    _root_dir = "MAST_HLSP"
+
+    def __init__(self, name=None, path=None):
         """
         Initialize a new HLSPFile object.
 
@@ -125,10 +134,14 @@ class HLSPFile(object):
         # Initialize primary attributes.
         self.file_paths = {"InputDir": "", "Output": ""}
         self.file_types = []
-        self.hlsp_name = "Blank"
+        self.hlsp_name = "blank"
         self.ingest = {s: False for s in steps}
         self.keyword_updates = []
         self.unique_parameters = {}
+
+        if name:
+            self.hlsp_name = name
+            self._update_stage_paths()
 
         # If path is provided, try to load the file contents into self.
         if path:
@@ -194,6 +207,24 @@ class HLSPFile(object):
 
         return parent
 
+    def _construct_step_file(self, step_dir):
+
+        fname = "".join([self.hlsp_name.lower(), self._file_ext])
+        full_path = os.path.join(os.getcwd(), step_dir, fname)
+        return full_path
+
+    @staticmethod
+    def _format_caller(call_file):
+
+        if isinstance(call_file, str):
+            caller = call_file.split("/")[-1]
+            caller = "".join([caller.split(".")[0], "_"])
+            print("caller = {0}".format(caller))
+        else:
+            caller = None
+
+        return caller
+
     def _get_keyword_updates(self):
         """
         Compare the _fits_keywords list to the _standard_keywords list to find
@@ -256,6 +287,19 @@ class HLSPFile(object):
 
         return value_dict
 
+    def _match_caller(self, caller):
+
+        if caller == self._check_file_names_out:
+            path = self._cfn_path
+        elif caller == self._precheck_metadata_format_out:
+            path = self._pcdf_path
+        elif caller == self._check_metadata_format_out:
+            path = self._cmd_path
+        else:
+            path = None
+
+        return path
+
     @staticmethod
     def _split_name_from_params(entry):
         """
@@ -274,6 +318,52 @@ class HLSPFile(object):
             return None
         else:
             return name[0], entry[name[0]]
+
+    def _update_stage_paths(self):
+        """
+        Construct file paths for resulting files from various stages of HLSP
+        ingestion.
+        """
+
+        # Get the expanded path for the 'MAST_HLSP' directory.
+        cwd = os.getcwd()
+        self._root = os.path.join(cwd.split(self._root_dir, 1)[0],
+                                  self._root_dir,
+                                  )
+
+        # Default filename should be in the root directory named hlsp_name.hlsp
+        default_name = "".join([self.hlsp_name, self._file_ext])
+        self._default_path = os.path.join(self._root, default_name)
+
+        # Construct file path for check_file_names.py results.
+        cfn_name = "".join([self._check_file_names_out,
+                            self.hlsp_name,
+                            self._file_ext
+                            ])
+        self._cfn_path = os.path.join(self._root,
+                                      self._check_file_names_dir,
+                                      cfn_name,
+                                      )
+
+        # Construct file path for precheck_data_format.py reults.
+        pcdf_name = "".join([self._precheck_metadata_format_out,
+                             self.hlsp_name,
+                             self._file_ext
+                             ])
+        self._pcdf_path = os.path.join(self._root,
+                                       self._check_metadata_format_dir,
+                                       pcdf_name
+                                       )
+
+        # Construct file path for check_metadata_format.py results.
+        cmd_name = "".join([self._check_metadata_format_out,
+                            self.hlsp_name,
+                            self._file_ext
+                            ])
+        self._cmd_path = os.path.join(self._root,
+                                      self._check_metadata_format_dir,
+                                      cmd_name,
+                                      )
 
     def add_filetype(self, new_filetype):
         """
@@ -418,6 +508,11 @@ class HLSPFile(object):
 
         return file_formatted_dict
 
+    def check_ingest_step(self, step_num):
+
+        ind = sorted(self.ingest.keys)[step_num]
+        return self.ingest[ind]
+
     def find_file_type(self, target_ending):
         """
         Find a given file ending in the file_types list.
@@ -434,6 +529,23 @@ class HLSPFile(object):
 
         return None
 
+    def find_log_file(self, call_file):
+
+        caller = self._format_caller(call_file)
+        caller = self._match_caller(caller)
+
+        if caller:
+            path = os.path.dirname(self._match_caller(caller))
+            filename = ".".join([caller[:-1], "log"])
+            filepath = os.path.join(path, filename)
+        else:
+            filepath = None
+
+        if not os.path.isfile(filepath):
+            filepath = None
+
+        return filepath
+
     def fits_keywords(self):
         """
         Combine the contents of the designated FITS template and any keyword
@@ -442,6 +554,32 @@ class HLSPFile(object):
         """
 
         return self._fits_keywords
+
+    def get_output_filepath(self, call_file=None):
+        """
+        Get an output file path for saving an HLSPFile to disk.  Either base
+        the file path on the calling file or return the default path.
+
+        :param call_file:  The __file__ of the function calling this method.
+        :type call_file:  str
+        """
+
+        # Trigger the file path construction method.
+        self._update_stage_paths()
+
+        # If call_file is provided, we want to exclude the '.py' extension
+        # for comparison.
+        caller = self._format_caller(call_file)
+
+        # If the caller matches a known method subdirectory, provide the
+        # appropriate file path.  Otherwise, provide the default file path.
+        if caller:
+            path = self._match_caller(caller)
+        else:
+            path = self._default_path
+
+        print("path = {0}".format(path))
+        return path
 
     def in_hlsp_format(self):
         """
@@ -506,6 +644,8 @@ class HLSPFile(object):
             else:
                 setattr(self, attr, val)
 
+        self._update_stage_paths()
+
         print("Loaded information for {0}".format(self.hlsp_name))
 
     def member_fits_standards(self):
@@ -563,7 +703,7 @@ class HLSPFile(object):
         self._standard_keywords = FitsKeywordList.empty_list()
         self._get_standard_fits_keywords()
 
-    def save(self, filename=None):
+    def save(self, caller=None, filename=None):
         """
         Write the current contents of self to a YAML-formatted .hlsp file.
 
@@ -571,24 +711,64 @@ class HLSPFile(object):
         :type filename:  str
         """
 
-        # Make sure a provided file name has an .hlsp extension.
-        if filename:
-            if not filename.endswith(".hlsp"):
-                filename = ".".join([filename, "hlsp"])
+        self._update_stage_paths()
 
-        # Construct a file name if none provided.
+        if caller:
+            savename = self.get_output_filepath(call_file=caller)
+            print(savename)
+
+        # Make sure a provided file name has an .hlsp extension.
+        elif filename:
+            if not filename.endswith(self._file_ext):
+                savename = "".join([filename, self._file_ext])
+                print(savename)
+            else:
+                savename = filename
+
+        # If no file name is provided, get the default name.
         else:
-            filename = ".".join([self.hlsp_name, "hlsp"])
+            savename = self.get_output_filepath()
+            print(savename)
 
         # Format self as a dictionary and write it to YAML.
-        with open(filename, 'w') as yamlfile:
+        with open(savename, 'w') as yamlfile:
             yaml.dump(self.as_dict(), yamlfile, default_flow_style=False)
-            print("...saving {0}...".format(filename))
+            print("...saving {0}...".format(savename))
 
-        return filename
+        return savename
+
+    def toggle_ingest(self, step_num, state=None):
+        """
+        Update a value in the self.ingest dictionary to indicate a completed
+        ingestion step.  Toggles the boolean value by default or can be given
+        a state to enforce.
+
+        :param step_num:  The number of the ingestion step to update.
+        :type step_num:  int
+
+        :param state:  The desired state to update the ingestion step with.
+                       (optional)
+        :type state:  bool
+        """
+
+        # Get the self.ingest step name for the given step number.
+        ind = sorted(self.ingest.keys())[step_num]
+
+        # If state is a boolean value, set the self.ingest value, otherwise
+        # toggle the self.ingest value.
+        if isinstance(state, bool):
+            self.ingest[ind] = state
+        else:
+            self.ingest[ind] = not(self.ingest[ind])
+
+        # Make sure any previous ingest steps are also set to True if the
+        # designated step is now True.
+        if self.ingest[ind]:
+            for k in sorted(self.ingest.keys())[:step_num]:
+                self.ingest[k] = True
 
     def toggle_updated(self, flag):
-        #self.updated = flag
+        # self.updated = flag
         pass
 
     def update_filepaths(self, input=None, output=None):

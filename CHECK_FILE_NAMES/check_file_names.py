@@ -20,6 +20,7 @@ from bin.new_logger import new_logger
 from check_dirpath_lower import check_dirpath_lower
 from check_file_compliance import check_file_compliance
 from get_all_files import get_all_files
+from lib.HLSPFile import HLSPFile
 
 # This file contains a list of known values for the "mission" part of a MAST
 # HLSP file.
@@ -114,6 +115,12 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     # Check file names for compliance.
     check_file_compliance(all_file_list, hlsp_name, known_missions,
                           known_filters, exclude_missions, exclude_filters)
+
+    # Start a new HLSPFile.
+    new_file = HLSPFile(name=hlsp_name.strip().lower())
+    new_file.update_filepaths(input=os.path.abspath(idir))
+    new_file.toggle_ingest(0, state=True)
+    new_file.save(caller=__file__)
 
     filenames_log.info('Finished at ' + datetime.datetime.now().isoformat())
 

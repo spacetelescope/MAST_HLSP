@@ -172,11 +172,12 @@ class HLSPGUI(QTabWidget):
         self.file_name_edit.insert(filename.split("/")[-1])
 
         # Launch the load modules for each GUI in the tabs.
-        for step, done in self.hlsp.ingest.items():
+        for step in sorted(self.hlsp.ingest.keys()):
+            done = self.hlsp.ingest[step]
             if not done:
                 break
             elif step.startswith("00"):
-                self.step1.load_hlsp(done)
+                self.step1.load_hlsp(self.hlsp)
             elif step.startswith("01"):
                 self.step2.load_hlsp()
             elif step.startswith("03"):

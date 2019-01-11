@@ -84,17 +84,12 @@ def check_metadata_format(paramfile, is_file=True):
 
     # Start logging to an output file.
     log_file_name = "check_metadata_format.log"
-    """
-    logging.basicConfig(filename=log_file_name,
-                        format='%(levelname)s from %(module)s: %(message)s',
-                        level=logging.DEBUG, filemode='w')
-    """
     metadata_log = new_logger(log_file_name)
     metadata_log.info('Started at ' + datetime.datetime.now().isoformat())
 
     # This will allow us to support running via script by default with a
     # previously saved metadata precheck file, or live via the GUI with an
-    # HLSP class object.
+    # HLSPFile class object.
     param_data = (_read_from_file(paramfile) if is_file else paramfile)
 
     # The root directory of the HLSP files is stored in the parameter file.

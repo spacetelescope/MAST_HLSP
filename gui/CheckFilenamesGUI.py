@@ -100,6 +100,16 @@ class CheckFilenamesGUI(QWidget):
         self.setLayout(self.grid)
         self.show()
 
+    def _display_log(self, log):
+
+        with open(log, 'r') as logfile:
+            log_lines = logfile.readlines()
+
+        for line in log_lines:
+            if "Started at" in line:
+                self.log_display.clear()
+            self.log_display.append(line[:-1])
+
     def _update_button_state(self):
         """
         Update the approve_button status and appearance based on the
@@ -133,7 +143,7 @@ class CheckFilenamesGUI(QWidget):
 
         return current_path, current_name
 
-    def load_hlsp(self, new_approved):
+    def load_hlsp(self, hlsp_file):
         """
         Given a new approved state, update the GUI.
 
@@ -143,7 +153,8 @@ class CheckFilenamesGUI(QWidget):
         """
 
         # Update the self.approved value and trigger a button state update.
-        self.approved = new_approved
+        logfile = hlsp_file.find_log_file()
+        self.approved = hlsp_file.check_ingest_step(0)
         self._update_button_state()
 
     def run(self):
@@ -161,15 +172,8 @@ class CheckFilenamesGUI(QWidget):
                                                       current_name)
         check_log = os.path.abspath(check_log)
 
-        # Open the resulting log file created by check_file_names.
-        with open(check_log, 'r') as logfile:
-            lines = logfile.readlines()
-
-        # Display the log file contents in log_display.
-        for line in lines:
-            if "Started at" in line:
-                self.log_display.clear()
-            self.log_display.append(line[:-1])
+        # Open and display the resulting log file created by check_file_names.
+        self._display_log(check_log)
 
         # Enable the approve button.
         self.approve_button.setEnabled(True)

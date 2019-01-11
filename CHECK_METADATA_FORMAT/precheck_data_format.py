@@ -14,6 +14,8 @@ import sys
 
 sys.path.append("../")
 from bin.new_logger import new_logger
+from lib.HLSPFile import HLSPFile
+from lib.FileType import FileType
 from get_all_file_endings import get_all_file_endings
 from make_parameter_file import make_parameter_file
 
@@ -43,16 +45,23 @@ def precheck_data_format(idir, hlsp_name):
     precheck_log = new_logger(logname)
     precheck_log.info('Started at ' + datetime.datetime.now().isoformat())
 
+    # Initialize a new HLSPFile object.
+    new_file = HLSPFile(name=hlsp_name)
+
     # Get unique set of file endings.
     all_file_endings = get_all_file_endings(idir)
 
     # Sort these based on the extension type.
     file_endings = set([x.split('.')[-1] for x in all_file_endings])
 
+    for fe in all_file_endings:
+        new_type = FileType(fe)
+        new_file.add_filetype(new_type)
+
     # Create the output file, based on the name of the HLSP.
-    filename = "check_metadata_format_{0}.hlsp".format(
-        hlsp_name.strip().lower())
-    make_parameter_file(filename, file_endings, all_file_endings, idir)
+    new_file.toggle_ingest(1, state=True)
+    filename = new_file.save(caller=__file__)
+    #make_parameter_file(filename, file_endings, all_file_endings, idir)
 
     precheck_log.info('Finished at ' + datetime.datetime.now().isoformat())
 

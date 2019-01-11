@@ -287,7 +287,7 @@ class FitsKeyword(object):
         if not isinstance(new_dict, dict):
             raise TypeError("FitsKeyword.update() requires a dict obj arg!")
 
-        # Initialize the boolean flag to False
+        # Initialize the boolean flag to False.
         updated = False
 
         for key, val in new_dict.items():
