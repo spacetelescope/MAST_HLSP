@@ -106,7 +106,7 @@ class HLSPFile(object):
     _file_ext = ".hlsp"
     _root_dir = "MAST_HLSP"
 
-    def __init__(self, name=None, path=None):
+    def __init__(self, from_dict=None, name=None, path=None):
         """
         Initialize a new HLSPFile object.
 
@@ -138,6 +138,9 @@ class HLSPFile(object):
         self.ingest = {s: False for s in steps}
         self.keyword_updates = []
         self.unique_parameters = {}
+
+        if from_dict:
+            self.load_dict(from_dict)
 
         if name:
             self.hlsp_name = name
@@ -252,7 +255,10 @@ class HLSPFile(object):
 
                 # Look up the FITS template file for the current standard.
                 filename = ".".join([std, "yml"])
-                filename = "/".join([FITS_TEMPLATES_DIR, filename])
+                filename = os.path.join(self._root,
+                                        FITS_TEMPLATES_DIR,
+                                        filename,
+                                        )
                 standard_fits = read_yaml(filename)["KEYWORDS"]
 
                 # Create a FitsKeyword for each entry in the template and try
@@ -298,6 +304,7 @@ class HLSPFile(object):
         else:
             path = None
 
+        print("match = {0}".format(path))
         return path
 
     @staticmethod
@@ -510,7 +517,7 @@ class HLSPFile(object):
 
     def check_ingest_step(self, step_num):
 
-        ind = sorted(self.ingest.keys)[step_num]
+        ind = sorted(self.ingest.keys())[step_num]
         return self.ingest[ind]
 
     def find_file_type(self, target_ending):
@@ -535,7 +542,7 @@ class HLSPFile(object):
         caller = self._match_caller(caller)
 
         if caller:
-            path = os.path.dirname(self._match_caller(caller))
+            path = os.path.dirname(caller)
             filename = ".".join([caller[:-1], "log"])
             filepath = os.path.join(path, filename)
         else:
@@ -598,21 +605,9 @@ class HLSPFile(object):
         except AttributeError:
             return False
 
-    def load_hlsp(self, filename):
-        """
-        Read information from a YAML-formatted .hlsp file and load those
-        contents into self.
+    def load_dict(self, from_dict):
 
-        :param filename:  Should be a filepath to a properly-formatted .hlsp
-                          file written in YAML.
-        :type filename:  str
-        """
-
-        # Access the given file.
-        load_dict = read_yaml(filename)
-
-        # Read the contents of the resulting dictionary.
-        for key, val in load_dict.items():
+        for key, val in from_dict.items():
 
             # Turn keys in 'KeywordUpdates' format to 'keyword_updates' format.
             key = re.findall('[A-Z][^A-Z]*', key)
@@ -643,10 +638,26 @@ class HLSPFile(object):
             # Otherwise just set the attribute.
             else:
                 setattr(self, attr, val)
-
-        self._update_stage_paths()
+                if attr == "hlsp_name":
+                    self._update_stage_paths()
 
         print("Loaded information for {0}".format(self.hlsp_name))
+
+    def load_hlsp(self, filename):
+        """
+        Read information from a YAML-formatted .hlsp file and load those
+        contents into self.
+
+        :param filename:  Should be a filepath to a properly-formatted .hlsp
+                          file written in YAML.
+        :type filename:  str
+        """
+
+        # Access the given file.
+        from_dict = read_yaml(filename)
+
+        # Read the contents of the resulting dictionary.
+        self.load_dict(from_dict)
 
     def member_fits_standards(self):
         """
@@ -734,6 +745,7 @@ class HLSPFile(object):
         with open(savename, 'w') as yamlfile:
             yaml.dump(self.as_dict(), yamlfile, default_flow_style=False)
             print("...saving {0}...".format(savename))
+            print("...ingest: {0}".format(self.ingest))
 
         return savename
 

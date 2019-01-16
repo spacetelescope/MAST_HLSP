@@ -10,6 +10,7 @@
 import argparse
 import datetime
 import logging
+import os
 import sys
 
 sys.path.append("../")
@@ -36,17 +37,13 @@ def precheck_data_format(idir, hlsp_name):
     """
 
     # Start logging to an output file.
-    """
-    logging.basicConfig(filename="precheck_data_format.log",
-                        format='%(levelname)s from %(module)s: %(message)s',
-                        level=logging.DEBUG, filemode='w')
-    """
     logname = "precheck_data_format.log"
     precheck_log = new_logger(logname)
     precheck_log.info('Started at ' + datetime.datetime.now().isoformat())
 
     # Initialize a new HLSPFile object.
     new_file = HLSPFile(name=hlsp_name)
+    new_file.update_filepaths(input=os.path.realpath(idir))
 
     # Get unique set of file endings.
     all_file_endings = get_all_file_endings(idir)

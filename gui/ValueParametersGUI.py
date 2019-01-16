@@ -329,6 +329,9 @@ class ValueParametersGUI(QWidget):
         # Display the new contents.
         self.display_parameters()
 
+        # Update the parent's HLSPFile ingest step tracking.
+        self.master.hlsp.toggle_ingest(4, state=True)
+
     def update_hlsp_file(self):
         """
         Read the current contents of the GUI and add these to the parent's
@@ -339,6 +342,3 @@ class ValueParametersGUI(QWidget):
         # HLSPFile.
         for row in range(self._first_value, self._next_value):
             self._read_row_to_hlsp(row)
-
-        # Update the parent's HLSPFile ingest step tracking.
-        self.master.hlsp.ingest["04_value_parameters_added"] = True

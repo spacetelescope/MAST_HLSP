@@ -104,7 +104,7 @@ class UpdateKeywordsGUI(QWidget):
 
         # Set up row pointers.
         label_row = 1
-        self._first_keyword = self._next_keyword = (label_row+1)
+        self._first_keyword = self._next_keyword = (label_row + 1)
 
         # Construct the keyword display area.
         self.display_grid = QGridLayout()
@@ -396,6 +396,9 @@ class UpdateKeywordsGUI(QWidget):
             self.master.hlsp._get_standard_fits_keywords()
         self._display_current_keywords()
 
+        # Update the ingest step tracker.
+        self.master.hlsp.toggle_ingest(3, state=True)
+
     def reset_to_defaults(self):
         """
         Revert the HLSPFile object to standard default FITS keywords.
@@ -438,6 +441,3 @@ class UpdateKeywordsGUI(QWidget):
             else:
                 new_kw = FitsKeyword(kw, parameters=row_info)
                 self.master.hlsp.add_fits_keyword(new_kw)
-
-        # Update the ingest step tracker.
-        self.master.hlsp.ingest["03_fits_keywords_set"] = True

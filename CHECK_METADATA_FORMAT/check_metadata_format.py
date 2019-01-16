@@ -18,6 +18,7 @@ from apply_metadata_check import apply_metadata_check
 sys.path.append("../")
 from bin.new_logger import new_logger
 from lib.FitsKeyword import FitsKeyword, FitsKeywordList
+from lib.HLSPFile import HLSPFile
 
 # --------------------
 
@@ -90,7 +91,11 @@ def check_metadata_format(paramfile, is_file=True):
     # This will allow us to support running via script by default with a
     # previously saved metadata precheck file, or live via the GUI with an
     # HLSPFile class object.
-    param_data = (_read_from_file(paramfile) if is_file else paramfile)
+    # param_data = (_read_from_file(paramfile) if is_file else paramfile)
+    if is_file:
+        param_data = HLSPFile(path=paramfile).as_dict()
+    else:
+        param_data = paramfile
 
     # The root directory of the HLSP files is stored in the parameter file.
     if 'InputDir' in param_data['FilePaths']:
@@ -141,6 +146,10 @@ def check_metadata_format(paramfile, is_file=True):
                            '\n')
         ologfile.write('# ------------------------------\n')
         ologfile.write(all_log_messages)
+
+    results = HLSPFile(from_dict=param_data)
+    results.toggle_ingest(2, state=True)
+    results.save(caller=__file__)
 
 # --------------------
 

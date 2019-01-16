@@ -110,7 +110,7 @@ class CheckMetadataGUI(QWidget):
 
         # Set column number variables to rearrange later if needed.
         head_row = 0
-        self._first_file = self._next_file = (head_row+1)
+        self._first_file = self._next_file = (head_row + 1)
         self._file_end_col = 0
         self._standard_col = 1
         self._data_type_col = 2
@@ -393,12 +393,12 @@ class CheckMetadataGUI(QWidget):
         # the check_metadata_format button and set the HLSPFile flag.
         if self._next_file == self._first_file or self.selected_count == 0:
             self.metacheck_button.setEnabled(False)
-            self.master.hlsp.ingest["01_metadata_prechecked"] = False
+            self.master.hlsp.toggle_ingest(1, state=False)
 
         # Otherwise, enable the check_metadata_format button.
         else:
             self.metacheck_button.setEnabled(True)
-            self.master.hlsp.ingest["01_metadata_prechecked"] = True
+            self.master.hlsp.toggle_ingest(1, state=True)
 
     def _update_selected(self, state):
         """
@@ -478,7 +478,9 @@ class CheckMetadataGUI(QWidget):
         the selected data files.
         """
 
+        print("step1: {0}".format(self.master.hlsp.ingest))
         self.update_hlsp_file()
+        print("step2: {0}".format(self.master.hlsp.ingest))
 
         # Launch check_metadata_format with the current contents of the parent
         # HLSPFile as a dict.
@@ -486,10 +488,12 @@ class CheckMetadataGUI(QWidget):
 
         # Set the metadata checked flag (may wish to incorporate some sort of
         # approval here as well).
-        self.master.hlsp.ingest["02_metadata_checked"] = True
+        self.master.hlsp.toggle_ingest(2, state=True)
+        print("step3: {0}".format(self.master.hlsp.ingest))
 
         # Save the HLSPFile.
         self.update_hlsp_file(save=True)
+        print("step4: {0}".format(self.master.hlsp.ingest))
 
     def precheck_clicked(self):
         """

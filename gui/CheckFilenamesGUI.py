@@ -153,7 +153,7 @@ class CheckFilenamesGUI(QWidget):
         """
 
         # Update the self.approved value and trigger a button state update.
-        logfile = hlsp_file.find_log_file()
+        logfile = hlsp_file.find_log_file("check_file_names.py")
         self.approved = hlsp_file.check_ingest_step(0)
         self._update_button_state()
 
@@ -192,7 +192,7 @@ class CheckFilenamesGUI(QWidget):
         auto = self.master.auto_save
 
         # Update the HLSPFile object accordingly.
-        self.master.hlsp.ingest["00_filenames_checked"] = self.approved
+        self.master.hlsp.toggle_ingest(0, state=self.approved)
         self.master.hlsp.save(filename="".join([current_name, auto]))
 
     def toggle_run(self):

@@ -159,16 +159,18 @@ class HLSPGUI(QTabWidget):
         if not filename:
             return
 
+        # Clear the current entries.
+        self.hlsp_name_edit.clear()
+        self.hlsp_path_edit.clear()
+        self.file_name_edit.clear()
+
         # Set self.hlsp to a new HLSPFile object using the user-selected file.
         self.hlsp = HLSPFile(path=filename)
 
         # Update the line edit elements in the master GUI using the new
         # HLSPFile parameters.
-        self.hlsp_name_edit.clear()
         self.hlsp_name_edit.insert(self.hlsp.hlsp_name)
-        self.hlsp_path_edit.clear()
         self.hlsp_path_edit.insert(self.hlsp.file_paths["InputDir"])
-        self.file_name_edit.clear()
         self.file_name_edit.insert(filename.split("/")[-1])
 
         # Launch the load modules for each GUI in the tabs.
