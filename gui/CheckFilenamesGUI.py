@@ -157,6 +157,9 @@ class CheckFilenamesGUI(QWidget):
         self.approved = hlsp_file.check_ingest_step(0)
         self._update_button_state()
 
+        if self.approved:
+            self._display_log(logfile)
+
     def run(self):
         """
         Launch the filename checking scripts in CHECK_FILE_NAMES.
