@@ -1,3 +1,20 @@
+"""
+:title:  HLSPFile.py
+:author:  Peter Forshay
+:contact:  pforshay@stsci.edu
+
+The class defined here can be used to construct a file to track information
+about a High-Level Science Product that will be needed for various stages of
+HLSP ingestion to MAST and CAOM.  Methods are also provided to add new
+information, update existing parameters, and file input and output.
+
+..class::  HLSPFile
+..synopsis::  This class constructs an object to organize information needed
+              for HLSP data file ingestion to MAST and CAOM.  The class
+              provides methods to access and modify that information, as well 
+              as read or write that information from/to YAML-formatted files.
+"""
+
 import bin.check_paths as cp
 from bin.read_yaml import read_yaml
 from lib.FileType import FileType
@@ -6,13 +23,6 @@ from lxml import etree
 import os
 import re
 import yaml
-
-try:
-    from PyQt5.QtCore import pyqtSignal
-except ImportError:
-    from PyQt4.QtCore import pyqtSignal
-
-FITS_TEMPLATES_DIR = "CHECK_METADATA_FORMAT/TEMPLATES"
 
 # --------------------
 
@@ -31,6 +41,19 @@ class HLSPFile(object):
     ..module::  _add_xml_value_pairs
     ..synopsis::  Add a dictionary of keyword / value pairs to an lxml etree.
 
+    ..module::  _format_caller
+    ..synopsis::  Convert a filename from a calling function to a format that
+                  will match a class attribute.
+
+    ..module::  _get_filename
+    ..synopsis::  Construct an output filename, with an optional prefix based
+                  on an ingestion step.
+
+    ..module::  _get_keyword_updates
+    ..synopsis::  Compare the _fits_keywords list to the _standard_keywords
+                  list to find any differences and add these keywords to the
+                  keyword_updates list.
+
     ..module::  _get_standard_fits_keywords
     ..synopsis::  Read a FITS template file based on the file types present,
                   create FitsKeyword objects based on the template and try to
@@ -43,12 +66,23 @@ class HLSPFile(object):
     ..module::  _make_value_xml_dict
     ..synopsis::  Format a provided value into a dictionary for lxml ingest.
 
+    ..module::  _match_caller
+    ..synopsis::  Match a calling function file to an appropriate filepath.
+
     ..module::  _split_name_from_params
     ..synopsis::  Given a single key dictionary, return the lone key and
                   corresponding dictionary.
 
+    ..module::  _update_stage_paths
+    ..synopsis::  Construct file paths for resulting files from various stages
+                  of HLSP ingestion.
+
     ..module::  add_filetype
     ..synopsis::  Add a FileType object to the file_types list.
+
+    ..module::  add_fits_keyword
+    ..synopsis::  Add a new FitsKeyword object to the private _fits_keywords
+                  list.  Skip if the keyword is already present.
 
     ..module::  add_keyword_update
     ..synopsis::  Add an updated FitsKeyword object to the keyword_updates
@@ -62,17 +96,32 @@ class HLSPFile(object):
                   dictionary.  This is useful for entering the contents into
                   an XML tree or writing to YAML.
 
+    ..module::  check_ingest_step
+    ..synopsis::  Check the HLSP ingestion status of a particular ingest step.
+
     ..module::  find_file_type
     ..synopsis::  Find a given file ending in the file_types list.
+
+    ..module::  find_log_file
+    ..synopsis::  Look for an existing log file for a given HLSP ingestion
+                  step.
 
     ..module::  fits_keywords
     ..synopsis::  Combine the contents of the designated FITS template and
                   any keyword updates and return a list of all FitsKeyword
                   objects used by this HLSPFile.
 
+    ..module::  get_output_filepath
+    ..synopsis::  Get an output file path for saving an HLSPFile to disk.
+                  Either base the file path on the calling file or return the
+                  default path.
+
     ..module::  in_hlsp_format
     ..synopsis::  Checks for a number of HLSPFile attributes, returns False if
                   not found.  Have not put this to any use yet.
+
+    ..module::  load_dict
+    ..synopsis::  Load the contents of a formatted dictionary into self.
 
     ..module::  load_hlsp
     ..synopsis::  Read information from a YAML-formatted .hlsp file and load
@@ -85,9 +134,19 @@ class HLSPFile(object):
     ..module::  remove_filetype
     ..synopsis::  Remove a FileType object from the file_types list.
 
+    ..module::  reset_fits_keywords
+    ..synopsis::  Update a value in the self.ingest dictionary to indicate a
+                  completed ingestion step.  Toggles the boolean value by
+                  default or can be given a state to enforce.
+
     ..module::  save
     ..synopsis::  Write the current contents of self to a YAML-formatted .hlsp
                   file.
+
+    ..module::  toggle_ingest
+    ..synopsis::  Update a value in the self.ingest dictionary to indicate a
+                  completed ingestion step.  Toggles the boolean value by
+                  default or can be given a state to enforce.
 
     ..module::  update_filepaths
     ..synopsis::  Update the file_paths dictionary with provided input / output
@@ -98,17 +157,28 @@ class HLSPFile(object):
                   template file for ingestion into CAOM.
     """
 
-    _check_file_names_dir = "CHECK_FILE_NAMES"
-    _check_file_names_out = "check_file_names_"
-    _check_metadata_format_dir = "CHECK_METADATA_FORMAT"
-    _check_metadata_format_out = "check_metadata_format_"
-    _precheck_metadata_format_out = "precheck_data_format_"
+    # Create class attributes to define file and routine naming and structure.
+    _check_file_names_out = "check_file_names"
+    _check_metadata_format_out = "check_metadata_format"
+    _precheck_metadata_format_out = "precheck_data_format"
+
+    _check_file_names_dir = _check_file_names_out.upper()
+    _check_metadata_format_dir = _check_metadata_format_out.upper()
+    _fits_templates_dir = os.path.join(_check_metadata_format_dir, "TEMPLATES")
+
     _file_ext = ".hlsp"
     _root_dir = "MAST_HLSP"
 
     def __init__(self, from_dict=None, name=None, path=None):
         """
         Initialize a new HLSPFile object.
+
+        :param from_dict:  Use a dictionary (likely pre-loaded from a .yaml
+                           file) to populate HLSPFile attributes.
+        :type from_dict:  dict
+
+        :param name:  Pre-seed an HLSPFile object with an optional name.
+        :type name:  str
 
         :param path:  Provided a path to a valid .hlsp-formatted file,
                       initialization will immediately load the contents into
@@ -139,9 +209,11 @@ class HLSPFile(object):
         self.keyword_updates = []
         self.unique_parameters = {}
 
+        # Load HLSP parameters from a provided dictionary.
         if from_dict:
             self.load_dict(from_dict)
 
+        # If a name is provided, update the related stage filepaths.
         if name:
             self.hlsp_name = name
             self._update_stage_paths()
@@ -210,23 +282,47 @@ class HLSPFile(object):
 
         return parent
 
-    def _construct_step_file(self, step_dir):
-
-        fname = "".join([self.hlsp_name.lower(), self._file_ext])
-        full_path = os.path.join(os.getcwd(), step_dir, fname)
-        return full_path
-
     @staticmethod
     def _format_caller(call_file):
+        """
+        Convert a filename from a calling function to a format that will match
+        a class attribute.
+
+        :param call_file:  The filename of the calling function.
+        :type call_file:  str
+        """
 
         if isinstance(call_file, str):
+
+            # If a full filepath is provided, we only want the final filename.
             caller = call_file.split("/")[-1]
-            caller = "".join([caller.split(".")[0], "_"])
+
+            # Remove the file extension.
+            caller = caller.split(".")[0]
+
             print("caller = {0}".format(caller))
         else:
             caller = None
 
         return caller
+
+    def _get_filename(self, prefix=None):
+        """
+        Construct an output filename, with an optional prefix based on an
+        ingestion step.
+
+        :param prefix:  Optional prefix to add to the filename.
+        :type prefix:  str
+        """
+
+        # Combine the HLSP name with the file extension attribute.
+        fname = "".join([self.hlsp_name.lower(), self._file_ext])
+
+        # Add the prefix to the filename, if provided.
+        if prefix:
+            fname = "_".join([prefix, fname])
+
+        return fname
 
     def _get_keyword_updates(self):
         """
@@ -256,7 +352,7 @@ class HLSPFile(object):
                 # Look up the FITS template file for the current standard.
                 filename = ".".join([std, "yml"])
                 filename = os.path.join(self._root,
-                                        FITS_TEMPLATES_DIR,
+                                        self._fits_templates_dir,
                                         filename,
                                         )
                 standard_fits = read_yaml(filename)["KEYWORDS"]
@@ -294,7 +390,14 @@ class HLSPFile(object):
         return value_dict
 
     def _match_caller(self, caller):
+        """
+        Match a calling function file to an appropriate filepath.
 
+        :param caller:  The formatted function name.
+        :type caller:  str
+        """
+
+        # Look for a match among the pre-defined routine files.
         if caller == self._check_file_names_out:
             path = self._cfn_path
         elif caller == self._precheck_metadata_format_out:
@@ -304,7 +407,7 @@ class HLSPFile(object):
         else:
             path = None
 
-        print("match = {0}".format(path))
+        print("_match_caller = {0}".format(path))
         return path
 
     @staticmethod
@@ -339,34 +442,25 @@ class HLSPFile(object):
                                   )
 
         # Default filename should be in the root directory named hlsp_name.hlsp
-        default_name = "".join([self.hlsp_name, self._file_ext])
+        default_name = self._get_filename()
         self._default_path = os.path.join(self._root, default_name)
 
         # Construct file path for check_file_names.py results.
-        cfn_name = "".join([self._check_file_names_out,
-                            self.hlsp_name,
-                            self._file_ext
-                            ])
+        cfn_name = self._get_filename(self._check_file_names_out)
         self._cfn_path = os.path.join(self._root,
                                       self._check_file_names_dir,
                                       cfn_name,
                                       )
 
         # Construct file path for precheck_data_format.py reults.
-        pcdf_name = "".join([self._precheck_metadata_format_out,
-                             self.hlsp_name,
-                             self._file_ext
-                             ])
+        pcdf_name = self._get_filename(self._precheck_metadata_format_out)
         self._pcdf_path = os.path.join(self._root,
                                        self._check_metadata_format_dir,
                                        pcdf_name
                                        )
 
         # Construct file path for check_metadata_format.py results.
-        cmd_name = "".join([self._check_metadata_format_out,
-                            self.hlsp_name,
-                            self._file_ext
-                            ])
+        cmd_name = self._get_filename(self._check_metadata_format_out)
         self._cmd_path = os.path.join(self._root,
                                       self._check_metadata_format_dir,
                                       cmd_name,
@@ -516,7 +610,15 @@ class HLSPFile(object):
         return file_formatted_dict
 
     def check_ingest_step(self, step_num):
+        """
+        Check the HLSP ingestion status of a particular ingest step.
 
+        :param step_num:  The ingestion step to check.
+        :type step_num:  int
+        """
+
+        # The ingest dictionary keys are prepended with the step number, so
+        # sorting these will allow dictionary access by index.
         ind = sorted(self.ingest.keys())[step_num]
         return self.ingest[ind]
 
@@ -537,19 +639,31 @@ class HLSPFile(object):
         return None
 
     def find_log_file(self, call_file):
+        """
+        Look for an existing log file for a given HLSP ingestion step.
 
+        :param call_file:  The function we are searching for a resulting log
+                           file for.
+        :type call_file:  str
+        """
+
+        # Format and look for a match for the provided calling function.
         caller = self._format_caller(call_file)
         caller = self._match_caller(caller)
 
+        # If a calling function match is found, construct a path to look for
+        # a log file.
         if caller:
             path = os.path.dirname(caller)
-            filename = ".".join([caller[:-1], "log"])
+            filename = call_file.replace(".py", ".log")
             filepath = os.path.join(path, filename)
         else:
             filepath = None
 
-        if not os.path.isfile(filepath):
-            filepath = None
+        print("log file = {0}".format(filepath))
+
+        # Check if the constructed log file path actually exists.
+        filepath = cp.check_existing_file(filepath)
 
         return filepath
 
@@ -606,7 +720,14 @@ class HLSPFile(object):
             return False
 
     def load_dict(self, from_dict):
+        """
+        Load the contents of a formatted dictionary into self.
 
+        :param from_dict:  A dictionary with a specific HLSP formatting.
+        :type from_dict:  dict
+        """
+
+        # Step through all entries in the dictionary.
         for key, val in from_dict.items():
 
             # Turn keys in 'KeywordUpdates' format to 'keyword_updates' format.
@@ -638,6 +759,9 @@ class HLSPFile(object):
             # Otherwise just set the attribute.
             else:
                 setattr(self, attr, val)
+
+                # When we set the HLSP name, we also want to trigger the stage
+                # path creation module.
                 if attr == "hlsp_name":
                     self._update_stage_paths()
 
@@ -718,28 +842,30 @@ class HLSPFile(object):
         """
         Write the current contents of self to a YAML-formatted .hlsp file.
 
-        :param filename:  Designate a file name to use for saving (optional).
+        :param caller:  May take a calling function to construct the filename.
+        :type caller:  str
+
+        :param filename:  Designate a filename to use for saving (optional).
         :type filename:  str
         """
 
         self._update_stage_paths()
 
+        # If a calling function is provided, use this to retrieve a matching
+        # output file path.
         if caller:
             savename = self.get_output_filepath(call_file=caller)
-            print(savename)
 
         # Make sure a provided file name has an .hlsp extension.
         elif filename:
             if not filename.endswith(self._file_ext):
                 savename = "".join([filename, self._file_ext])
-                print(savename)
             else:
                 savename = filename
 
         # If no file name is provided, get the default name.
         else:
             savename = self.get_output_filepath()
-            print(savename)
 
         # Format self as a dictionary and write it to YAML.
         with open(savename, 'w') as yamlfile:
@@ -854,7 +980,7 @@ class HLSPFile(object):
 
 def __test__():
     h = HLSPFile()
-    h.save("test_ouput")
+    h.save(filename="test_ouput.hlsp")
 
 # --------------------
 
