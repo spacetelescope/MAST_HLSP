@@ -54,6 +54,7 @@ def precheck_data_format(idir, hlsp_name):
     for fe in all_file_endings:
         new_type = FileType(fe)
         new_file.add_filetype(new_type)
+        precheck_log.info("Found the following file type: {0}".format(fe))
 
     # Create the output file, based on the name of the HLSP.
     new_file.toggle_ingest(1, state=True)

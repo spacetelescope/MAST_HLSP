@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import yaml
 base = sys.path[0]
 subdirectories = [x for x in os.listdir(base) if (os.path.isdir(x)
@@ -9,7 +10,6 @@ subpackages = [os.path.join(base, subdir) for subdir in subdirectories]
 sys.path = subpackages + sys.path
 
 from bin.read_yaml import read_yaml
-from CHECK_METADATA_FORMAT import select_data_templates_gui
 from gui.GUIbuttons import BlueButton, GreenButton, GreyButton, RedButton
 from gui.CheckFilenamesGUI import CheckFilenamesGUI
 from gui.metadata import CheckMetadataGUI
@@ -26,6 +26,30 @@ try:
 except ImportError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
+
+# --------------------
+
+
+class TimerThread(QThread):
+
+    def __init__(self, label):
+
+        super().__init__()
+        self._label = label
+
+    def run(self):
+
+        start = time.time()
+        print("start={0}".format(start))
+
+        while True:
+            time.sleep(1)
+            now = time.time()
+            elapsed = int(now - start)
+            m = str(int(elapsed / 60)).zfill(2)
+            s = str(elapsed % 60).zfill(2)
+            as_string = "{0}:{1}".format(m, s)
+            self._label.setText("Elapsed time: {0}".format(as_string))
 
 # --------------------
 
@@ -54,12 +78,21 @@ class HLSPGUI(QTabWidget):
                   updates the HLSP data path.
     """
 
+    files_updated = pyqtSignal(object)
+    ready = pyqtSignal()
+    running = pyqtSignal()
+
     def __init__(self):
 
         super().__init__()
 
         # Begin with an empty HLSPFile object in memory.
         self.hlsp = HLSPFile()
+
+        self._files_found = None
+        self.busy = False
+        self.ready.connect(self._ready)
+        self.running.connect(self._running)
 
         # Set up autosave variable to pass to child GUIs.
         self.auto_save = "_autosave.hlsp"
@@ -86,6 +119,16 @@ class HLSPGUI(QTabWidget):
         save_hlsp_button = GreyButton("Save to .hlsp File", 70, min_width=150)
         save_hlsp_button.clicked.connect(self.save_hlsp)
 
+        self.header_grid = QGridLayout()
+        self.header_grid.addWidget(load_button, 0, 0, 2, 1)
+        self.header_grid.addWidget(path_label, 0, 1)
+        self.header_grid.addWidget(self.hlsp_path_edit, 0, 2, 1, 3)
+        self.header_grid.addWidget(save_hlsp_button, 0, 5, 2, 1)
+        self.header_grid.addWidget(name_label, 1, 1)
+        self.header_grid.addWidget(self.hlsp_name_edit, 1, 2)
+        self.header_grid.addWidget(file_label, 1, 3)
+        self.header_grid.addWidget(self.file_name_edit, 1, 4)
+
         # Set up the tabs contained in this widget
         self.tabs = QTabWidget()
         self.step1 = CheckFilenamesGUI(parent=self)
@@ -97,19 +140,32 @@ class HLSPGUI(QTabWidget):
         self.tabs.addTab(self.step3, "3: Update FITS Keywords")
         self.tabs.addTab(self.step4, "4: Edit Value Parameters")
         self.tbar = self.tabs.tabBar()
-        #self.tbar.setTabTextColor(0, Qt.red)
+        # self.tbar.setTabTextColor(0, Qt.red)
+
+        self.flag_bar = FlagBar()
+
+        self.status = QLabel("> Ready")
+        self.status.setMaximumWidth(80)
+        self.counter = QLabel("counter")
+        self.files_updated.connect(self._update_count)
+        window_width = self.frameGeometry().width()
+        self.spacer = QSpacerItem(int(window_width * 0.8), 1)
+        self.progress = QProgressBar()
+        self.progress.setTextVisible(True)
+        self.timer = TimerThread(self.counter)
+
+        self.progress_grid = QGridLayout()
+        self.progress_grid.addWidget(self.status, 0, 0, 1, 1)
+        self.progress_grid.addWidget(self.counter, 0, 1, 1, 1)
+        self.progress_grid.addItem(self.spacer, 0, 2, 1, -1)
+        self.progress_grid.addWidget(self.progress, 1, 0, 1, -1)
 
         # Create a grid layout and add all the elements.
-        self.meta_grid = QGridLayout()
-        self.meta_grid.addWidget(load_button, 0, 0, 2, 1)
-        self.meta_grid.addWidget(path_label, 0, 1)
-        self.meta_grid.addWidget(self.hlsp_path_edit, 0, 2, 1, 3)
-        self.meta_grid.addWidget(save_hlsp_button, 0, 5, 2, 1)
-        self.meta_grid.addWidget(name_label, 1, 1)
-        self.meta_grid.addWidget(self.hlsp_name_edit, 1, 2)
-        self.meta_grid.addWidget(file_label, 1, 3)
-        self.meta_grid.addWidget(self.file_name_edit, 1, 4)
-        self.meta_grid.addWidget(self.tabs, 2, 0, 1, -1)
+        self.meta_grid = QVBoxLayout()
+        self.meta_grid.addLayout(self.header_grid)
+        self.meta_grid.addWidget(self.tabs)
+        self.meta_grid.addLayout(self.progress_grid)
+        self.meta_grid.addLayout(self.flag_bar)
 
         # Set the layout and size properties.
         self.setLayout(self.meta_grid)
@@ -125,6 +181,31 @@ class HLSPGUI(QTabWidget):
         # Name and display the window
         self.setWindowTitle("HLSP Ingestion GUI")
         self.show()
+
+    def _ready(self):
+
+        self.status.setText("> Ready")
+        self.busy = False
+        self.timer.terminate()
+
+    def _running(self):
+
+        self.status.setText("> Running...")
+        self.busy = True
+        self.timer.start()
+
+    def _update_count(self):
+
+        self.counter.setText("{0} files found".format(self.files_found))
+
+    @property
+    def files_found(self):
+        return self._files_found
+
+    @files_found.setter
+    def files_found(self, value):
+        self._files_found = value
+        self.files_updated.emit(value)
 
     def closeEvent(self, event):
         """
@@ -176,7 +257,10 @@ class HLSPGUI(QTabWidget):
         # Launch the load modules for each GUI in the tabs.
         for step in sorted(self.hlsp.ingest.keys()):
             done = self.hlsp.ingest[step]
+            num = int(step[1])
+
             if not done:
+                self.flag_bar.turn_off(num)
                 break
             elif step.startswith("00"):
                 self.step1.load_hlsp(self.hlsp)
@@ -186,6 +270,8 @@ class HLSPGUI(QTabWidget):
                 self.step3.load_current_fits()
             elif step.startswith("04"):
                 self.step4.refresh_parameters()
+
+            self.flag_bar.turn_on(num)
 
     def save_hlsp(self):
         """
@@ -228,6 +314,49 @@ class HLSPGUI(QTabWidget):
         current_path = self.hlsp_path_edit.text()
         self.hlsp.update_filepaths(input=current_path)
         self.hlsp.toggle_updated(True)
+
+# --------------------
+
+
+class FlagBar(QHBoxLayout):
+
+    off_css = ("font-style: italic; "
+               "color: #ffaaaa; "
+               "text-align: center; "
+               "border: 4px inset #ffaaaa; "
+               )
+    on_css = ("font-style: normal; "
+              "font-weight: bold; "
+              "color: #45a018; "
+              "text-align: center; "
+              "border: 4px outset #45a018; "
+              )
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.flag_labels = {0: QLabel("Filenames Checked"),
+                            1: QLabel("File Metadata Pre-Checked"),
+                            2: QLabel("File Metadata Checked"),
+                            3: QLabel("FITS Keywords Updated"),
+                            4: QLabel("Value Parameters Added")
+                            }
+
+        for x in sorted(self.flag_labels.keys()):
+            widg = self.flag_labels[x]
+            widg.setStyleSheet(self.off_css)
+            self.addWidget(widg)
+
+    def turn_on(self, ind):
+
+        widg = self.flag_labels[ind]
+        widg.setStyleSheet(self.on_css)
+
+    def turn_off(self, ind):
+
+        widg = self.flag_labels[ind]
+        widg.setStyleSheet(self.off_css)
 
 # --------------------
 

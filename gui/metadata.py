@@ -394,11 +394,13 @@ class CheckMetadataGUI(QWidget):
         if self._next_file == self._first_file or self.selected_count == 0:
             self.metacheck_button.setEnabled(False)
             self.master.hlsp.toggle_ingest(1, state=False)
+            self.master.flag_bar.turn_off(1)
 
         # Otherwise, enable the check_metadata_format button.
         else:
             self.metacheck_button.setEnabled(True)
             self.master.hlsp.toggle_ingest(1, state=True)
+            self.master.flag_bar.turn_on(1)
 
     def _update_selected(self, state):
         """
@@ -478,9 +480,7 @@ class CheckMetadataGUI(QWidget):
         the selected data files.
         """
 
-        print("step1: {0}".format(self.master.hlsp.ingest))
         self.update_hlsp_file()
-        print("step2: {0}".format(self.master.hlsp.ingest))
 
         # Launch check_metadata_format with the current contents of the parent
         # HLSPFile as a dict.
@@ -489,11 +489,10 @@ class CheckMetadataGUI(QWidget):
         # Set the metadata checked flag (may wish to incorporate some sort of
         # approval here as well).
         self.master.hlsp.toggle_ingest(2, state=True)
-        print("step3: {0}".format(self.master.hlsp.ingest))
+        self.master.flag_bar.turn_on(2)
 
         # Save the HLSPFile.
         self.update_hlsp_file(save=True)
-        print("step4: {0}".format(self.master.hlsp.ingest))
 
     def precheck_clicked(self):
         """
@@ -504,7 +503,9 @@ class CheckMetadataGUI(QWidget):
         hlsp_dir, hlsp_name = self.master.current_config()
 
         # Launch the precheck_data_format script.
+        self.master.running.emit()
         results = precheck_data_format(hlsp_dir, hlsp_name)
+        self.master.ready.emit()
 
         # Read the resulting log file.
         results_dict = read_yaml(results)

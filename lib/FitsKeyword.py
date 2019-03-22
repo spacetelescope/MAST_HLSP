@@ -421,7 +421,7 @@ class FitsKeywordList(object):
         Search the list for a given FITS keyword and return the matching
         FitsKeyword object.
 
-        :param target_keyword:  The FITS keyword to search for.
+        :param target_keyword:  The FITS keyword string to search for.
         :type target_keyword:  str
         """
 
@@ -460,9 +460,9 @@ class FitsKeywordList(object):
         else:
             return False
 
-    def remove(self, fits_kw):
+    def remove(self, kw_obj):
         """
-        Remove a FitsKeyword object from self.keywords if a match to fits_kw
+        Remove a FitsKeyword object from self.keywords if a matching object
         is found.
 
         :param fits_kw:  The FITS keyword to search for and remove if found.
@@ -470,7 +470,7 @@ class FitsKeywordList(object):
         """
 
         # find_fits will return the FitsKeyword object if a match is found.
-        existing = self.find_fits(fits_kw)
+        existing = self.find_fits(kw_obj.fits_keyword)
 
         if existing:
             self.keywords.remove(existing)

@@ -102,6 +102,8 @@ class CheckFilenamesGUI(QWidget):
 
     def _display_log(self, log):
 
+        self.master.ready.emit()
+
         with open(log, 'r') as logfile:
             log_lines = logfile.readlines()
 
@@ -119,6 +121,7 @@ class CheckFilenamesGUI(QWidget):
         # If the filenames have been approved, change this to a red "Unapprove"
         # button.
         if self.approved:
+            self.master.flag_bar.turn_on(0)
             self.approve_label.setText(self.approved_text)
             self.approve_button.set_style(gb.RedButton)
             self.approve_button.setText("Unapprove")
@@ -127,6 +130,7 @@ class CheckFilenamesGUI(QWidget):
         # If the filenames have not been approved, change this to a green
         # "Approve" button.
         else:
+            self.master.flag_bar.turn_off(0)
             self.approve_label.setText(self.unapproved_text)
             self.approve_button.set_style(gb.GreenButton)
             self.approve_button.setText("Approve")
@@ -153,7 +157,7 @@ class CheckFilenamesGUI(QWidget):
         """
 
         # Update the self.approved value and trigger a button state update.
-        logfile = hlsp_file.find_log_file("check_file_names.py")
+        logfile = hlsp_file.find_log_file("check_file_names.py", here=True)
         self.approved = hlsp_file.check_ingest_step(0)
         self._update_button_state()
 
@@ -171,12 +175,13 @@ class CheckFilenamesGUI(QWidget):
         current_path = os.path.abspath(current_path)
 
         # Launch the check_file_names module.
-        check_log = check_file_names.check_file_names(current_path,
-                                                      current_name)
-        check_log = os.path.abspath(check_log)
-
-        # Open and display the resulting log file created by check_file_names.
-        self._display_log(check_log)
+        self.master.progress.setValue(0)
+        script = ScriptThread(current_path, current_name)
+        script.finished.connect(lambda: self._display_log(script.log))
+        self.master.running.emit()
+        self.master.files_found = script.count
+        script.start()
+        self.master.progress.setValue(100)
 
         # Enable the approve button.
         self.approve_button.setEnabled(True)
@@ -224,6 +229,31 @@ class CheckFilenamesGUI(QWidget):
 # --------------------
 
 
+class ScriptThread(QThread):
+
+    def __init__(self, path, name):
+
+        super().__init__()
+        self._path = path
+        self._name = name
+        self.log = None
+        self.count = None
+        self._count_files()
+
+    def _count_files(self):
+
+        temp = []
+        for _p, _d, files in os.walk(self._path):
+            temp.extend(files)
+
+        self.count = len(temp)
+
+    def run(self):
+
+        self.log = check_file_names.check_file_names(self._path, self._name)
+
+
+# --------------------
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = CheckFilenamesGUI(parent=None)

@@ -11,7 +11,7 @@ information, update existing parameters, and file input and output.
 ..class::  HLSPFile
 ..synopsis::  This class constructs an object to organize information needed
               for HLSP data file ingestion to MAST and CAOM.  The class
-              provides methods to access and modify that information, as well 
+              provides methods to access and modify that information, as well
               as read or write that information from/to YAML-formatted files.
 """
 
@@ -638,7 +638,7 @@ class HLSPFile(object):
 
         return None
 
-    def find_log_file(self, call_file):
+    def find_log_file(self, call_file, here=None):
         """
         Look for an existing log file for a given HLSP ingestion step.
 
@@ -647,25 +647,27 @@ class HLSPFile(object):
         :type call_file:  str
         """
 
+        self._update_stage_paths()
+
         # Format and look for a match for the provided calling function.
         caller = self._format_caller(call_file)
         caller = self._match_caller(caller)
+        filename = call_file.replace(".py", ".log")
 
         # If a calling function match is found, construct a path to look for
         # a log file.
-        if caller:
+        if caller and not here:
             path = os.path.dirname(caller)
-            filename = call_file.replace(".py", ".log")
-            filepath = os.path.join(path, filename)
         else:
-            filepath = None
+            path = os.getcwd()
 
+        filepath = os.path.join(path, filename)
         print("log file = {0}".format(filepath))
 
         # Check if the constructed log file path actually exists.
         filepath = cp.check_existing_file(filepath)
 
-        return filepath
+        return str(filepath)
 
     def fits_keywords(self):
         """
@@ -675,6 +677,10 @@ class HLSPFile(object):
         """
 
         return self._fits_keywords
+
+    def get_data_path(self):
+
+        return self.file_paths['InputDir']
 
     def get_output_filepath(self, call_file=None):
         """
@@ -960,7 +966,8 @@ class HLSPFile(object):
 
         # Add all FITS keyword updates to the XML tree using the FitsKeyword
         # class method.
-        for kw in sorted(self.fits_keywords()):
+        keywords_obj = self.fits_keywords()
+        for kw in sorted(keywords_obj.keywords):
             xmltree = kw.add_to_xml(xmltree)
 
         # Add all unique parameters to the XML tree.

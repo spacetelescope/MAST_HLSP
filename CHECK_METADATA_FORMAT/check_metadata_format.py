@@ -13,10 +13,10 @@ import os
 import sys
 import numpy
 import yaml
-from apply_metadata_check import apply_metadata_check
 
 sys.path.append("../")
 from bin.new_logger import new_logger
+from apply_metadata_check import apply_metadata_check
 from lib.FitsKeyword import FitsKeyword, FitsKeywordList
 from lib.HLSPFile import HLSPFile
 

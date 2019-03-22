@@ -331,6 +331,7 @@ class ValueParametersGUI(QWidget):
 
         # Update the parent's HLSPFile ingest step tracking.
         self.master.hlsp.toggle_ingest(4, state=True)
+        self.master.flag_bar.turn_on(4)
 
     def update_hlsp_file(self):
         """

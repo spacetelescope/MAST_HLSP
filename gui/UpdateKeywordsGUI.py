@@ -370,6 +370,7 @@ class UpdateKeywordsGUI(QWidget):
 
             if selected.widget().isChecked():
 
+                print("{0} is selected in the GUI".format(kw.widget().text()))
                 target = self._find_in_keywords(kw.widget().text())
                 self._keywords.remove(target)
 
@@ -398,6 +399,7 @@ class UpdateKeywordsGUI(QWidget):
 
         # Update the ingest step tracker.
         self.master.hlsp.toggle_ingest(3, state=True)
+        self.master.flag_bar.turn_on(3)
 
     def reset_to_defaults(self):
         """
