@@ -238,7 +238,7 @@ class ScriptThread(QThread):
         self._name = name
         self.log = None
         self.count = None
-        self._count_files()
+        # self._count_files()
 
     def _count_files(self):
 
