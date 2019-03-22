@@ -874,7 +874,7 @@ class HLSPFile(object):
             savename = self.get_output_filepath()
 
         # Format self as a dictionary and write it to YAML.
-        with open(savename, 'w') as yamlfile:
+        with open(savename, 'w+') as yamlfile:
             yaml.dump(self.as_dict(), yamlfile, default_flow_style=False)
             print("...saving {0}...".format(savename))
             print("...ingest: {0}".format(self.ingest))

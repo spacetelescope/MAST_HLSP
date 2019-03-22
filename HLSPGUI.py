@@ -40,7 +40,6 @@ class TimerThread(QThread):
     def run(self):
 
         start = time.time()
-        print("start={0}".format(start))
 
         while True:
             time.sleep(1)
@@ -49,7 +48,7 @@ class TimerThread(QThread):
             m = str(int(elapsed / 60)).zfill(2)
             s = str(elapsed % 60).zfill(2)
             as_string = "{0}:{1}".format(m, s)
-            self._label.setText("Elapsed time: {0}".format(as_string))
+            self._label.setText("(elapsed time: {0})".format(as_string))
 
 # --------------------
 
@@ -186,7 +185,8 @@ class HLSPGUI(QTabWidget):
 
         self.status.setText("> Ready")
         self.busy = False
-        self.timer.terminate()
+        if self.timer.isRunning():
+            self.timer.terminate()
 
     def _running(self):
 

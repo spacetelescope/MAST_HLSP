@@ -287,6 +287,34 @@ class CheckMetadataGUI(QWidget):
             x = self.files_grid.itemAtPosition(self._next_file, n).widget()
             x.setParent(None)
 
+    def _finish_metacheck(self):
+
+        self.master.ready.emit()
+
+        # Set the metadata checked flag (may wish to incorporate some sort of
+        # approval here as well).
+        self.master.hlsp.toggle_ingest(2, state=True)
+        self.master.flag_bar.turn_on(2)
+
+        # Save the HLSPFile.
+        self.update_hlsp_file(save=True)
+
+    def _finish_precheck(self, precheck_thread):
+
+        self.results = precheck_thread.results
+        self.master.ready.emit()
+
+        # Read the resulting log file.
+        results_dict = read_yaml(self.results)
+        types_found = results_dict["FileTypes"]
+
+        # Display the precheck results and save the HLSPFile.
+        self.type_count_label.setText(
+            "...found {0} file types".format(len(types_found)))
+        self.clear_files()
+        self.add_found_files(types_found)
+        self.update_hlsp_file(save=True)
+
     def _read_file_row(self, row_num):
         """
         Read information from a file type row and use it to update a FileType
@@ -484,15 +512,10 @@ class CheckMetadataGUI(QWidget):
 
         # Launch check_metadata_format with the current contents of the parent
         # HLSPFile as a dict.
-        check_metadata_format(self.master.hlsp.as_dict(), is_file=False)
-
-        # Set the metadata checked flag (may wish to incorporate some sort of
-        # approval here as well).
-        self.master.hlsp.toggle_ingest(2, state=True)
-        self.master.flag_bar.turn_on(2)
-
-        # Save the HLSPFile.
-        self.update_hlsp_file(save=True)
+        self.master.running.emit()
+        thr = CheckThread(self.master.hlsp.as_dict())
+        thr.finished.connect(self._finish_metacheck)
+        thr.start()
 
     def precheck_clicked(self):
         """
@@ -504,19 +527,9 @@ class CheckMetadataGUI(QWidget):
 
         # Launch the precheck_data_format script.
         self.master.running.emit()
-        results = precheck_data_format(hlsp_dir, hlsp_name)
-        self.master.ready.emit()
-
-        # Read the resulting log file.
-        results_dict = read_yaml(results)
-        types_found = results_dict["FileTypes"]
-
-        # Display the precheck results and save the HLSPFile.
-        self.type_count_label.setText(
-            "...found {0} file types".format(len(types_found)))
-        self.clear_files()
-        self.add_found_files(types_found)
-        self.update_hlsp_file(save=True)
+        thr = PrecheckThread(hlsp_dir, hlsp_name)
+        thr.finished.connect(lambda: self._finish_precheck(thr))
+        thr.start()
 
     def update_hlsp_file(self, save=None):
         """
@@ -537,6 +550,34 @@ class CheckMetadataGUI(QWidget):
 # --------------------
 
 
+class CheckThread(QThread):
+
+    def __init__(self, hlsp_dict):
+
+        super().__init__()
+        self._hlsp = hlsp_dict
+
+    def run(self):
+
+        check_metadata_format(self._hlsp, is_file=False)
+
+# --------------------
+
+
+class PrecheckThread(QThread):
+
+    def __init__(self, path, name):
+
+        super().__init__()
+        self._path = path
+        self._name = name
+
+    def run(self):
+
+        self.results = precheck_data_format(self._path, self._name)
+
+
+# --------------------
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = CheckMetadataGUI(parent=None)
