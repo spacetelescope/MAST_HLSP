@@ -128,7 +128,6 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
 
 # --------------------
 
-
 def setup_args():
     """
     Set up command-line arguments and options.
@@ -162,7 +161,6 @@ def setup_args():
     return parser
 
 # --------------------
-
 
 if __name__ == "__main__":
 

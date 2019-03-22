@@ -63,6 +63,7 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
 
         # Check that this file has the corret number of fields.
         splits = ifile_base.split('_')
+
         if len(splits) != n_fields_expected:
             logging.warning("File does not have " + str(n_fields_expected) +
                             " parts: " + ifile)
@@ -105,7 +106,7 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters,
             if splits[7][-3:] == '.gz':
                 prod_ext_str = prod_ext_str.strip('.gz')
             product_extension_splits = prod_ext_str.split('.')
-            if len(product_extension_splits) != 2:
+            if len(product_extension_splits) < 2:
                 logging.warning('Field 8 does not have <product>.<extension> '
                                 'format: ' + ifile)
 
