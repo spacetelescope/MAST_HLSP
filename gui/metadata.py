@@ -287,7 +287,7 @@ class CheckMetadataGUI(QWidget):
             x = self.files_grid.itemAtPosition(self._next_file, n).widget()
             x.setParent(None)
 
-    def _finish_metacheck(self):
+    def _finish_metacheck(self, check_thread):
 
         self.master.ready.emit()
 
@@ -514,7 +514,9 @@ class CheckMetadataGUI(QWidget):
         # HLSPFile as a dict.
         self.master.running.emit()
         thr = CheckThread(self.master.hlsp.as_dict())
-        thr.finished.connect(self._finish_metacheck)
+        print("metacheck_clicked made a CheckThread")
+        thr.finished.connect(lambda: self._finish_metacheck(thr))
+        print("metacheck_clicked connected the CheckThread")
         thr.start()
 
     def precheck_clicked(self):
@@ -556,10 +558,13 @@ class CheckThread(QThread):
 
         super().__init__()
         self._hlsp = hlsp_dict
+        print("CheckThread() initiated")
 
     def run(self):
 
+        print("Beginning check_metadata_format")
         check_metadata_format(self._hlsp, is_file=False)
+        print("check_metadata_format is done")
 
 # --------------------
 
