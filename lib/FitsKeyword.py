@@ -263,8 +263,10 @@ class FitsKeyword(object):
 
         # Should only be a single keyword:values pair.
         if len(dict_from_list.keys()) == 1:
-            kw, info = dict_from_list.popitem()
+            temp_dict = dict(dict_from_list)
+            kw, info = temp_dict.popitem()
         else:
+            print("<FitsKeyword> from_list_item got wrong obj!")
             return None
 
         # Expecting kw to be a string (keyword name) and info to be a

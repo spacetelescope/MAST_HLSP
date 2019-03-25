@@ -384,7 +384,6 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
     # This dict will store all the messages logged, and count how many times
     # that message is logged.
     log_message_counts = {'files_checked': 0}
-
     # Loop over each file in the file_base_dir.
     for froot, _, file_list in os.walk(file_base_dir):
         if file_list:

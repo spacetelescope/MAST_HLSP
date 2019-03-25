@@ -256,9 +256,6 @@ class HLSPFile(object):
         # FitsKeyword, add it to self._fits_keywords.
         if not found:
             self._fits_keywords.append(keyword_obj)
-        else:
-            print("_add_fits_keyword skipping {0}".format(
-                keyword_obj.fits_keyword))
 
     def _add_xml_value_pairs(self, parent, parameters):
         """
@@ -300,7 +297,6 @@ class HLSPFile(object):
             # Remove the file extension.
             caller = caller.split(".")[0]
 
-            print("caller = {0}".format(caller))
         else:
             caller = None
 
@@ -407,7 +403,6 @@ class HLSPFile(object):
         else:
             path = None
 
-        print("_match_caller = {0}".format(path))
         return path
 
     @staticmethod
@@ -662,7 +657,6 @@ class HLSPFile(object):
             path = os.getcwd()
 
         filepath = os.path.join(path, filename)
-        print("log file = {0}".format(filepath))
 
         # Check if the constructed log file path actually exists.
         filepath = cp.check_existing_file(filepath)
@@ -705,7 +699,6 @@ class HLSPFile(object):
         else:
             path = self._default_path
 
-        print("path = {0}".format(path))
         return path
 
     def in_hlsp_format(self):
@@ -739,6 +732,9 @@ class HLSPFile(object):
             # Turn keys in 'KeywordUpdates' format to 'keyword_updates' format.
             key = re.findall('[A-Z][^A-Z]*', key)
             attr = "_".join([k.lower() for k in key])
+
+            if (not attr or not val):
+                continue
 
             # All attributes in an .hlsp file should have already been
             # initialized by self.__init__().
@@ -877,7 +873,6 @@ class HLSPFile(object):
         with open(savename, 'w+') as yamlfile:
             yaml.dump(self.as_dict(), yamlfile, default_flow_style=False)
             print("...saving {0}...".format(savename))
-            print("...ingest: {0}".format(self.ingest))
 
         return savename
 
