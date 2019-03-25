@@ -339,9 +339,9 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                 if kw_value_checked.lower() == "multi":
                     # Make sure there are other keywords of the format
                     # KW[0:6]nn.  There should be at least two of them.
-                    if (kw_checked[0:6]+'01' not in
+                    if (kw_checked[0:6] + '01' not in
                             hdulist[kw.header].header.keys() or
-                            kw_checked[0:6]+'02' not in
+                            kw_checked[0:6] + '02' not in
                             hdulist[kw.header].header.keys()):
                         logstring = ('Keyword "{0}"'.format(kw_checked) +
                                      ' is set to "MULTI" but does not' +
@@ -383,7 +383,7 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
 
     # This dict will store all the messages logged, and count how many times
     # that message is logged.
-    log_message_counts = {}
+    log_message_counts = {'files_checked': 0}
 
     # Loop over each file in the file_base_dir.
     for froot, _, file_list in os.walk(file_base_dir):
@@ -391,6 +391,7 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
             for this_file in file_list:
                 this_ending = this_file.split('_')[-1]
                 if this_ending in all_endings_to_check:
+                    log_message_counts['files_checked'] += 1
                     # Idetify the index in the list to pass template, product
                     # types to 'apply_check'.
                     where_this_ending = numpy.where(

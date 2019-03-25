@@ -132,6 +132,10 @@ def check_metadata_format(paramfile, is_file=True):
                                               kw_updates
                                               )
 
+    c = log_message_counts['files_checked']
+    metadata_log.info("Files checked: {0}".format(c))
+    del log_message_counts['files_checked']
+
     metadata_log.info('Finished at %s', datetime.datetime.now().isoformat())
 
     # Add a summary of the number of log messages to the top of the log file.

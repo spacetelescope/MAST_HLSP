@@ -262,7 +262,10 @@ class FitsKeyword(object):
         """
 
         # Should only be a single keyword:values pair.
-        kw, info = dict_from_list.popitem()
+        if len(dict_from_list.keys()) == 1:
+            kw, info = dict_from_list.popitem()
+        else:
+            return None
 
         # Expecting kw to be a string (keyword name) and info to be a
         # dictionary containing parameters.
@@ -448,7 +451,8 @@ class FitsKeywordList(object):
             # Use the from_list_item constructor and add the new object to
             # self.
             as_obj = FitsKeyword.from_list_item(kw)
-            self.add(as_obj)
+            if as_obj:
+                self.add(as_obj)
 
     def is_empty(self):
         """
