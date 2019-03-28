@@ -380,6 +380,7 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
     """
 
     all_endings_to_check = numpy.asarray(get_filetypes_keys(endings_to_check))
+    print("Checking file endings: {0}".format(all_endings_to_check))
 
     # This dict will store all the messages logged, and count how many times
     # that message is logged.
