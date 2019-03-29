@@ -217,8 +217,8 @@ def find_standard_match(all_standards, file_type):
     for kw_list in all_standards:
 
         if (kw_list.product_type == prodtype
-                and kw_list.standard_type == standard
-            ):
+                    and kw_list.standard_type == standard
+                ):
 
             match = kw_list
             break
@@ -427,12 +427,20 @@ def apply_metadata_check(file_base_dir, hlsp_obj, all_standards):
                             fitsfile = os.path.join(froot, this_file)
                             # if hlsp_obj.keyword_updates:
                             # kw_list.update_list(hlsp_obj.keyword_updates)
-                            with fits.open(fitsfile, mode="readonly") as hdulist:
-                                apply_check(fitsfile,
-                                            kw_list,
-                                            hdulist,
-                                            log_message_counts
-                                            )
+                            try:
+                                with fits.open(fitsfile, mode="readonly") as hdulist:
+                                    apply_check(fitsfile,
+                                                kw_list,
+                                                hdulist,
+                                                log_message_counts
+                                                )
+                            except OSError:
+                                logstring = "astropy.io could not open file."
+                                write_log(fitsfile,
+                                          logstring,
+                                          'error',
+                                          log_message_counts
+                                          )
                         else:
                             raise ValueError("No template standard found "
                                              "for this combination of product "
