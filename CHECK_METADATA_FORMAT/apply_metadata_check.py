@@ -252,9 +252,11 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
 
     # Check each extension.
     for kw in template_standard.keywords:
+        hdr = {}
         if kw.header >= 0:
+            hdr = hdulist[kw.header].header
             kw_checked = kw.fits_keyword
-            is_in_hdr = kw_checked.upper() in hdulist[kw.header].header.keys()
+            is_in_hdr = kw_checked.upper() in hdr.keys()
             # If this keyword is missing from the header, try the alternate
             # keyword(s) instead, if one exists.
             # The alternates are stored as a comma-separated string.
@@ -262,8 +264,7 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                 if kw.alternates:
                     for kwa in kw.alternates:
                         kw_checked = kwa
-                        is_in_hdr = kw_checked.upper() in (
-                            hdulist[kw.header].header.keys())
+                        is_in_hdr = kw_checked.upper() in hdr.keys()
                         if is_in_hdr:
                             break
         else:
@@ -352,18 +353,17 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
             if kw_checked == "DATE-OBS":
                 # Check DATE-OBS keyword is correct format, if not,
                 # try TIME-OBS.
-                check_date_obs(hdulist[kw.header].header, this_file,
-                               log_message_counts)
+                check_date_obs(hdr, this_file, log_message_counts)
             if kw.multiple:
                 # Check if this keyword is set to 'MULTI' properly.
-                kw_value_checked = hdulist[kw.header].header[kw_checked]
+                kw_value_checked = hdr[kw_checked]
                 if kw_value_checked.lower() == "multi":
                     # Make sure there are other keywords of the format
                     # KW[0:6]nn.  There should be at least two of them.
                     if (kw_checked[0:6] + '01' not in
-                            hdulist[kw.header].header.keys() or
+                            hdr.keys() or
                             kw_checked[0:6] + '02' not in
-                            hdulist[kw.header].header.keys()):
+                            hdr.keys()):
                         logstring = ('Keyword "{0}"'.format(kw_checked) +
                                      ' is set to "MULTI" but does not' +
                                      ' have at least two of keyword' +
@@ -417,9 +417,6 @@ def apply_metadata_check(file_base_dir, hlsp_obj, all_standards):
                     log_message_counts['files_checked'] += 1
                     if log_message_counts['files_checked'] == 1:
                         print("Examining ...{0}".format(this_ending))
-                    if (log_message_counts['files_checked'] % 100) == 0:
-                        print("...{0}...".format(
-                            log_message_counts['files_checked']))
                     # Idetify the index in the list to pass template, product
                     # types to 'apply_check'.
                     file_type = hlsp_obj.find_file_type(this_ending)
