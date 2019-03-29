@@ -67,7 +67,9 @@ def check_metadata_format(paramfile, is_file=True):
     # Create FitsKeywordList object for each standard in all_standards array.
     # These are used to define the expected keywords for a given template
     # standard, but can have any part overwritten by the .hlsp file.
-    all_standards = numpy.asarray([])
+    # all_standards = numpy.asarray([])
+    all_standards = []
+
     for ttr in templates_to_read:
         this_file = os.path.realpath(__file__)
         this_dir = "/".join(this_file.split("/")[:-1])
@@ -75,11 +77,18 @@ def check_metadata_format(paramfile, is_file=True):
         if os.path.isfile(ttr):
             with open(ttr, 'r') as istream:
                 yaml_data = yaml.load(istream)
+                kw_list = FitsKeywordList(yaml_data['PRODUCT'],
+                                          yaml_data['STANDARD'],
+                                          yaml_data['KEYWORDS']
+                                          )
+                all_standards.append(kw_list)
+                """
                 all_standards = numpy.append(all_standards,
                                              FitsKeywordList(
                                                  yaml_data['PRODUCT'],
                                                  yaml_data['STANDARD'],
                                                  yaml_data['KEYWORDS']))
+                """
         else:
             raise IOError("Template file not found: " + ttr)
 
@@ -93,32 +102,36 @@ def check_metadata_format(paramfile, is_file=True):
     # HLSPFile class object.
     # param_data = (_read_from_file(paramfile) if is_file else paramfile)
     if is_file:
-        param_data = HLSPFile(path=paramfile).as_dict()
+        param_data = HLSPFile(path=paramfile)
     else:
         param_data = paramfile
 
+    print("<check_metadata_format> check_metadata_format() got:")
+    param_data.fits_keywords().__display__()
+    print("<<<>>>")
+
     # The root directory of the HLSP files is stored in the parameter file.
-    if 'InputDir' in param_data['FilePaths']:
-        file_base_dir = param_data['FilePaths']['InputDir']
-    else:
-        raise ValueError("Parameter file missing 'InputDir' field: " +
-                         '"' + paramfile + '".')
+    file_base_dir = param_data.get_data_path()
 
     # Loop over each file ending.  Run the metadata checks on any file ending
     # marked to be checked for HLSP requirements.
-    endings_to_check = []
+    endings_to_check = param_data.get_check_extensions()
+    """
     for ending in param_data['FileTypes']:
         this_key = [*ending][0]
         if ending[this_key]['RunCheck']:
             endings_to_check.append(ending)
+    """
 
     # Pull any FITS keyword updates out of paramfile.  (this can be either the
     # file created by precheck_data_format.py or the HLSPFile provided by
     # running through the GUI)
     try:
-        kw_updates = param_data['KeywordUpdates']
-    except KeyError:
+        kw_updates = param_data.keyword_updates
+    except AttributeError:
         kw_updates = None
+
+    print("type(kw_updates)={0}".format(type(kw_updates)))
 
     if isinstance(kw_updates, list):
         new_list = FitsKeywordList.empty_list()
@@ -127,13 +140,11 @@ def check_metadata_format(paramfile, is_file=True):
 
     # Apply the metadata correction on the requested file endings.
     log_message_counts = apply_metadata_check(file_base_dir,
-                                              endings_to_check,
-                                              all_standards,
-                                              kw_updates
+                                              param_data,
+                                              all_standards
                                               )
 
-    c = log_message_counts['files_checked']
-    metadata_log.info("Files checked: {0}".format(c))
+    c = int(log_message_counts['files_checked'])
     del log_message_counts['files_checked']
 
     metadata_log.info('Finished at %s', datetime.datetime.now().isoformat())
@@ -143,6 +154,7 @@ def check_metadata_format(paramfile, is_file=True):
         all_log_messages = ilogfile.read()
     with open(log_file_name, 'w') as ologfile:
         ologfile.write('# ------------------------------\n')
+        ologfile.write('Total files checked: {0}\n'.format(c))
         ologfile.write('Message Summary (# Files: [Type] Message)\n')
         for dkey in log_message_counts:
             ologfile.write(str(log_message_counts[dkey]['count']) + ': [' +
@@ -151,9 +163,9 @@ def check_metadata_format(paramfile, is_file=True):
         ologfile.write('# ------------------------------\n')
         ologfile.write(all_log_messages)
 
-    results = HLSPFile(from_dict=param_data)
-    results.toggle_ingest(2, state=True)
-    results.save(caller=__file__)
+    # results = HLSPFile(from_dict=param_data)
+    param_data.toggle_ingest(2, state=True)
+    param_data.save(caller=__file__)
 
 # --------------------
 

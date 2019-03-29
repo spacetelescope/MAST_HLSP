@@ -242,6 +242,9 @@ class UpdateKeywordsGUI(QWidget):
         self.clear_keywords()
 
         # Make a new row for each entry in self._keywords.
+        print("<UpdateKeywordsGUI> _display_current_keywords() loading:")
+        self.master.hlsp.fits_keywords().__display__()
+        print("<<<>>>")
         for kw in self.master.hlsp.fits_keywords().keywords:
             self._add_keyword_row(kw_obj=kw)
 

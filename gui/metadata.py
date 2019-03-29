@@ -513,7 +513,7 @@ class CheckMetadataGUI(QWidget):
         # Launch check_metadata_format with the current contents of the parent
         # HLSPFile as a dict.
         self.master.running.emit()
-        thr = CheckThread(self.master.hlsp.as_dict())
+        thr = CheckThread(self.master.hlsp)
         print("metacheck_clicked made a CheckThread")
         thr.finished.connect(lambda: self._finish_metacheck(thr))
         print("metacheck_clicked connected the CheckThread")

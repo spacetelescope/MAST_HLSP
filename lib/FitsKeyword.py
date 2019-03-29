@@ -51,6 +51,7 @@ class FitsKeyword(object):
     def __repr__(self):
         return ("<FitsKeyword ({0.fits_keyword})>: "
                 "CAOM={0.caom_keyword}, "
+                "DEFAULT={0.default}, "
                 "HEADER={0.header}".format(self)
                 )
 

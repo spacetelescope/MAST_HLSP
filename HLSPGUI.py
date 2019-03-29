@@ -247,6 +247,9 @@ class HLSPGUI(QTabWidget):
 
         # Set self.hlsp to a new HLSPFile object using the user-selected file.
         self.hlsp = HLSPFile(path=filename)
+        print("<HLSPGUI> load_hlsp() keyword_updates:")
+        self.hlsp.keyword_updates.__display__()
+        print("<<<>>>")
 
         # Update the line edit elements in the master GUI using the new
         # HLSPFile parameters.

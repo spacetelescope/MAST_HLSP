@@ -206,7 +206,7 @@ class HLSPFile(object):
         self.file_types = []
         self.hlsp_name = "blank"
         self.ingest = {s: False for s in steps}
-        self.keyword_updates = []
+        self.keyword_updates = FitsKeywordList.empty_list()
         self.unique_parameters = {}
 
         # Load HLSP parameters from a provided dictionary.
@@ -672,9 +672,27 @@ class HLSPFile(object):
 
         return self._fits_keywords
 
+    def get_check_extensions(self):
+
+        ext_list = []
+
+        for f in self.file_types:
+
+            if f.run_check:
+                ext_list.append(f.ftype)
+
+        return ext_list
+
     def get_data_path(self):
 
-        return self.file_paths['InputDir']
+        try:
+            path = self.file_paths['InputDir']
+        except KeyError:
+            err = "<HLSPFile> object for {0} is missing 'InputDir'!".format(
+                self.hlsp_name)
+            raise AttributeError(err)
+
+        return path
 
     def get_output_filepath(self, call_file=None):
         """
@@ -726,8 +744,16 @@ class HLSPFile(object):
         :type from_dict:  dict
         """
 
+        self._update_stage_paths()
+
+        # Need to load FileTypes beforre KeywordUpdates in order to load
+        # standard keywords first.
+        in_order = sorted(from_dict.keys())
+
         # Step through all entries in the dictionary.
-        for key, val in from_dict.items():
+        for key in in_order:
+
+            val = from_dict[key]
 
             # Turn keys in 'KeywordUpdates' format to 'keyword_updates' format.
             key = re.findall('[A-Z][^A-Z]*', key)
@@ -752,8 +778,8 @@ class HLSPFile(object):
                 for ftype in val:
                     as_obj = FileType.from_list_item(ftype)
                     self.add_filetype(as_obj)
-            elif attr == "keyword_updates":
                 self.reset_fits_keywords()
+            elif attr == "keyword_updates":
                 for kw in val:
                     as_obj = FitsKeyword.from_list_item(kw)
                     self.add_fits_keyword(as_obj)
@@ -852,6 +878,9 @@ class HLSPFile(object):
         """
 
         self._update_stage_paths()
+
+        print("<HLSPFile> save() type(keyword_updates)={0}".format(
+            type(self.keyword_updates)))
 
         # If a calling function is provided, use this to retrieve a matching
         # output file path.

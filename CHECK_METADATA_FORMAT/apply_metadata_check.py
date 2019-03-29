@@ -208,6 +208,26 @@ def check_date_obs(header, this_file, log_message_counts):
 # --------------------
 
 
+def find_standard_match(all_standards, file_type):
+
+    match = None
+    prodtype = file_type.product_type
+    standard = file_type.standard
+
+    for kw_list in all_standards:
+
+        if (kw_list.product_type == prodtype
+                and kw_list.standard_type == standard
+            ):
+
+            match = kw_list
+            break
+
+    return match
+
+# --------------------
+
+
 def apply_check(this_file, template_standard, hdulist, log_message_counts):
     """
     Conducts the standard verification on the given file.
@@ -229,6 +249,7 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
 
     :type log_message_counts: dict
     """
+
     # Check each extension.
     for kw in template_standard.keywords:
         if kw.header >= 0:
@@ -269,22 +290,22 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
                                  ' specififed.')
                     write_log(this_file, logstring, 'warning',
                               log_message_counts)
-            # This scenario is an HLSP requirement error regardless, since
-            # even if a default is provided, it's not in the file headers.
-            if kw.hlsp_status == 'required':
-                logstring = ("Missing HLSP required" +
-                             " keyword: {0}".format(kw.fits_keyword) +
-                             ', and no default value is' +
-                             ' specififed.')
-                write_log(this_file, logstring, 'error',
-                          log_message_counts)
-            elif kw.hlsp_status == 'recommended':
-                logstring = ("Missing HLSP recommended" +
-                             " keyword: {0}".format(kw.fits_keyword) +
-                             ', and no default value is' +
-                             ' specififed.')
-                write_log(this_file, logstring, 'warning',
-                          log_message_counts)
+                # This scenario is an HLSP requirement error regardless, since
+                # even if a default is provided, it's not in the file headers.
+                if kw.hlsp_status == 'required':
+                    logstring = ("Missing HLSP required" +
+                                 " keyword: {0}".format(kw.fits_keyword) +
+                                 ', and no default value is' +
+                                 ' specififed.')
+                    write_log(this_file, logstring, 'error',
+                              log_message_counts)
+                elif kw.hlsp_status == 'recommended':
+                    logstring = ("Missing HLSP recommended" +
+                                 " keyword: {0}".format(kw.fits_keyword) +
+                                 ', and no default value is' +
+                                 ' specififed.')
+                    write_log(this_file, logstring, 'warning',
+                              log_message_counts)
         if (not is_in_hdr and is_in_hdr != 'None') and kw_checked != 'None':
             # Check required/recommended HLSP keywords.
             if kw.hlsp_status == "required":
@@ -359,8 +380,7 @@ def apply_check(this_file, template_standard, hdulist, log_message_counts):
 # --------------------
 
 
-def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
-                         keyword_updates):
+def apply_metadata_check(file_base_dir, hlsp_obj, all_standards):
     """
     Main module that applies metadata standards to files.
 
@@ -379,8 +399,11 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
     :returns: dict -- A count of the messages being logged.
     """
 
-    all_endings_to_check = numpy.asarray(get_filetypes_keys(endings_to_check))
-    print("Checking file endings: {0}".format(all_endings_to_check))
+    # all_endings_to_check = numpy.asarray(get_filetypes_keys(endings_to_check))
+    all_endings_to_check = hlsp_obj.get_check_extensions()
+    print("<apply_metadata_check> apply_metadata_check() got:")
+    hlsp_obj.fits_keywords().__display__()
+    print("<<<>>>")
 
     # This dict will store all the messages logged, and count how many times
     # that message is logged.
@@ -392,24 +415,21 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
                 this_ending = this_file.split('_')[-1]
                 if this_ending in all_endings_to_check:
                     log_message_counts['files_checked'] += 1
+                    if log_message_counts['files_checked'] == 1:
+                        print("Examining ...{0}".format(this_ending))
+                    if (log_message_counts['files_checked'] % 100) == 0:
+                        print("...{0}...".format(
+                            log_message_counts['files_checked']))
                     # Idetify the index in the list to pass template, product
                     # types to 'apply_check'.
-                    where_this_ending = numpy.where(
-                        all_endings_to_check == this_ending)[0]
-                    if len(where_this_ending) == 1:
-                        ending_params = endings_to_check[where_this_ending[0]]
-                        prodtype = ending_params[this_ending]['ProductType']
-                        standard = ending_params[this_ending]['Standard']
+                    file_type = hlsp_obj.find_file_type(this_ending)
+                    if file_type:
                         # Identify which standard template to pass.
-                        all_standard_index = [i for i, x in enumerate(
-                            all_standards) if (
-                                x.product_type == prodtype and
-                                x.standard_type == standard)]
-                        if len(all_standard_index) == 1:
+                        kw_list = hlsp_obj.fits_keywords()
+                        if kw_list:
                             fitsfile = os.path.join(froot, this_file)
-                            kw_list = all_standards[all_standard_index[0]]
-                            if keyword_updates:
-                                kw_list.update_list(keyword_updates)
+                            # if hlsp_obj.keyword_updates:
+                            # kw_list.update_list(hlsp_obj.keyword_updates)
                             with fits.open(fitsfile, mode="readonly") as hdulist:
                                 apply_check(fitsfile,
                                             kw_list,
@@ -422,7 +442,8 @@ def apply_metadata_check(file_base_dir, endings_to_check, all_standards,
                                              "type and standard: " + prodtype +
                                              ", " + standard + ".")
                     else:
-                        raise ValueError("No match or multiple match "
-                                         "for this file ending inside "
-                                         "'apply_metadata_check'.")
+                        err = ("Could not find ''{0} in provided "
+                               "HLSPFile.".format(this_ending)
+                               )
+                        raise ValueError(err)
     return log_message_counts
