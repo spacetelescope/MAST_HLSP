@@ -1,17 +1,26 @@
 hlsp:
     metadataList:
         collection: HLSP
+        dataRelease: None
         intent: SCIENCE
         observationID: FILEROOTSUFFIX
+    provenance:
+        reference: https://archive.stsci.edu/hlsp/
 timeseries:
     metadataList:
         algorithm: timeseries
-kepler:
+k2:
     metadataList:
         #Some K2 headers use "Kepler Photometer", want to standardize for portal.
         aperture_radius: '4'
         instrument_name: Kepler
+        sequenceNumber: KEPLERCAMPAIGN
         targetPosition_coordsys: ICRS
+tess:
+    metadataList:
+        aperture_radius: '21'
+        instrument_name: Photometer
+        sequenceNumber: TESSSECTOR
 product_properties:
     calibrationLevel: HLSP
     fileNameDescriptor: FILEROOTSUFFIX

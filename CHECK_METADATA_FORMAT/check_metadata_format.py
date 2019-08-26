@@ -61,6 +61,7 @@ def check_metadata_format(paramfile, is_file=True):
 #    templates_to_read = ["TEMPLATES/timeseries_mast.yml",
 #                         "TEMPLATES/timeseries_k2.yml"]
     templates_to_read = ["TEMPLATES/timeseries_k2.yml",
+                         "TEMPLATES/timeseries_tess.yml",
                          # "TEMPLATES/image_hst.yml"
                          ]
 

@@ -169,6 +169,8 @@ class HLSPFile(object):
     _file_ext = ".hlsp"
     _root_dir = "MAST_HLSP"
 
+    _static_values_yaml = "PREP_CAOM/resources/hlsp_caom_staticvalues.yaml"
+
     def __init__(self, from_dict=None, name=None, path=None):
         """
         Initialize a new HLSPFile object.
@@ -279,6 +281,12 @@ class HLSPFile(object):
 
         return parent
 
+    def _bulk_add_static_values(self, static_values):
+
+        for parent, values in static_values.items():
+            for key, val in values.items():
+                self.add_unique_parameter(key, parent, val)
+
     @staticmethod
     def _format_caller(call_file):
         """
@@ -358,6 +366,18 @@ class HLSPFile(object):
                 for kw, info in standard_fits.items():
                     kw_obj = FitsKeyword(kw, parameters=info)
                     self.add_fits_keyword(kw_obj, standard=True)
+
+                static_vals = read_yaml(self._static_values_yaml)
+                data_type, inst = std.split("_")
+                self._bulk_add_static_values(static_vals["hlsp"])
+                try:
+                    self._bulk_add_static_values(static_vals[data_type])
+                except KeyError:
+                    pass
+                try:
+                    self._bulk_add_static_values(static_vals[inst])
+                except KeyError:
+                    pass
 
     def _implement_keyword_updates(self):
         """
@@ -995,6 +1015,7 @@ class HLSPFile(object):
             xmltree = kw.add_to_xml(xmltree)
 
         # Add all unique parameters to the XML tree.
+        self.add_unique_parameter("name", "provenance", self.hlsp_name.upper())
         for parent, parameters in self.unique_parameters.items():
             parent = xmltree.find(parent)
             parent = self._add_xml_value_pairs(parent, parameters)

@@ -52,14 +52,14 @@ KEYWORDS:
         alternates: []
         # default: 1765.463013
     FILTER:
-        header: 1
+        header: -999
         hlsp_status: required
         caom_status: required
         caom_keyword: instrument_keywords
         xml_parent: metadataList
         multiple: False
         alternates: []
-        default: Kepler
+        default: KEPLER
     INSTRUME:
         header: 1
         hlsp_status: required
@@ -68,7 +68,7 @@ KEYWORDS:
         xml_parent: metadataList
         multiple: False
         alternates: []
-    OBJECT:
+    KEPLERID:
         header: 0
         hlsp_status: required
         caom_status: required

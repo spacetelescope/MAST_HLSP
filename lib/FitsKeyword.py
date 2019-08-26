@@ -35,6 +35,8 @@ class FitsKeyword(object):
         self.header = 0
         self.hlsp_status = "required"
         self.multiple = False
+        self.prefix = ""
+        self.suffix = ""
         self.updated = False
         self.xml_parent = "metadataList"
         if parameters:
@@ -69,7 +71,7 @@ class FitsKeyword(object):
 
     @caom_keyword.setter
     def caom_keyword(self, c_keyword):
-        self._caom_keyword = str(c_keyword).lower()
+        self._caom_keyword = str(c_keyword)
 
     @property
     def caom_status(self):
@@ -162,6 +164,11 @@ class FitsKeyword(object):
                     "headerKeyword": self.fits_keyword.upper(),
                     "headerDefaultValue": self.default,
                     }
+
+        if len(self.prefix) > 0:
+            xml_dict["valuePrefix"] = self.prefix
+        if len(self.suffix) > 0:
+            xml_dict["valueSuffix"] = self.suffix
 
         return xml_dict
 

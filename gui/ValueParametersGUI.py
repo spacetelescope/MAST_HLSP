@@ -244,6 +244,15 @@ class ValueParametersGUI(QWidget):
         xml = caom_box.getXMLParent()
         xml_edit.setText(xml)
 
+    def _read_parameters_from_hlsp(self):
+        """
+        Add information from a populated HLSPFile to the GUI.
+        """
+
+        # Copy the parent's HLSPFile unique_parameters dict and return it.
+        current_parameters = dict(self.master.hlsp.unique_parameters)
+        return current_parameters
+
     def _read_row_to_hlsp(self, row_num):
         """
         Read the current information from a keyword/value row in the GUI and
@@ -265,15 +274,6 @@ class ValueParametersGUI(QWidget):
 
         # Add these to the parent's HLSPFile.
         self.master.hlsp.add_unique_parameter(this_caom, this_xml, this_val)
-
-    def _read_parameters_from_hlsp(self):
-        """
-        Add information from a populated HLSPFile to the GUI.
-        """
-
-        # Copy the parent's HLSPFile unique_parameters dict and return it.
-        current_parameters = dict(self.master.hlsp.unique_parameters)
-        return current_parameters
 
     def clear_values(self):
         """
@@ -322,7 +322,7 @@ class ValueParametersGUI(QWidget):
 
         # Set values_dict to standard parameters, then add any from the
         # HLSPFile.
-        self.values_dict = make_standard_parameters(self.master.hlsp)
+        # self.values_dict = make_standard_parameters(self.master.hlsp)
         current_parameters = self._read_parameters_from_hlsp()
         self.values_dict.update(current_parameters)
 
