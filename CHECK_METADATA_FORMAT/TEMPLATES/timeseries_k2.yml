@@ -50,7 +50,7 @@ KEYWORDS:
         xml_parent: metadataList
         multiple: False
         alternates: []
-        # default: 1765.463013
+        default: 1800
     FILTER:
         header: -999
         hlsp_status: required

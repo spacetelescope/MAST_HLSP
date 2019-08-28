@@ -585,6 +585,14 @@ class HLSPFile(object):
         if parent not in current_parents:
             self.unique_parameters[parent] = {}
 
+        # Update certain parameters.
+        if parent == 'provenance':
+            if caom == 'name' and value.endswith(">"):
+                value = self.hlsp_name.upper()
+            if caom == 'reference' and value.endswith(">"):
+                url_root = "https://archive.stsci.edu/hlsp"
+                value = "/".join([url_root, self.hlsp_name.lower()])
+
         # Add the keyword / value pair to the parent section.
         self.unique_parameters[parent].update({caom: value})
 

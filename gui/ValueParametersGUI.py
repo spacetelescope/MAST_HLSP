@@ -21,54 +21,6 @@ except ImportError:
 # --------------------
 
 
-def make_standard_parameters(hlsp_obj):
-    """
-    This function constructs a dictionary with standard keyword/value pairs
-    for CAOM XML template files.  Different dictionaries correspond to
-    different HLSP standards.
-
-    :param hlsp_obj:  An HLSPFile object is needed for analysis to determine
-                      which sets of parameters to add.
-    :type hlsp_obj:  HLSPFile
-    """
-
-    # Initialize a dictionary for new XML entries under metadataList.
-    standard_entries = {"metadataList": {}}
-
-    # Normal additions for all HLSP files.
-    normal = {"collection": "HLSP",
-              "intent": "SCIENCE",
-              "observationID": "FILEROOTSUFFIX",
-              }
-
-    # Additions for timeseries collections.
-    timeseries = {"algorithm": "timeseries"}
-
-    # Additions for Kepler collections.
-    kepler = {"aperture_radius": "4",
-              "instrument_name": "Kepler",
-              "targetPosition_coordsys": "ICRS",
-              }
-
-    # Find the standards being used in hlsp_obj.
-    fits_standards = hlsp_obj.member_fits_standards()
-
-    if fits_standards:
-
-        # Analyze any standards found and add corresponding parameters.
-        for fit in fits_standards:
-            std, inst = fit.split("_")
-            if std.lower() == "timeseries":
-                normal.update(timeseries)
-            if inst.lower() == "kepler" or inst.lower() == "k2":
-                normal.update(kepler)
-
-    standard_entries["metadataList"].update(normal)
-    return standard_entries
-
-# --------------------
-
-
 class ValueParametersGUI(QWidget):
     """
     This class constructs a GUI for adding and modifying keyword/value pairs
@@ -322,7 +274,6 @@ class ValueParametersGUI(QWidget):
 
         # Set values_dict to standard parameters, then add any from the
         # HLSPFile.
-        # self.values_dict = make_standard_parameters(self.master.hlsp)
         current_parameters = self._read_parameters_from_hlsp()
         self.values_dict.update(current_parameters)
 
