@@ -61,7 +61,7 @@ def read_known_filters():
 
 
 def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
-                     exclude_filters=None):
+                     exclude_filters=None, skip_sym=False):
     """
     Checks all files contained below this directory for MAST HLSP compliance.
 
@@ -86,6 +86,10 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
         the file names that will be temporarily accepted (for this run only).
 
     :type exclude_filters: list
+
+    :param skip_sym: If True, will ignore symbolic links.
+
+    :type skip_sym: Boolean
     """
 
     # Start logging to an output file.
@@ -105,7 +109,7 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     known_filters = read_known_filters()
 
     # Get list of all files.
-    all_file_list = get_all_files(idir)
+    all_file_list = get_all_files(idir, skip_sym=skip_sym)
     # Record the total number of files found, in case user needs to confirm.
     filenames_log.info('Total files found: ' + str(len(all_file_list)))
 
@@ -158,6 +162,10 @@ def setup_args():
                         action="store", help="Optional list of filter values"
                         " to temporarily accept as valid values.")
 
+    parser.add_argument("--skip_sym", dest="skip_sym", action="store_true",
+                        help="If set, will ignore symbolic links",
+                        default=False)
+
     return parser
 
 # --------------------
@@ -169,6 +177,7 @@ if __name__ == "__main__":
 
     # Call main function.
     check_file_names(INPUT_ARGS.idir, INPUT_ARGS.hlsp_name, INPUT_ARGS.root_dir,
-                     INPUT_ARGS.exclude_missions, INPUT_ARGS.exclude_filters)
+                     INPUT_ARGS.exclude_missions, INPUT_ARGS.exclude_filters,
+                     INPUT_ARGS.skip_sym)
 
 # --------------------
