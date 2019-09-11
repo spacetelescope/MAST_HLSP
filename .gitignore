@@ -1,0 +1,8 @@
+.DS_Store
+*.hlsp
+*.log
+*.profile
+*.pyc
+.idea/
+.pytest_cache/
+__pycache__/
