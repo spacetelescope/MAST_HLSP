@@ -36,6 +36,7 @@ class FitsKeyword(object):
         self.hlsp_status = "required"
         self.multiple = False
         self.prefix = ""
+        self.required = False
         self.suffix = ""
         self.updated = False
         self.xml_parent = "metadataList"
@@ -169,6 +170,8 @@ class FitsKeyword(object):
             xml_dict["valuePrefix"] = self.prefix
         if len(self.suffix) > 0:
             xml_dict["valueSuffix"] = self.suffix
+        if self.required:
+            xml_dict["headerRequired"] = 'True'
 
         return xml_dict
 

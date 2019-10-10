@@ -868,6 +868,13 @@ class HLSPFile(object):
         else:
             return None
 
+    def read_from_template(self, caom_template):
+
+        template = lxml.parse(caom_template)
+        metadata = template.find('metadataList')
+        provenance = template.find('provenance')
+        products = template.find('productList')
+
     def remove_filetype(self, filetype_obj):
         """
         Remove a FileType object from the file_types list.

@@ -1,0 +1,101 @@
+# HDUs and names for required and recommended HLSP FITS keyword records.
+#   Applies to TIMESERIES files following the K2 standard.
+# Last update: 2018-Apr-24
+#
+# Keyword dictionaries:
+#   required:  KW record must be present in the named HDU
+#   recommended: KW record should be present in the named HDU
+
+PRODUCT: timeseries
+STANDARD: tess
+KEYWORDS:
+    DATE-OBS:
+        header: 1
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: instrument_keywords
+        xml_parent: metadataList
+        multiple: False
+        alternates: 
+        - TIME-OBS
+    DATE-END:
+        header: 1
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: instrument_keywords
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    DEC_OBJ:
+        header: 0
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: targetPosition_coordinates_cval2
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    EQUINOX:
+        header: 0
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: targetPosition_equinox
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    EXPTIME:
+        header: -999
+        hlsp_status: omitted
+        caom_status: required
+        caom_keyword: instrument_keywords
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    FILTER:
+        header: 0
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: instrument_keywords
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+        default: TESS
+    INSTRUME:
+        header: 0
+        hlsp_status: required
+        caom_status: omitted
+        caom_keyword: instrument_name
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    OBJECT:
+        header: 0
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: target_name
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    RA_OBJ:
+        header: 0
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: targetPosition_coordinates_cval1
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    TELESCOP:
+        header: 0
+        hlsp_status: required
+        caom_status: required
+        caom_keyword: telescope_name
+        xml_parent: metadataList
+        multiple: False
+        alternates: []
+    TIMEDEL:
+        header: 1
+        hlsp_status: required
+        caom_status: omitted
+        caom_keyword: instrument_keywords
+        xml_parent: metadataList
+        multiple: False
+        alternates: []

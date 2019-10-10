@@ -22,6 +22,8 @@ tess:
         instrument_name: Photometer
         sequenceNumber: TESSSECTOR
         targetPosition_coordsys: ICRS
+    provenance:
+        project: TESS
 product_properties:
     calibrationLevel: HLSP
     fileNameDescriptor: FILEROOTSUFFIX
