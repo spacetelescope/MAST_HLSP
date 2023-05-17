@@ -41,7 +41,7 @@
     - Changing signs in directory names or filenames requires a list of catalogs whose name was constructed with RA/DEC coordinates called "radec_named_catalogs_\[hlspname\]_dat". Create a list of the prefixes before the coordinates in the file. For instance, if the target name is "macs1201+25", only use "macs" in the list. See more examples in radec_named_catalogs.dat. 
 
 
-  python check_file_names.py --root_dir /ifs/archive/test/mast/public/hlsp/cos-gal/spectra/ --update_dirname_sign /ifs/archive/test/mast/public/hlsp/cos-gal/ cos-gal
+    python check_file_names.py --root_dir /ifs/archive/test/mast/public/hlsp/cos-gal/spectra/ --update_dirname_sign /ifs/archive/test/mast/public/hlsp/cos-gal/ cos-gal
 
   - Change '+', '-' in filename to 'p', 'm' respectively, e.g.,
     python check_file_names.py --update_filename_sign /ifs/archive/test/mast/public/hlsp/test_relics/ test_relics
