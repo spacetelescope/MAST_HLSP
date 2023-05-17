@@ -117,11 +117,13 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters, r
             if update_filename_sign:
                 new_targetname = create_new_name(splits[4], radec_named_catalogs)
 
-                if new_targetname !=None:
+                if new_targetname:
                     new_filename = ifile.replace(splits[4], new_targetname[1])    
                     os.rename(ifile, new_filename)
                     logging.info( "Now SIGNS in FILENAME " + ifile +" SWAPED"
-                                    " to '-p' or '-m' : " + new_filename )
+                                    " to " + new_filename )
+                else: logging.info("There is no sign in this filename: "+ifile)
+            
                      
             # Check that the sixth field is in the list of known filters.
             if not check_in_known_filters(splits[5], known_filters,

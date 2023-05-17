@@ -22,7 +22,7 @@ def create_new_name(current_name, radec_named_catalogs):
     : param current_name : current dirname or filename
     : type current_name : string
 
-    : param radec_named_catalogs : list of catalogs whose name have ra/dec coordinates
+    : param radec_named_catalogs : list of catalogs whose names have ra/dec coordinates
     : type radec_named_catalogs : list
 
     """
@@ -34,14 +34,14 @@ def create_new_name(current_name, radec_named_catalogs):
 
                 #suggest new name for either dirname or filename
                 if re.search('\+', newstring) :
-                    new_name = substring+newstring.replace('+','-p',1) 
+                    new_name = substring+newstring.replace('+','p',1) 
                     failed_name = current_name
-                    logging.error("Subdirectory name has '+' : " + failed_name)
+                    logging.error("Subdirectory or file name has the positive sign, '+' : " + failed_name)
                     return failed_name, new_name
                 elif re.search('-',newstring) : 
-                    new_name = substring+newstring.replace('-','-m',1)
+                    new_name = substring+newstring.replace('-','m',1)
                     failed_name = current_name
-                    logging.error("Subdirectory name has '+' : " + failed_name)                        
+                    logging.error("Subdirectory or file name has the negative sign, '-' in " + failed_name)                        
                     return failed_name, new_name
                 else : 
                     logging.info(current_name + "doesn't contain '-' or '+' signs! ")

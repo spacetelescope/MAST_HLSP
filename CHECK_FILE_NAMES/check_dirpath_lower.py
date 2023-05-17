@@ -44,7 +44,7 @@ def check_dirpath_lower(file_list, root_dir, hlsp_name, lowercase_dirname = Fals
     # If there are any failed subdirectories, log them to the file.
     if failed_dirs:
         for failed_dir in failed_dirs:
-            logging.error("Subdirectory is not all lowercase: " + failed_dir)
+            logging.error("The subdirectory name is not all lowercase: " + failed_dir)
 
         if lowercase_dirname:
             os.rename(failed_dir, failed_dir.lower())

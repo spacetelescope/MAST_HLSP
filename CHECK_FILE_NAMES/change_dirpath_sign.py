@@ -58,7 +58,7 @@ def change_dirpath_sign(idir, file_list, root_dir, hlsp_name, radec_named_catalo
 
     def log(dirname, failed_dir, new_Dir):
         logging.info( "Now SIGNS in DIRNAME " + dirname+failed_dir +" SWAPED"
-                        " to '-p' or '-m' : " + dirname+new_dir )
+                        " to 'p' or 'm' : " + dirname+new_dir )
     # finally rename dirs 
     if update_dirname_sign:
         if dirname_change_list:

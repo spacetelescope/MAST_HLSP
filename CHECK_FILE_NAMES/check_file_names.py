@@ -28,7 +28,7 @@ from lib.HLSPFile import HLSPFile
 # HLSP file.
 KNOWN_MISSIONS_FILE = "known_missions.dat"
 KNOWN_FILTERS_FILE = "known_filters.dat"
-RADEC_NAMED_CATALOGS_FILE = "radec_named_catalogs.dat"
+TEMPLATE_RADEC_NAMED_CATALOGS_FILE = "radec_named_catalogs.dat"
 
 # CURRENT_DIR will allow this script to find the .dat files when run from
 # outside the CHECK_FILE_NAMES directory as well.
@@ -60,9 +60,10 @@ def read_known_filters():
         raise OSError('Known Filters file not found.  Looking for "' +
                       filters_file + '".')
 
-def read_radec_named_catalogs():
+def read_radec_named_catalogs(hlsp_name):
     """ Reads in a list of radec named catalogs from a file on disk. """
-    catalogs_file = os.path.join(CURRENT_DIR, RADEC_NAMED_CATALOGS_FILE)
+    global catalogs_file
+    catalogs_file = os.path.join(CURRENT_DIR, TEMPLATE_RADEC_NAMED_CATALOGS_FILE.replace(".dat", "_"+hlsp_name+".dat"))
     if os.path.isfile(catalogs_file):
         with open(catalogs_file, 'r') as kc_file:
             return set([x.strip() for x in kc_file.readlines()])
@@ -117,7 +118,7 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     """
 
    # Start logging to an output file.
-    logfile = "check_file_names."+hlsp_name+".log"
+    logfile = "check_file_names_"+hlsp_name+".log"
     """
     logging.basicConfig(filename=logfile,
                         format='%(levelname)s from %(module)s: %(message)s',
@@ -134,7 +135,7 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     known_filters = read_known_filters()
 
     # Read in list of radec named catalogs from reference file.
-    radec_named_catalogs = read_radec_named_catalogs()
+    radec_named_catalogs = read_radec_named_catalogs(hlsp_name)
 
 
     # Get list of all files.
@@ -234,5 +235,6 @@ if __name__ == "__main__":
                      INPUT_ARGS.skip_sym, INPUT_ARGS.lowercase_dirname,
                      INPUT_ARGS.lowercase_filename, INPUT_ARGS.update_dirname_sign,
                      INPUT_ARGS.update_filename_sign)
-
+    if INPUT_ARGS.update_filename_sign:
+        os.rename(catalogs_file, catalogs_file+".Changed")
 # --------------------
