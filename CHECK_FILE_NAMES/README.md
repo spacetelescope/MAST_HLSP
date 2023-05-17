@@ -44,5 +44,6 @@
     python check_file_names.py --root_dir /ifs/archive/test/mast/public/hlsp/cos-gal/spectra/ --update_dirname_sign /ifs/archive/test/mast/public/hlsp/cos-gal/ cos-gal
 
   - Change '+', '-' in filename to 'p', 'm' respectively, e.g.,
+  
     python check_file_names.py --update_filename_sign /ifs/archive/test/mast/public/hlsp/test_relics/ test_relics
     - If both names of the subdirectories and the filenames need to change the signs, you need to change the subdirectory names and then filenames after that.
