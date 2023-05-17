@@ -31,18 +31,18 @@
 
   - simply check directory and file names and see the log
 
-  check_file_names.py /ifs/archive/test/mast/public/hlsp/lowlib/ lowib
+    check_file_names.py /ifs/archive/test/mast/public/hlsp/lowlib/ lowib
 
   - Check directory and file names and make directory names to lowercase
 
-  python check_file_names.py --lowercase_dirname  /ifs/archive/test/mast/public/hlsp/<hlspname>/ <hlspname>
+    python check_file_names.py --lowercase_dirname  /ifs/archive/test/mast/public/hlsp/\[hlspname\]/ \[hlspname\]
 
   - Change '+', '-' in directory name to 'p', 'm' respectively, e.g., cos-gal has another subdirectory called 'spectra' so you need to specify --rootdir down to the directory just above the targetname directories 
-    - Changing signs in directory names or filenames requires a list of catalogs whose name was constructed with RA/DEC coordinates called "radec_named_catalogs_<hlspname>_dat". Create a list of the prefixes before the coordinates in the file. For instance, if the target name is "macs1201+25", only use "macs" in the list. See more examples in radec_named_catalogs.dat. 
+    - Changing signs in directory names or filenames requires a list of catalogs whose name was constructed with RA/DEC coordinates called "radec_named_catalogs_\[hlspname\]_dat". Create a list of the prefixes before the coordinates in the file. For instance, if the target name is "macs1201+25", only use "macs" in the list. See more examples in radec_named_catalogs.dat. 
 
 
   python check_file_names.py --root_dir /ifs/archive/test/mast/public/hlsp/cos-gal/spectra/ --update_dirname_sign /ifs/archive/test/mast/public/hlsp/cos-gal/ cos-gal
 
   - Change '+', '-' in filename to 'p', 'm' respectively, e.g.,
-  python check_file_names.py --update_filename_sign /ifs/archive/test/mast/public/hlsp/test_relics/ test_relics
+    python check_file_names.py --update_filename_sign /ifs/archive/test/mast/public/hlsp/test_relics/ test_relics
     - If both names of the subdirectories and the filenames need to change the signs, you need to change the subdirectory names and then filenames after that.
