@@ -55,7 +55,7 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters, r
     :type lowercase_filename: Boolean
 
     :param update_filename_sign : if True, will change the sign '+' or '-' 
-                         in coordinated filenames to '-p' or '-m' respectively.
+                         in coordinated filenames to 'p' or 'm' respectively.
     :type update_filename_sign : Boolean
 
 
@@ -117,11 +117,11 @@ def check_file_compliance(file_list, hlsp_name, known_missions, known_filters, r
             if update_filename_sign:
                 new_targetname = create_new_name(splits[4], radec_named_catalogs)
 
-                if new_targetname:
+                if new_targetname !=None:
                     new_filename = ifile.replace(splits[4], new_targetname[1])    
                     os.rename(ifile, new_filename)
-                    logging.info( "Now SIGNS in FILENAME " + ifile +" SWAPED"
-                                    " to " + new_filename )
+                    logging.info( "Now SIGNS in the filename " + ifile +" SWAPED"
+                                    " to 'm' or 'p so now the new filename is " + new_filename )
                 else: logging.info("There is no sign in this filename: "+ifile)
             
                      

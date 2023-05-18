@@ -64,6 +64,7 @@ def read_radec_named_catalogs(hlsp_name):
     """ Reads in a list of radec named catalogs from a file on disk. """
     global catalogs_file
     catalogs_file = os.path.join(CURRENT_DIR, TEMPLATE_RADEC_NAMED_CATALOGS_FILE.replace(".dat", "_"+hlsp_name+".dat"))
+    #print("catalog files:", catalogs_file)
     if os.path.isfile(catalogs_file):
         with open(catalogs_file, 'r') as kc_file:
             return set([x.strip() for x in kc_file.readlines()])
@@ -147,7 +148,7 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     check_dirpath_lower(all_file_list, root_dir, hlsp_name, 
                         lowercase_dirname = lowercase_dirname)
 
-    change_dirpath_sign(idir, all_file_list, root_dir, hlsp_name, radec_named_catalogs, 
+    change_dirpath_sign(idir, all_file_list, root_dir, radec_named_catalogs, 
                         update_dirname_sign = update_dirname_sign)
 
     # Check file names for compliance.
