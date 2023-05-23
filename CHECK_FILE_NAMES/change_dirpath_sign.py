@@ -47,33 +47,35 @@ def change_dirpath_sign(idir, file_list, root_dir, radec_named_catalogs, update_
                            for x in file_list])
     else:
         unique_dirs = set([os.path.dirname(x).replace(idir, '').split('/')[0] for x in file_list])
-        print("check_dirpath_sign: ", unique_dirs)
-        #print(file_list)
+        # print("check_dirpath_sign: ", unique_dirs)
 
     
     # compling dirname list to update 
     compiled_dirlist= [create_new_name(current_dir, radec_named_catalogs) for current_dir in unique_dirs]
 
     # list of only dirs which need updating; remove None or [] values from the list
-    dirname_change_list = list(itertools.filterfalse(lambda item: not item , compiled_dirlist))
-    print("dirname_change_list", dirname_change_list)
 
     def log(dirname, failed_dir, new_dir):
         logging.info( "Now SIGNS in " + dirname+failed_dir +" SWAPED"
                         " to 'p' or 'm'. The new filename is " + dirname+new_dir )
     # finally rename dirs 
     if update_dirname_sign:
-       
+        dirname_change_list = list(itertools.filterfalse(lambda item: not item , compiled_dirlist))
+        print("dirname_change_list", dirname_change_list)
+
         if dirname_change_list:
-            
+
             for failed_dir, new_dir in dirname_change_list:
-                print(failed_dir, new_dir)
                 if root_dir:
                     os.rename(root_dir+failed_dir, root_dir+new_dir)
                     log(root_dir, failed_dir, new_dir)
+                    print(f"{failed_dir} changed to {new_dir}")
+
                 else:
                     os.rename(idir+failed_dir, idir+new_dir)
                     log(idir, failed_dir, new_dir)
+                    print(f"{failed_dir} changed to {new_dir}")
+
 
             
 #----------------
