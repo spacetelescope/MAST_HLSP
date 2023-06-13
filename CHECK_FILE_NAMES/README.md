@@ -43,7 +43,7 @@ This folder contains Python software for 1) checking that file names follow MAST
 
   - simply check directory and file names and see the log
     ```
-    check_file_names.py /ifs/archive/test/mast/public/hlsp/lowlib/ lowib
+    python check_file_names.py /ifs/archive/test/mast/public/hlsp/lowlib/ lowib
     ```
   - Check directory and file names and make directory names to lowercase
     ```
@@ -51,7 +51,7 @@ This folder contains Python software for 1) checking that file names follow MAST
     ```
   - Change '+', '-' in directory name to 'p', 'm' respectively, e.g., cos-gal has another subdirectory called 'spectra' so you need to specify --rootdir down to the directory just above the target name based directories 
     
-    - Changing signs in directory names or filenames requires a list of catalogs whose name was constructed with RA/DEC coordinates called "radec_named_catalogs_\[hlspname\]_dat". Create a list of the prefixes before the coordinates in the file. For instance, if the target name is "macs1201+25", only add "macs" to the list. See more examples in radec_named_catalogs.dat. 
+    - Changing signs in directory names or filenames requires a list of catalogs whose name was constructed with RA/DEC coordinates called "radec_named_catalogs_\[hlspname\].dat". Create a list of the prefixes before the coordinates in the file. For instance, if the target name is "macs1201+25", only add "macs" to the list. See more examples in radec_named_catalogs.dat. 
 
     ```
     python check_file_names.py --root_dir /ifs/archive/test/mast/public/hlsp/cos-gal/spectra/ --update_dirname_sign /ifs/archive/test/mast/public/hlsp/cos-gal/ cos-gal

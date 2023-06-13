@@ -136,8 +136,9 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     known_filters = read_known_filters()
 
     # Read in list of radec named catalogs from reference file.
-    radec_named_catalogs = read_radec_named_catalogs(hlsp_name)
-
+    if update_dirname_sign or update_filename_sign: 
+        radec_named_catalogs = read_radec_named_catalogs(hlsp_name)
+    else: radec_named_catalogs = None
 
     # Get list of all files.
     all_file_list = get_all_files(idir, skip_sym=skip_sym)
@@ -147,9 +148,9 @@ def check_file_names(idir, hlsp_name, root_dir="", exclude_missions=None,
     # Make sure all sub-directories are lowercase.
     check_dirpath_lower(all_file_list, root_dir, hlsp_name, 
                         lowercase_dirname = lowercase_dirname)
-
-    change_dirpath_sign(idir, all_file_list, root_dir, radec_named_catalogs, 
-                        update_dirname_sign = update_dirname_sign)
+    if update_dirname_sign:
+        change_dirpath_sign(idir, all_file_list, root_dir, radec_named_catalogs, 
+                            update_dirname_sign = update_dirname_sign)
 
     # Check file names for compliance.
     check_file_compliance(all_file_list, hlsp_name, known_missions,
